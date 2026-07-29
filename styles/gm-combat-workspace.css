@@ -1,0 +1,14 @@
+.gm-combat-workspace {
+  --gm-combat-accent: #d17b28;
+  --gm-combat-danger: #a83232;
+  --gm-combat-ready: #3f7d51;
+}
+
+.gm-combat-workspace .active-combatant {
+  border-color: var(--gm-combat-accent);
+  box-shadow: 0 0 0 1px var(--gm-combat-accent);
+}
+
+.gm-combat-workspace .resource-used {
+  opacity: 0.55;
+}

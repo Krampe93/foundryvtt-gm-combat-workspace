@@ -1,0 +1,60 @@
+{
+  "id": "gm-combat-workspace",
+  "title": "GM Combat Workspace",
+  "description": "A focused Foundry VTT combat workspace for enemy management, reactions, legendary actions, statblocks, and hidden movement tracking.",
+  "version": "0.1.0",
+  "authors": [
+    {
+      "name": "Tim"
+    }
+  ],
+  "compatibility": {
+    "minimum": "14",
+    "verified": "14"
+  },
+  "relationships": {
+    "systems": [
+      {
+        "id": "dnd5e",
+        "type": "system",
+        "compatibility": {
+          "minimum": "5.3"
+        }
+      }
+    ],
+    "recommends": [
+      {
+        "id": "rsreforged",
+        "type": "module",
+        "reason": "Optional integration for the existing RSReforged roll and damage workflow."
+      },
+      {
+        "id": "monks-combat-details",
+        "type": "module",
+        "reason": "Optional compatibility with the existing player initiative placeholder workflow."
+      }
+    ]
+  },
+  "esmodules": [
+    "scripts/main.js"
+  ],
+  "styles": [
+    "styles/gm-combat-workspace.css"
+  ],
+  "languages": [
+    {
+      "lang": "de",
+      "name": "Deutsch",
+      "path": "lang/de.json"
+    },
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "manifest": "",
+  "download": "",
+  "license": "LICENSE",
+  "readme": "README.md"
+}

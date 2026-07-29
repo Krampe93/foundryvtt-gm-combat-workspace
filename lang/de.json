@@ -1,0 +1,13 @@
+{
+  "GMCOMBAT.Ready": "GM Combat Workspace ist bereit.",
+  "GMCOMBAT.Settings.OpenNpcSheet.Name": "Statblock beim Gegnerzug öffnen",
+  "GMCOMBAT.Settings.OpenNpcSheet.Hint": "Öffnet automatisch den normalen D&D5e-Statblock des aktiven Gegners.",
+  "GMCOMBAT.Settings.ClosePreviousNpcSheet.Name": "Vorherigen Gegner-Statblock schließen",
+  "GMCOMBAT.Settings.ClosePreviousNpcSheet.Hint": "Schließt beim Zugwechsel den zuvor automatisch geöffneten Gegner-Statblock.",
+  "GMCOMBAT.Settings.SelectActiveNpcToken.Name": "Aktiven Gegner auswählen",
+  "GMCOMBAT.Settings.SelectActiveNpcToken.Hint": "Wählt den Token des aktiven Gegners aus, ohne die Karte zu verschieben.",
+  "GMCOMBAT.Settings.PanToActiveNpc.Name": "Kamera zum aktiven Gegner bewegen",
+  "GMCOMBAT.Settings.PanToActiveNpc.Hint": "Verschiebt die Kartenansicht beim Beginn eines Gegnerzuges.",
+  "GMCOMBAT.Settings.HiddenMovement.Name": "Verborgene Bewegung verfolgen",
+  "GMCOMBAT.Settings.HiddenMovement.Hint": "Zeigt den Bewegungspfad des aktiven verborgenen Gegners."
+}

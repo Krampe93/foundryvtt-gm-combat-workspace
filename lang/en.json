@@ -1,0 +1,13 @@
+{
+  "GMCOMBAT.Ready": "GM Combat Workspace is ready.",
+  "GMCOMBAT.Settings.OpenNpcSheet.Name": "Open statblock on an enemy turn",
+  "GMCOMBAT.Settings.OpenNpcSheet.Hint": "Automatically opens the active enemy's regular D&D5e actor sheet.",
+  "GMCOMBAT.Settings.ClosePreviousNpcSheet.Name": "Close the previous enemy statblock",
+  "GMCOMBAT.Settings.ClosePreviousNpcSheet.Hint": "Closes the previously auto-opened enemy sheet when the turn changes.",
+  "GMCOMBAT.Settings.SelectActiveNpcToken.Name": "Select the active enemy",
+  "GMCOMBAT.Settings.SelectActiveNpcToken.Hint": "Selects the active enemy token without moving the map.",
+  "GMCOMBAT.Settings.PanToActiveNpc.Name": "Pan to the active enemy",
+  "GMCOMBAT.Settings.PanToActiveNpc.Hint": "Moves the map view when an enemy turn begins.",
+  "GMCOMBAT.Settings.HiddenMovement.Name": "Track hidden movement",
+  "GMCOMBAT.Settings.HiddenMovement.Hint": "Shows the movement path of the active hidden enemy."
+}
