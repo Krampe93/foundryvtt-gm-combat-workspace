@@ -4,6 +4,8 @@ GM Combat Workspace is a Foundry VTT module for running D&D 5e encounters from a
 
 The project is at the initial scaffold stage. Existing macro behavior will be migrated into separate, maintainable services rather than combined into one large macro.
 
+The implementation order, manual Foundry test cases, and acceptance gates are maintained in [ROADMAP.md](ROADMAP.md). Each stage is reviewed and tested before work begins on the next one.
+
 ## Planned features
 
 - Compact enemy dashboard with HP, temporary HP, armor class, and saving throws
