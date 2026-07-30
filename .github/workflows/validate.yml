@@ -1,0 +1,37 @@
+name: Validate module
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate manifest and translations
+        run: node tools/validate.mjs
+
+      - name: Check JavaScript syntax
+        run: find scripts tools -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
+
+      - name: Build Foundry test package
+        shell: pwsh
+        run: ./tools/package.ps1
+
+      - name: Upload Foundry test package
+        uses: actions/upload-artifact@v4
+        with:
+          name: gm-combat-workspace-stage-0
+          path: dist/gm-combat-workspace.zip
+          if-no-files-found: error

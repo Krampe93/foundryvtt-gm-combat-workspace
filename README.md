@@ -6,6 +6,36 @@ The project is at the initial scaffold stage. Existing macro behavior will be mi
 
 The implementation order, manual Foundry test cases, and acceptance gates are maintained in [ROADMAP.md](ROADMAP.md). Each stage is reviewed and tested before work begins on the next one.
 
+The current manual acceptance checklist is maintained in [TESTING.md](TESTING.md).
+
+## Installation
+
+In Foundry VTT, open **Add-on Modules → Install Module**, paste the following URL into **Manifest URL**, and select **Install**:
+
+```text
+https://github.com/Krampe93/foundryvtt-gm-combat-workspace/releases/download/v0.1.0/module.json
+```
+
+Version `0.1.0` is the Stage 0 test release. It contains the development foundation and settings, but no combat features yet.
+
+## Development
+
+Validate the manifest, referenced files, optional-dependency policy, and matching translation keys:
+
+```powershell
+node tools/validate.mjs
+```
+
+Build an installable Foundry package:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File ./tools/package.ps1
+```
+
+The package is written to `dist/gm-combat-workspace.zip` and contains a single top-level module folder.
+
+Every pull request also publishes the same ZIP as a downloadable GitHub Actions artifact.
+
 ## Planned features
 
 - Compact enemy dashboard with HP, temporary HP, armor class, and saving throws

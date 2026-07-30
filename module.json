@@ -53,8 +53,8 @@
       "path": "lang/en.json"
     }
   ],
-  "manifest": "",
-  "download": "",
+  "manifest": "https://github.com/Krampe93/foundryvtt-gm-combat-workspace/releases/download/v0.1.0/module.json",
+  "download": "https://github.com/Krampe93/foundryvtt-gm-combat-workspace/releases/download/v0.1.0/gm-combat-workspace.zip",
   "license": "LICENSE",
   "readme": "README.md"
 }

@@ -1,5 +1,7 @@
 {
   "GMCOMBAT.Ready": "GM Combat Workspace ist bereit.",
+  "GMCOMBAT.Settings.DebugMode.Name": "Entwicklungsmodus",
+  "GMCOMBAT.Settings.DebugMode.Hint": "Schreibt zusätzliche, strukturierte Diagnosemeldungen in die Browserkonsole.",
   "GMCOMBAT.Settings.OpenNpcSheet.Name": "Statblock beim Gegnerzug öffnen",
   "GMCOMBAT.Settings.OpenNpcSheet.Hint": "Öffnet automatisch den normalen D&D5e-Statblock des aktiven Gegners.",
   "GMCOMBAT.Settings.ClosePreviousNpcSheet.Name": "Vorherigen Gegner-Statblock schließen",

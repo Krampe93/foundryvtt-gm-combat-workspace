@@ -1,5 +1,7 @@
 {
   "GMCOMBAT.Ready": "GM Combat Workspace is ready.",
+  "GMCOMBAT.Settings.DebugMode.Name": "Development mode",
+  "GMCOMBAT.Settings.DebugMode.Hint": "Writes additional structured diagnostics to the browser console.",
   "GMCOMBAT.Settings.OpenNpcSheet.Name": "Open statblock on an enemy turn",
   "GMCOMBAT.Settings.OpenNpcSheet.Hint": "Automatically opens the active enemy's regular D&D5e actor sheet.",
   "GMCOMBAT.Settings.ClosePreviousNpcSheet.Name": "Close the previous enemy statblock",
