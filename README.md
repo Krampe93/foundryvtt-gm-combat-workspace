@@ -13,10 +13,12 @@ The current manual acceptance checklist is maintained in [TESTING.md](TESTING.md
 In Foundry VTT, open **Add-on Modules → Install Module**, paste the following URL into **Manifest URL**, and select **Install**:
 
 ```text
-https://github.com/Krampe93/foundryvtt-gm-combat-workspace/releases/download/v0.1.0/module.json
+https://raw.githubusercontent.com/Krampe93/foundryvtt-gm-combat-workspace/main/module.json
 ```
 
-Version `0.1.0` is the Stage 0 test release. It contains the development foundation and settings, but no combat features yet.
+This manifest URL is permanent. Foundry can use it to discover and install future test versions through the normal update function.
+
+Version `0.2.0` is the Stage 1 test release. It contains the central Combat Coordinator, but no visible dashboard or automatic statblock behavior yet.
 
 ## Development
 

@@ -18,9 +18,9 @@ export function createLogger(scope = null) {
       if (!isDebugEnabled()) return;
 
       if (data === undefined) {
-        console.debug(`${prefix} | ${message}`);
+        console.info(`${prefix} | ${message}`);
       } else {
-        console.debug(`${prefix} | ${message}`, data);
+        console.info(`${prefix} | ${message}`, data);
       }
     },
 

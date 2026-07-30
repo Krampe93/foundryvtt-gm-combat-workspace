@@ -13,7 +13,7 @@ Record the result of each item as:
 ### A. Installation
 
 - [ ] Open the Stage 0 pull request and its successful **Validate module** workflow.
-- [ ] Download the `gm-combat-workspace-stage-0` artifact from the workflow run.
+- [ ] Download the `gm-combat-workspace-test-build` artifact from the workflow run.
 - [ ] Extract the artifact wrapper and locate `gm-combat-workspace.zip`.
 - [ ] Confirm that the ZIP contains one top-level folder named `gm-combat-workspace`.
 - [ ] Copy or extract that folder into Foundry's `Data/modules` directory.
@@ -77,3 +77,65 @@ Record the result of each item as:
 - [ ] Monk's Combat Details version is recorded, if tested.
 
 Do not approve Stage 0 if the module fails to load, produces a console error, requires an optional module, or cannot retain its settings.
+
+---
+
+## Stage 1 – Central Combat Coordinator
+
+Enable **Development mode** before running these checks. Keep the browser console open and filter for `gm-combat-workspace`.
+
+For each user action, count only the named coordinator events. Foundry may print unrelated messages from other modules.
+
+### A. Startup and empty state
+
+- [ ] Reload a scene without an active or started encounter.
+- [ ] Confirm that exactly one `gm-combat-workspace | Ready` entry is visible under the default console levels.
+- [ ] Confirm that no coordinator error appears.
+- [ ] Confirm that no false `combatStarted`, `turnChanged`, or `activeCombatantChanged` entry appears.
+
+### B. Start and normal turn order
+
+- [ ] Create or open an encounter on the visible scene.
+- [ ] Start the encounter.
+- [ ] Confirm exactly one `combatStarted` entry.
+- [ ] Confirm exactly one `activeCombatantChanged` entry for the first participant.
+- [ ] Advance to the next participant.
+- [ ] Confirm exactly one `turnChanged` entry.
+- [ ] Confirm exactly one `activeCombatantChanged` entry.
+- [ ] Advance through the end of the round.
+- [ ] Confirm exactly one `roundChanged`, one `turnChanged`, and one `activeCombatantChanged` entry.
+- [ ] Move backward to the previous participant and confirm the same events occur only once.
+
+### C. Resolved participant information
+
+- [ ] Activate an NPC participant and expand the logged event object.
+- [ ] Confirm `combatantType` is `npc`.
+- [ ] Confirm `actorId` and `tokenId` contain values.
+- [ ] Activate a player character and confirm `combatantType` is `player`.
+- [ ] Activate a player placeholder without an Actor and confirm `combatantType` is `placeholder`.
+- [ ] Activate a hidden NPC and confirm `hidden` is `true`.
+- [ ] If the same NPC Actor has multiple combatants, confirm the active entry reports the correct token ID.
+
+### D. Combatant changes
+
+- [ ] Add a participant during the encounter and confirm no false `turnChanged` event.
+- [ ] Change a non-active participant's initiative and confirm no false `turnChanged` event.
+- [ ] Remove a non-active participant and confirm no false `turnChanged` event.
+- [ ] Remove the active participant and confirm the resulting active-combatant change appears once.
+
+### E. Scene and encounter lifecycle
+
+- [ ] Switch to a scene without an encounter and confirm the previous encounter does not continue producing events.
+- [ ] Return to the encounter scene and confirm the current state is recognized once.
+- [ ] End or delete the started encounter and confirm exactly one `combatEnded` entry.
+- [ ] Reload the browser and confirm the coordinator does not duplicate later events.
+
+### F. Final result
+
+- [ ] No user action produces duplicate coordinator events.
+- [ ] No placeholder causes a red console error.
+- [ ] Actor and token IDs match the active NPC.
+- [ ] Scene changes leave no stale events behind.
+- [ ] Foundry, D&D5e, and optional module versions are recorded with the result.
+
+Do not approve Stage 1 if an action produces duplicate named events, the active participant is classified incorrectly, a placeholder produces an error, or events continue from the wrong scene.

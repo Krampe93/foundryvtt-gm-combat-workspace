@@ -23,7 +23,10 @@ jobs:
         run: node tools/validate.mjs
 
       - name: Check JavaScript syntax
-        run: find scripts tools -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
+        run: find scripts tests tools -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
+
+      - name: Run unit tests
+        run: node --test
 
       - name: Build Foundry test package
         shell: pwsh
@@ -32,6 +35,6 @@ jobs:
       - name: Upload Foundry test package
         uses: actions/upload-artifact@v4
         with:
-          name: gm-combat-workspace-stage-0
+          name: gm-combat-workspace-test-build
           path: dist/gm-combat-workspace.zip
           if-no-files-found: error

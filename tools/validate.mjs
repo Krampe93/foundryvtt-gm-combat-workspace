@@ -100,7 +100,10 @@ if (manifest) {
 
   await Promise.all(referencedFiles.map((path) => fileExists(path, "module.json")));
 
-  const javaScriptFiles = await findJavaScriptFiles("scripts");
+  const javaScriptFiles = [
+    ...await findJavaScriptFiles("scripts"),
+    ...await findJavaScriptFiles("tests")
+  ];
   await Promise.all(javaScriptFiles.map(validateRelativeImports));
 }
 

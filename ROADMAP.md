@@ -49,7 +49,7 @@ Das Modul muss ohne diese optionalen Module starten und alle nativen D&D5e-Grund
 
 ## Etappe 0 – Entwicklungs- und Testfundament
 
-**Status:** `[~]` – Implementiert, wartet auf Foundry-Abnahme
+**Status:** `[x]` – Abgenommen am 2026-07-30
 
 ### Ziel
 
@@ -126,7 +126,7 @@ gm-combat-workspace/
 
 ## Etappe 1 – Zentraler Combat Coordinator
 
-**Status:** `[ ]`
+**Status:** `[~]` – Implementiert, wartet auf Foundry-Abnahme
 
 ### Ziel
 
@@ -757,5 +757,7 @@ Diese Punkte sind ausdrücklich nicht Teil der ersten stabilen Version, sofern s
 
 | Datum | Änderung | Entscheidung |
 |---|---|---|
+| 2026-07-30 | Etappe 1 implementiert | Wartet auf Foundry-Abnahme |
+| 2026-07-30 | Etappe 0 abgenommen | Freigegeben |
 | 2026-07-30 | Etappe 0 implementiert | Wartet auf Foundry-Abnahme |
 | 2026-07-29 | Erste Roadmap erstellt | Noch nicht abgenommen |
