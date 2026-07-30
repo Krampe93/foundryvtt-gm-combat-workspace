@@ -21,7 +21,8 @@ jobs:
       - name: Validate module
         run: |
           node tools/validate.mjs
-          find scripts tools -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
+          find scripts tests tools -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
+          node --test
 
       - name: Build Foundry package
         shell: pwsh

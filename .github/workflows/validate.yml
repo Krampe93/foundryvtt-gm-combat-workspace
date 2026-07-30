@@ -23,7 +23,10 @@ jobs:
         run: node tools/validate.mjs
 
       - name: Check JavaScript syntax
-        run: find scripts tools -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
+        run: find scripts tests tools -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
+
+      - name: Run unit tests
+        run: node --test
 
       - name: Build Foundry test package
         shell: pwsh
