@@ -13,50 +13,89 @@ if ($manifest.id -ne 'gm-combat-workspace') {
 }
 
 $resolvedOutput = [System.IO.Path]::GetFullPath($OutputDirectory)
-$stagingRoot = Join-Path ([System.IO.Path]::GetTempPath()) (
-  'gm-combat-workspace-package-' + [guid]::NewGuid().ToString('N')
-)
-$moduleStage = Join-Path $stagingRoot $manifest.id
 $zipPath = Join-Path $resolvedOutput ($manifest.id + '.zip')
 
-try {
-  New-Item -ItemType Directory -Path $moduleStage -Force | Out-Null
-  New-Item -ItemType Directory -Path $resolvedOutput -Force | Out-Null
+$files = @(
+  '.gitignore',
+  'CHANGELOG.md',
+  'LICENSE',
+  'README.md',
+  'ROADMAP.md',
+  'TESTING.md',
+  'module.json'
+)
 
-  $files = @(
-    '.gitignore',
-    'CHANGELOG.md',
-    'LICENSE',
-    'README.md',
-    'ROADMAP.md',
-    'TESTING.md',
-    'module.json'
-  )
-  $directories = @('lang', 'scripts', 'styles')
+foreach ($directory in @('lang', 'scripts', 'styles')) {
+  $directoryPath = Join-Path $moduleRoot $directory
 
-  foreach ($file in $files) {
-    Copy-Item -LiteralPath (Join-Path $moduleRoot $file) -Destination $moduleStage
-  }
-
-  foreach ($directory in $directories) {
-    Copy-Item -LiteralPath (Join-Path $moduleRoot $directory) -Destination $moduleStage -Recurse
-  }
-
-  if (Test-Path -LiteralPath $zipPath) {
-    Remove-Item -LiteralPath $zipPath
-  }
-
-  Compress-Archive -LiteralPath $moduleStage -DestinationPath $zipPath
-  Write-Output $zipPath
+  $files += Get-ChildItem -LiteralPath $directoryPath -Recurse -File |
+    ForEach-Object {
+      $_.FullName.Substring($moduleRoot.Length).TrimStart(
+        [System.IO.Path]::DirectorySeparatorChar,
+        [System.IO.Path]::AltDirectorySeparatorChar
+      )
+    }
 }
-finally {
-  if (Test-Path -LiteralPath $stagingRoot) {
-    $resolvedStaging = (Resolve-Path -LiteralPath $stagingRoot).Path
-    $resolvedTemp = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath())
 
-    if ($resolvedStaging.StartsWith($resolvedTemp) -and
-        $resolvedStaging -like '*gm-combat-workspace-package-*') {
-      Remove-Item -LiteralPath $resolvedStaging -Recurse
+$files = $files | Sort-Object -Unique
+
+New-Item -ItemType Directory -Path $resolvedOutput -Force | Out-Null
+
+if (Test-Path -LiteralPath $zipPath) {
+  Remove-Item -LiteralPath $zipPath
+}
+
+Add-Type -AssemblyName System.IO.Compression
+
+$zipStream = [System.IO.File]::Open(
+  $zipPath,
+  [System.IO.FileMode]::CreateNew,
+  [System.IO.FileAccess]::ReadWrite,
+  [System.IO.FileShare]::None
+)
+
+try {
+  $archive = [System.IO.Compression.ZipArchive]::new(
+    $zipStream,
+    [System.IO.Compression.ZipArchiveMode]::Create,
+    $true
+  )
+
+  try {
+    foreach ($relativePath in $files) {
+      $sourcePath = Join-Path $moduleRoot $relativePath
+      $entryPath = (
+        $manifest.id + '/' + $relativePath.Replace('\', '/')
+      )
+
+      $entry = $archive.CreateEntry(
+        $entryPath,
+        [System.IO.Compression.CompressionLevel]::Optimal
+      )
+
+      # A fixed timestamp makes repeated builds byte-stable.
+      $entry.LastWriteTime = [DateTimeOffset]::new(
+        2026, 1, 1, 0, 0, 0, [TimeSpan]::Zero
+      )
+
+      $sourceStream = [System.IO.File]::OpenRead($sourcePath)
+      $entryStream = $entry.Open()
+
+      try {
+        $sourceStream.CopyTo($entryStream)
+      }
+      finally {
+        $entryStream.Dispose()
+        $sourceStream.Dispose()
+      }
     }
   }
+  finally {
+    $archive.Dispose()
+  }
 }
+finally {
+  $zipStream.Dispose()
+}
+
+Write-Output $zipPath
