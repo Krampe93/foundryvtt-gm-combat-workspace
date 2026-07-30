@@ -8,6 +8,16 @@ The implementation order, manual Foundry test cases, and acceptance gates are ma
 
 The current manual acceptance checklist is maintained in [TESTING.md](TESTING.md).
 
+## Installation
+
+In Foundry VTT, open **Add-on Modules → Install Module**, paste the following URL into **Manifest URL**, and select **Install**:
+
+```text
+https://github.com/Krampe93/foundryvtt-gm-combat-workspace/releases/download/v0.1.0/module.json
+```
+
+Version `0.1.0` is the Stage 0 test release. It contains the development foundation and settings, but no combat features yet.
+
 ## Development
 
 Validate the manifest, referenced files, optional-dependency policy, and matching translation keys:
