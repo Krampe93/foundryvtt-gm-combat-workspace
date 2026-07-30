@@ -13,7 +13,7 @@ Record the result of each item as:
 ### A. Installation
 
 - [ ] Open the Stage 0 pull request and its successful **Validate module** workflow.
-- [ ] Download the `gm-combat-workspace-stage-0` artifact from the workflow run.
+- [ ] Download the `gm-combat-workspace-test-build` artifact from the workflow run.
 - [ ] Extract the artifact wrapper and locate `gm-combat-workspace.zip`.
 - [ ] Confirm that the ZIP contains one top-level folder named `gm-combat-workspace`.
 - [ ] Copy or extract that folder into Foundry's `Data/modules` directory.

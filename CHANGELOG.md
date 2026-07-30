@@ -2,7 +2,9 @@
 
 All notable changes to GM Combat Workspace will be documented in this file.
 
-## [Unreleased]
+## [0.2.0] - 2026-07-30
+
+Stage 1 test release. Manual Foundry acceptance is still pending.
 
 ### Added
 

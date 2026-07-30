@@ -2,7 +2,7 @@
   "id": "gm-combat-workspace",
   "title": "GM Combat Workspace",
   "description": "A focused Foundry VTT combat workspace for enemy management, reactions, legendary actions, statblocks, and hidden movement tracking.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "authors": [
     {
       "name": "Tim"
@@ -53,8 +53,8 @@
       "path": "lang/en.json"
     }
   ],
-  "manifest": "https://github.com/Krampe93/foundryvtt-gm-combat-workspace/releases/download/v0.1.0/module.json",
-  "download": "https://github.com/Krampe93/foundryvtt-gm-combat-workspace/releases/download/v0.1.0/gm-combat-workspace.zip",
+  "manifest": "https://raw.githubusercontent.com/Krampe93/foundryvtt-gm-combat-workspace/main/module.json",
+  "download": "https://github.com/Krampe93/foundryvtt-gm-combat-workspace/releases/download/v0.2.0/gm-combat-workspace.zip",
   "license": "LICENSE",
   "readme": "README.md"
 }
