@@ -18,7 +18,7 @@ https://raw.githubusercontent.com/Krampe93/foundryvtt-gm-combat-workspace/main/m
 
 This manifest URL is permanent. Foundry can use it to discover and install future test versions through the normal update function.
 
-Version `0.4.0` is the Stage 2B native-statblock test release. The companion window now embeds the selected or active NPC's configured native Actor Sheet on the left and provides selection-source and pin controls on the right. The full enemy dashboard is intentionally not part of this test yet.
+Version `0.4.1` is the Stage 2B native-statblock test release. The companion window embeds the selected or active NPC's configured native Actor Sheet on the left and provides selection-source and pin controls on the right. The full enemy dashboard is intentionally not part of this test yet.
 
 ## Development
 

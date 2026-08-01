@@ -34,7 +34,7 @@ function displayValue(value, fallback = "–") {
 }
 
 function applicationElement(application, renderedHtml = null) {
-  const candidate = application?.element ?? renderedHtml ?? null;
+  const candidate = renderedHtml ?? application?.element ?? null;
   if (!candidate) return null;
   if (candidate instanceof HTMLElement) return candidate;
   if (candidate?.jquery && candidate[0] instanceof HTMLElement) return candidate[0];
@@ -231,7 +231,8 @@ export class WorkspaceBridge {
   #registerSheetHooks() {
     for (const hookName of ["renderActorSheet", "renderActorSheetV2"]) {
       const hookId = Hooks.on(hookName, (application, html) => {
-        if (!this.#workspaceMode || application?.actor !== this.#displayedActor) return;
+        const actor = application?.actor ?? application?.document ?? application?.object ?? null;
+        if (!this.#workspaceMode || actor !== this.#displayedActor) return;
         this.#mountSheet(application, html);
       });
       this.#sheetRenderHooks.push([hookName, hookId]);
@@ -292,6 +293,15 @@ export class WorkspaceBridge {
   async #clickedSelection() {
     const selection = this.#selectedToken;
     if (selection?.actorType !== "npc") return null;
+
+    const snapshot = this.#getSnapshot?.();
+    if (
+      snapshot?.activeType === "npc" &&
+      selection.tokenId &&
+      selection.tokenId === snapshot.activeTokenId
+    ) {
+      return this.#activeSelection();
+    }
 
     const scene = game.scenes?.get(selection.sceneId) ?? null;
     const tokenDocument = scene?.tokens?.get(selection.tokenId) ?? null;

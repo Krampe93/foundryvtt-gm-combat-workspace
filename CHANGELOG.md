@@ -2,6 +2,14 @@
 
 All notable changes to GM Combat Workspace will be documented in this file.
 
+## [0.4.1] - 2026-08-01
+
+### Fixed
+
+- An automatically controlled active NPC token is now labeled **Aktiver Kampfteilnehmer** instead of **Auf Laptop angeklickt**
+- Native sheet rerenders now mount the freshly rendered element instead of retaining a stale, empty sheet frame
+- Actor resolution in sheet-render hooks now supports `actor`, `document`, and `object` application properties
+
 ## [0.4.0] - 2026-08-01
 
 Stage 2B native-statblock test release.
