@@ -58,6 +58,7 @@ export class WorkspaceBridge {
   #pinnedSelection = null;
   #displayedActor = null;
   #displayedSheet = null;
+  #preparedSheetElements = new WeakSet();
   #selectionRevision = 0;
   #workspaceMode = isWorkspaceWindow();
   #workspaceWindow = null;
@@ -268,7 +269,7 @@ export class WorkspaceBridge {
   #releaseStaleModifiers() {
     if (!this.#workspaceMode) return;
 
-    for (const [key, code] of [
+    const modifierKeys = [
       ["Control", "ControlLeft"],
       ["Control", "ControlRight"],
       ["Alt", "AltLeft"],
@@ -277,13 +278,26 @@ export class WorkspaceBridge {
       ["Shift", "ShiftRight"],
       ["Meta", "MetaLeft"],
       ["Meta", "MetaRight"]
-    ]) {
+    ];
+
+    for (const [key, code] of modifierKeys) {
+      game.keyboard?.downKeys?.delete?.(code);
       window.dispatchEvent(new KeyboardEvent("keyup", {
         key,
         code,
         bubbles: true
       }));
     }
+  }
+
+  #prepareSheetElement(element) {
+    if (this.#preparedSheetElements.has(element)) return;
+    this.#preparedSheetElements.add(element);
+
+    element.addEventListener("click", (event) => {
+      if (event.altKey || event.ctrlKey || event.shiftKey || event.metaKey) return;
+      this.#releaseStaleModifiers();
+    }, { capture: true });
   }
 
   #broadcastControlledToken() {
@@ -465,6 +479,7 @@ export class WorkspaceBridge {
     if (!host || !element) return;
 
     element.classList.add("gm-workspace-embedded-sheet");
+    this.#prepareSheetElement(element);
     if (element.parentElement !== document.body) document.body.append(element);
     host.classList.add("has-embedded-sheet");
     this.#positionSheetElement(element, host);

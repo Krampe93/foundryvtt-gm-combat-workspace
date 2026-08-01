@@ -205,13 +205,13 @@ Do not approve Stage 2A if the second window disconnects the main GM client, com
 
 ---
 
-## Stage 2B – Native statblock workspace (0.4.3)
+## Stage 2B – Native statblock workspace (0.4.4)
 
 Complete Stage 2A first. Use the laptop for the map and the companion window on the second monitor.
 
 ### A. Update and layout
 
-- [ ] Update GM Combat Workspace and confirm version `0.4.3`.
+- [ ] Update GM Combat Workspace and confirm version `0.4.4`.
 - [ ] Hard-reload both Foundry windows once with Ctrl+F5.
 - [ ] Open the companion workspace.
 - [ ] Confirm that the left statblock area occupies roughly 60 percent of the width.

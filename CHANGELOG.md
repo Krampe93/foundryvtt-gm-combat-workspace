@@ -2,6 +2,14 @@
 
 All notable changes to GM Combat Workspace will be documented in this file.
 
+## [0.4.4] - 2026-08-01
+
+### Fixed
+
+- Clears stale modifier codes directly from the companion client's `game.keyboard.downKeys` set
+- Normal unmodified statblock clicks clear stale Control, Alt, Shift, and Meta state before D&D5e evaluates advantage or disadvantage
+- Explicitly held modifier keys are preserved so intentional roll shortcuts continue to work
+
 ## [0.4.3] - 2026-08-01
 
 ### Fixed
