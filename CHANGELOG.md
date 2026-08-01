@@ -2,6 +2,12 @@
 
 All notable changes to GM Combat Workspace will be documented in this file.
 
+## [0.3.2] - 2026-08-01
+
+### Fixed
+
+- Reusing the launcher now focuses an open companion window without navigating or reloading the Foundry client
+
 ## [0.3.1] - 2026-08-01
 
 ### Fixed

@@ -42,6 +42,7 @@ export class WorkspaceBridge {
   #root = null;
   #selectedToken = null;
   #workspaceMode = isWorkspaceWindow();
+  #workspaceWindow = null;
 
   constructor({ eventBus, getSnapshot, logger = createLogger("WorkspaceBridge") }) {
     this.#eventBus = eventBus;
@@ -93,9 +94,15 @@ export class WorkspaceBridge {
   }
 
   openWorkspace() {
+    if (this.#workspaceWindow && !this.#workspaceWindow.closed) {
+      this.#workspaceWindow.focus();
+      return true;
+    }
+
+    const target = `${MODULE_ID}-companion`;
     const popup = window.open(
-      workspaceUrl(),
-      `${MODULE_ID}-companion`,
+      "",
+      target,
       "popup=yes,width=1400,height=900,resizable=yes,scrollbars=yes"
     );
 
@@ -104,6 +111,17 @@ export class WorkspaceBridge {
       return false;
     }
 
+    let alreadyWorkspace = false;
+    try {
+      const currentUrl = new URL(popup.location.href);
+      alreadyWorkspace = currentUrl.searchParams.get(WORKSPACE_PARAMETER) === "1";
+    } catch (_error) {
+      alreadyWorkspace = false;
+    }
+
+    if (!alreadyWorkspace) popup.location.href = workspaceUrl();
+
+    this.#workspaceWindow = popup;
     popup.focus();
     return true;
   }
@@ -219,4 +237,3 @@ export class WorkspaceBridge {
     this.#set("selected-token-id", this.#selectedToken?.tokenId);
   }
 }
-

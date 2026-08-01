@@ -148,7 +148,7 @@ Use the normal GM Foundry window as the laptop/map window. The newly opened comp
 
 ### A. Update and startup
 
-- [ ] Update GM Combat Workspace through Foundry and confirm version `0.3.1`.
+- [ ] Update GM Combat Workspace through Foundry and confirm version `0.3.2`.
 - [ ] Activate the module and reload the world.
 - [ ] Confirm that exactly one **GM Workspace öffnen** button appears at the lower-left edge.
 - [ ] Confirm that the normal map remains usable and no existing Foundry control is blocked.
