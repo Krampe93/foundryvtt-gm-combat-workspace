@@ -126,7 +126,7 @@ gm-combat-workspace/
 
 ## Etappe 1 – Zentraler Combat Coordinator
 
-**Status:** `[~]` – Implementiert, wartet auf Foundry-Abnahme
+**Status:** `[x]` – Abgenommen am 2026-08-01
 
 ### Ziel
 
@@ -757,6 +757,7 @@ Diese Punkte sind ausdrücklich nicht Teil der ersten stabilen Version, sofern s
 
 | Datum | Änderung | Entscheidung |
 |---|---|---|
+| 2026-08-01 | Etappe 1 in Foundry 14.360 / D&D5e 5.3.2 geprüft | Freigegeben |
 | 2026-07-30 | Etappe 1 implementiert | Wartet auf Foundry-Abnahme |
 | 2026-07-30 | Etappe 0 abgenommen | Freigegeben |
 | 2026-07-30 | Etappe 0 implementiert | Wartet auf Foundry-Abnahme |
