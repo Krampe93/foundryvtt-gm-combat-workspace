@@ -294,15 +294,15 @@ Do not approve Stage 2B if the configured native sheet cannot be embedded, its a
 
 ---
 
-## Stage 3 – Encounter dashboard (0.5.2)
+## Stage 3 – Encounter dashboard (0.5.3)
 
 Complete and approve Stage 2B first. Keep the map on the laptop and the companion workspace maximized on the second monitor.
 
 ### A. Layout and empty states
 
-- [ ] Update GM Combat Workspace and confirm version `0.5.2`.
+- [ ] Update GM Combat Workspace and confirm version `0.5.3` in Foundry and in the workspace header.
 - [ ] Hard-reload both Foundry windows once with Ctrl+F5.
-- [ ] Confirm that the native statblock uses roughly 35 percent and the dashboard roughly 65 percent of the companion width.
+- [ ] Confirm that the native statblock uses roughly 40 percent and the dashboard roughly 60 percent of the companion width.
 - [ ] Confirm that the Adult Red Dragon sheet remains readable, scrollable, and clickable in the narrower column.
 - [ ] Without an encounter, confirm that the dashboard shows a clear empty state.
 - [ ] With an encounter containing no undefeated NPCs, confirm that no enemy rows appear.
@@ -358,5 +358,6 @@ Do not approve Stage 3 if the dashboard moves the laptop camera, selects the wro
 - [ ] Hide and reveal a token and confirm an immediate `Versteckt`/`Bereit` update.
 - [ ] On an unlinked token, set HP to zero through the token HUD and confirm that Dead/Bloodied is applied without duplicate ActorDelta errors.
 - [ ] Repeat the HP-zero test with a linked token.
+- [ ] Heal a defeated unlinked token through the token HUD and confirm that Dead/Bloodied is removed without `ActiveEffect does not exist` errors.
 - [ ] End the encounter and confirm that pin, statblock, dashboard rows, token colors, hover, and laptop token selection all clear.
 - [ ] Start a new encounter and confirm that no enemy from the previous encounter remains selected or pinned.

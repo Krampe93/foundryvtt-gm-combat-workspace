@@ -18,7 +18,7 @@ https://raw.githubusercontent.com/Krampe93/foundryvtt-gm-combat-workspace/main/m
 
 This manifest URL is permanent. Foundry can use it to discover and install future test versions through the normal update function.
 
-Version `0.5.2` uses a 35/65 statblock-dashboard split and strengthens the companion-only guard against duplicate automatic D&D5e Dead/Bloodied effects by identifying the canonical effect ids independently of Foundry's temporary parent representation.
+Version `0.5.3` uses a 40/60 statblock-dashboard split, displays the exact installed manifest version, and prevents the companion client from duplicating both creation and deletion of automatic D&D5e Dead/Bloodied effects.
 
 ## Development
 

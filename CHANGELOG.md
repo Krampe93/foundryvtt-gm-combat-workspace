@@ -2,6 +2,15 @@
 
 All notable changes to GM Combat Workspace will be documented in this file.
 
+## [0.5.3] - 2026-08-01
+
+### Fixed
+
+- Expands the native statblock column to 40 percent with a 760 pixel minimum width
+- Displays the exact installed module version from the Foundry manifest in the workspace header
+- Prevents the companion client from issuing duplicate automatic D&D5e Dead/Bloodied deletions when a defeated token is healed
+- Keeps both creation and deletion guards limited to the companion client and the canonical Dead/Bloodied ids
+
 ## [0.5.2] - 2026-08-01
 
 ### Fixed

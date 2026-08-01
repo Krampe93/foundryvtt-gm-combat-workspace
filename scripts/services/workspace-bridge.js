@@ -75,6 +75,7 @@ export class WorkspaceBridge {
   #controlTokenHook = null;
   #canvasReadyHook = null;
   #systemStatusGuardHook = null;
+  #systemStatusDeleteGuardHook = null;
   #rollAttackHook = null;
   #sheetRenderHooks = [];
   #sheetDiagnosticHooks = [];
@@ -144,6 +145,11 @@ export class WorkspaceBridge {
         this.#recordSheetDebug("duplicate system status blocked", { effectId, parentName });
         return false;
       });
+      this.#systemStatusDeleteGuardHook = Hooks.on("preDeleteActiveEffect", (effect) => {
+        if (!isAutomaticActorDeltaStatus(effect)) return;
+        this.#recordSheetDebug("duplicate system status deletion blocked", { effectId: effect?.id ?? null });
+        return false;
+      });
     }
 
     if (this.#workspaceMode) {
@@ -177,6 +183,11 @@ export class WorkspaceBridge {
     if (this.#systemStatusGuardHook !== null) {
       Hooks.off("preCreateActiveEffect", this.#systemStatusGuardHook);
       this.#systemStatusGuardHook = null;
+    }
+
+    if (this.#systemStatusDeleteGuardHook !== null) {
+      Hooks.off("preDeleteActiveEffect", this.#systemStatusDeleteGuardHook);
+      this.#systemStatusDeleteGuardHook = null;
     }
 
     if (this.#rollAttackHook !== null) {
@@ -267,7 +278,7 @@ export class WorkspaceBridge {
       <header class="gm-workspace-header">
         <div>
           <h1>GM Combat Workspace</h1>
-          <p>Statblock und Gegnerübersicht · Version 0.5</p>
+          <p>Statblock und Gegnerübersicht · Version ${game.modules.get(MODULE_ID)?.version ?? "–"}</p>
         </div>
         <span class="gm-workspace-status">Verbunden</span>
       </header>
