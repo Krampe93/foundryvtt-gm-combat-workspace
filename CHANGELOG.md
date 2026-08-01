@@ -2,6 +2,23 @@
 
 All notable changes to GM Combat Workspace will be documented in this file.
 
+## [0.5.0] - 2026-08-01
+
+### Added
+
+- Stage 3 encounter dashboard in the right 70 percent of the companion workspace
+- Live list of undefeated NPC combatants with active, hidden, and scene-presence states
+- Stable per-combatant colors shared by dashboard rows and local laptop-token outlines
+- Dashboard click selects the laptop token and displays its native statblock without moving the camera
+- Dashboard hover highlights the matching laptop token without selecting it
+- Empty states for encounters without available enemies
+
+### Changed
+
+- Native statblock column now uses 30 percent of the companion workspace
+- Defeated enemies are removed from the dashboard and their local color outline is removed
+- Diagnostic panels are collapsed behind an optional details section
+
 ## [0.4.9] - 2026-08-01
 
 ### Fixed

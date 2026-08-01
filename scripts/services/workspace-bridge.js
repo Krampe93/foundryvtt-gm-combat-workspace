@@ -33,6 +33,27 @@ function displayValue(value, fallback = "–") {
   return value === null || value === undefined || value === "" ? fallback : String(value);
 }
 
+function combatantColor(id = "") {
+  let hash = 0;
+  for (const character of String(id)) hash = ((hash << 5) - hash + character.charCodeAt(0)) | 0;
+  const hue = Math.abs(hash) % 360;
+  const saturation = 68;
+  const lightness = 58;
+  const chroma = (1 - Math.abs((2 * lightness / 100) - 1)) * saturation / 100;
+  const segment = hue / 60;
+  const secondary = chroma * (1 - Math.abs((segment % 2) - 1));
+  const [red, green, blue] = segment < 1 ? [chroma, secondary, 0]
+    : segment < 2 ? [secondary, chroma, 0]
+      : segment < 3 ? [0, chroma, secondary]
+        : segment < 4 ? [0, secondary, chroma]
+          : segment < 5 ? [secondary, 0, chroma]
+            : [chroma, 0, secondary];
+  const match = lightness / 100 - chroma / 2;
+  return `#${[red, green, blue]
+    .map((value) => Math.round((value + match) * 255).toString(16).padStart(2, "0"))
+    .join("")}`;
+}
+
 function applicationElement(application, renderedHtml = null) {
   const candidate = renderedHtml ?? application?.element ?? null;
   if (!candidate) return null;
@@ -49,6 +70,7 @@ export class WorkspaceBridge {
   #channel = null;
   #unsubscribe = null;
   #controlTokenHook = null;
+  #canvasReadyHook = null;
   #rollAttackHook = null;
   #sheetRenderHooks = [];
   #sheetDiagnosticHooks = [];
@@ -73,6 +95,8 @@ export class WorkspaceBridge {
   #sheetDebug = [];
   #workspaceMode = isWorkspaceWindow();
   #workspaceWindow = null;
+  #tokenColorOverlays = new Map();
+  #hoveredToken = null;
 
   constructor({ eventBus, getSnapshot, logger = createLogger("WorkspaceBridge") }) {
     this.#eventBus = eventBus;
@@ -90,11 +114,17 @@ export class WorkspaceBridge {
     this.#unsubscribe = this.#eventBus.on("combatStateChanged", () => {
       this.#render();
       this.#broadcastState();
+      this.#syncTokenColors();
     });
 
     this.#controlTokenHook = Hooks.on("controlToken", () => {
       if (this.#workspaceMode) return;
       queueMicrotask(() => this.#broadcastControlledToken());
+    });
+
+    this.#canvasReadyHook = Hooks.on("canvasReady", () => {
+      this.#clearTokenColors();
+      this.#syncTokenColors();
     });
 
     if (this.#workspaceMode) {
@@ -108,6 +138,7 @@ export class WorkspaceBridge {
     }
 
     this.#render();
+    this.#syncTokenColors();
   }
 
   stop() {
@@ -117,6 +148,11 @@ export class WorkspaceBridge {
     if (this.#controlTokenHook !== null) {
       Hooks.off("controlToken", this.#controlTokenHook);
       this.#controlTokenHook = null;
+    }
+
+    if (this.#canvasReadyHook !== null) {
+      Hooks.off("canvasReady", this.#canvasReadyHook);
+      this.#canvasReadyHook = null;
     }
 
     if (this.#rollAttackHook !== null) {
@@ -145,7 +181,9 @@ export class WorkspaceBridge {
     }
 
 
+    if (this.#workspaceMode) this.#channel?.postMessage({ type: "hoverToken", active: false });
     this.#closeDisplayedSheet();
+    this.#clearTokenColors();
     this.#channel?.close();
     this.#channel = null;
     this.#root?.remove();
@@ -205,7 +243,7 @@ export class WorkspaceBridge {
       <header class="gm-workspace-header">
         <div>
           <h1>GM Combat Workspace</h1>
-          <p>Statblock-Arbeitsplatz · Version 0.4</p>
+          <p>Statblock und Gegnerübersicht · Version 0.5</p>
         </div>
         <span class="gm-workspace-status">Verbunden</span>
       </header>
@@ -225,17 +263,18 @@ export class WorkspaceBridge {
             </div>
           </div>
         </section>
-        <aside class="gm-workspace-context-panel">
-          <section>
-            <h2>Auswahlkontrolle</h2>
-            <dl>
-              <dt>Aktiver Teilnehmer</dt><dd data-field="active-name">–</dd>
-              <dt>Typ</dt><dd data-field="active-type">–</dd>
-              <dt>Auf Laptop angeklickt</dt><dd data-field="selected-name">–</dd>
-              <dt>Angezeigt durch</dt><dd data-field="selection-source-detail">Keine Auswahl</dd>
-            </dl>
+        <aside class="gm-workspace-context-panel" aria-label="Gegnerübersicht">
+          <section class="gm-workspace-enemies">
+            <header class="gm-workspace-enemy-header">
+              <div>
+                <span class="gm-workspace-eyebrow">Encounter · Runde <span data-field="round">–</span></span>
+                <h2>Gegnerübersicht</h2>
+              </div>
+              <span class="gm-workspace-enemy-count" data-field="enemy-count">0 Gegner</span>
+            </header>
+            <div class="gm-workspace-enemy-list" data-role="enemy-list"></div>
           </section>
-          <section>
+          <section class="gm-workspace-controls">
             <h2>Statblock-Steuerung</h2>
             <button type="button" class="gm-workspace-pin" data-action="toggle-pin" disabled>
               <i class="fa-solid fa-thumbtack" aria-hidden="true"></i>
@@ -243,34 +282,32 @@ export class WorkspaceBridge {
             </button>
             <p class="gm-workspace-help">Ein angepinnter Gegner bleibt sichtbar, auch wenn sich Zug oder Tokenauswahl ändern.</p>
           </section>
-          <section>
-            <h2>Kampf</h2>
-            <dl>
-              <dt>Status</dt><dd data-field="combat-status">–</dd>
-              <dt>Runde</dt><dd data-field="round">–</dd>
-              <dt>Zug</dt><dd data-field="turn">–</dd>
-            </dl>
-          </section>
-          <section class="gm-workspace-future">
-            <h2>Dashboard</h2>
-            <p>Gegnerliste, TP, RK, Bewegung und Rettungswürfe folgen nach Abnahme des nativen Statblocks.</p>
-          </section>
-          <section class="gm-workspace-diagnostics">
+          <details class="gm-workspace-diagnostics">
+            <summary>Diagnose</summary>
+            <section>
             <h2>Roll-Diagnose</h2>
             <p>Zeigt den letzten Workspace-Klick und den daraus entstandenen D&D5e-Angriff.</p>
             <pre data-role="roll-debug">Noch kein Item im Workspace benutzt.</pre>
-          </section>
-          <section class="gm-workspace-diagnostics">
+            </section>
+            <section>
             <h2>Statblock-Diagnose</h2>
             <p>Protokolliert Render-, Actor-Update-, Close- und Container-Ereignisse.</p>
             <pre data-role="sheet-debug">Noch kein Statblock-Ereignis aufgezeichnet.</pre>
-          </section>
+            </section>
+          </details>
         </aside>
       </section>
     `;
 
     root.querySelector('[data-action="toggle-pin"]')
       .addEventListener("click", () => this.#togglePin());
+
+    root.querySelector('[data-role="enemy-list"]')
+      .addEventListener("click", (event) => this.#onEnemyClick(event));
+    root.querySelector('[data-role="enemy-list"]')
+      .addEventListener("pointerover", (event) => this.#onEnemyHover(event, true));
+    root.querySelector('[data-role="enemy-list"]')
+      .addEventListener("pointerout", (event) => this.#onEnemyHover(event, false));
 
     document.body.append(root);
     this.#root = root;
@@ -566,6 +603,175 @@ export class WorkspaceBridge {
     if (message.type === "tokenSelected" && this.#workspaceMode) {
       this.#selectedToken = message.token ?? null;
       this.#render();
+      return;
+    }
+
+    if (message.type === "selectToken" && !this.#workspaceMode) {
+      this.#selectLaptopToken(message);
+      return;
+    }
+
+    if (message.type === "hoverToken" && !this.#workspaceMode) {
+      this.#hoverLaptopToken(message);
+    }
+  }
+
+  #enemyEntries() {
+    const snapshot = this.#getSnapshot?.();
+    if (!snapshot?.combatId) return [];
+    const allEnemies = snapshot.combatants.filter((combatant) => combatant.type === "npc");
+    const totals = new Map();
+    for (const enemy of allEnemies) totals.set(enemy.name, (totals.get(enemy.name) ?? 0) + 1);
+    const occurrences = new Map();
+
+    return allEnemies.map((combatant) => {
+      const occurrence = (occurrences.get(combatant.name) ?? 0) + 1;
+      occurrences.set(combatant.name, occurrence);
+      return {
+        ...combatant,
+        displayName: totals.get(combatant.name) > 1 ? `${combatant.name} ${occurrence}` : combatant.name,
+        sceneId: snapshot.sceneId,
+        active: combatant.id === snapshot.activeCombatantId,
+        onCurrentScene: snapshot.sceneId === canvas?.scene?.id && combatant.tokenPresent,
+        color: combatantColor(combatant.id)
+      };
+    }).filter((combatant) => !combatant.defeated);
+  }
+
+  #renderEnemyList() {
+    const list = this.#root?.querySelector('[data-role="enemy-list"]');
+    if (!list) return;
+    const entries = this.#enemyEntries();
+    this.#set("enemy-count", `${entries.length} ${entries.length === 1 ? "Gegner" : "Gegner"}`);
+
+    if (!entries.length) {
+      const snapshot = this.#getSnapshot?.();
+      list.innerHTML = `<div class="gm-workspace-enemy-empty">${snapshot?.combatId
+        ? "Keine kampffähigen Gegner im Encounter."
+        : "Kein Encounter auf der aktuellen Szene."}</div>`;
+      return;
+    }
+
+    const selectedTokenId = this.#selectedToken?.tokenId ?? null;
+    list.innerHTML = entries.map((entry) => `
+      <button type="button"
+        class="gm-workspace-enemy${entry.active ? " is-active" : ""}${entry.tokenId === selectedTokenId ? " is-selected" : ""}"
+        style="--gm-enemy-color:${entry.color}"
+        data-combatant-id="${entry.id}"
+        data-token-id="${entry.tokenId ?? ""}"
+        data-scene-id="${entry.sceneId ?? ""}">
+        <span class="gm-workspace-enemy-name">${foundry.utils.escapeHTML(entry.displayName ?? "Unbenannter Gegner")}</span>
+        <span class="gm-workspace-enemy-state">${entry.active ? "Aktiv" : entry.hidden ? "Versteckt" : "Bereit"}</span>
+        <span class="gm-workspace-enemy-meta">${entry.hidden ? "versteckt" : "sichtbar"} · ${entry.onCurrentScene ? "auf Szene" : "nicht auf aktueller Szene"}</span>
+      </button>
+    `).join("");
+  }
+
+  #onEnemyClick(event) {
+    const row = event.target.closest?.("[data-combatant-id]");
+    if (!row) return;
+    const entry = this.#enemyEntries().find(({ id }) => id === row.dataset.combatantId);
+    if (!entry) return;
+    const scene = game.scenes?.get(entry.sceneId) ?? null;
+    const tokenDocument = scene?.tokens?.get(entry.tokenId) ?? null;
+    const actor = tokenDocument?.actor ?? game.actors?.get(entry.actorId) ?? null;
+    if (!actor || actor.type !== "npc") return;
+
+    this.#pinnedSelection = null;
+    this.#selectedToken = {
+      tokenId: entry.tokenId,
+      tokenName: entry.name,
+      actorId: actor.id,
+      actorName: actor.name,
+      actorType: actor.type,
+      sceneId: entry.sceneId
+    };
+    this.#channel?.postMessage({ type: "selectToken", tokenId: entry.tokenId, sceneId: entry.sceneId });
+    this.#render();
+  }
+
+  #onEnemyHover(event, active) {
+    const row = event.target.closest?.("[data-combatant-id]");
+    if (!row) return;
+    if (!active && row.contains(event.relatedTarget)) return;
+    if (active && row.contains(event.relatedTarget)) return;
+    this.#channel?.postMessage({
+      type: "hoverToken",
+      tokenId: row.dataset.tokenId || null,
+      sceneId: row.dataset.sceneId || null,
+      active
+    });
+  }
+
+  #selectLaptopToken({ tokenId, sceneId }) {
+    if (!tokenId || sceneId !== canvas?.scene?.id) return;
+    const token = canvas.tokens?.get(tokenId) ?? null;
+    if (!token) return;
+    token.control({ releaseOthers: true });
+  }
+
+  #hoverLaptopToken({ tokenId, sceneId, active }) {
+    if (this.#hoveredToken && (!active || this.#hoveredToken.id !== tokenId)) {
+      this.#hoveredToken.hover = false;
+      this.#hoveredToken.renderFlags?.set?.({ refreshState: true });
+      this.#hoveredToken = null;
+    }
+    if (!active || !tokenId || sceneId !== canvas?.scene?.id) return;
+    const token = canvas.tokens?.get(tokenId) ?? null;
+    if (!token) return;
+    token.hover = true;
+    token.renderFlags?.set?.({ refreshState: true });
+    this.#hoveredToken = token;
+  }
+
+  #syncTokenColors() {
+    if (this.#workspaceMode || !canvas?.ready) return;
+    const desired = new Map(this.#enemyEntries()
+      .filter(({ tokenId, sceneId }) => tokenId && sceneId === canvas.scene?.id)
+      .map((entry) => [entry.tokenId, entry]));
+
+    for (const [tokenId, overlay] of this.#tokenColorOverlays) {
+      if (desired.has(tokenId)) continue;
+      overlay.destroy?.({ children: true });
+      this.#tokenColorOverlays.delete(tokenId);
+    }
+
+    for (const [tokenId, entry] of desired) {
+      const token = canvas.tokens?.get(tokenId) ?? null;
+      if (!token) continue;
+      this.#drawTokenColor(token, entry);
+    }
+  }
+
+  #drawTokenColor(token, entry) {
+    let overlay = this.#tokenColorOverlays.get(token.id) ?? null;
+    if (!overlay) {
+      overlay = new PIXI.Graphics();
+      overlay.eventMode = "none";
+      overlay.zIndex = 1000;
+      token.addChild(overlay);
+      this.#tokenColorOverlays.set(token.id, overlay);
+    }
+    overlay.clear();
+    const color = Number.parseInt(entry.color.slice(1), 16);
+    const padding = 5;
+    const width = Math.max(1, token.w - padding * 2);
+    const height = Math.max(1, token.h - padding * 2);
+    if (typeof overlay.rect === "function") {
+      overlay.rect(padding, padding, width, height).stroke({ color, width: entry.active ? 6 : 4, alpha: 0.95 });
+    } else {
+      overlay.lineStyle(entry.active ? 6 : 4, color, 0.95);
+      overlay.drawRect(padding, padding, width, height);
+    }
+  }
+
+  #clearTokenColors() {
+    for (const overlay of this.#tokenColorOverlays.values()) overlay.destroy?.({ children: true });
+    this.#tokenColorOverlays.clear();
+    if (this.#hoveredToken) {
+      this.#hoveredToken.hover = false;
+      this.#hoveredToken.renderFlags?.set?.({ refreshState: true });
+      this.#hoveredToken = null;
     }
   }
 
@@ -665,6 +871,7 @@ export class WorkspaceBridge {
     this.#set("active-name", active?.name);
     this.#set("active-type", snapshot?.activeType);
     this.#set("selected-name", this.#selectedToken?.actorName ?? this.#selectedToken?.tokenName);
+    this.#renderEnemyList();
 
     const revision = ++this.#selectionRevision;
     this.#desiredSelection()

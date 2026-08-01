@@ -186,7 +186,7 @@ Im Entwicklungsmodus wird für jedes tatsächlich neue Ereignis genau ein strukt
 
 ## Etappe 2 – Zwei-Monitor-Workspace und nativer Gegner-Statblock
 
-**Status:** `[-]` – Etappe 2A abgenommen, Etappe 2B als Version 0.4.0 im Foundry-Test
+**Status:** `[x]` – Abgenommen am 2026-08-01
 
 ### Ziel
 
@@ -204,7 +204,7 @@ Die Karte und Tokensteuerung bleiben vollständig im Laptop-Fenster. Ein zweiter
 
 ### Etappe 2B – Nativer Statblock
 
-**Status:** `[-]` – Version 0.4.0
+**Status:** `[x]` – Abgenommen mit Version 0.4.9
 
 - endgültiges Zweispalten-Grundlayout im Companion-Fenster
 - nativen, konfigurierten Actor-Sheet-Typ links einbetten
@@ -233,27 +233,26 @@ Das Modul baut keinen Ersatz-Statblock. Angriffe, Features, Rettungswürfe, Rech
 
 ## Etappe 3 – Dashboard-Grundfenster und Gegnerliste
 
-**Status:** `[ ]`
+**Status:** `[-]` – Version 0.5.0 im Foundry-Test
 
 ### Ziel
 
-Ein kompaktes, verschiebbares GM-Fenster bereitstellen, ohne die Map oder Token-Steuerung zu blockieren.
+Die rechte Seite des Companion-Workspaces als Gegnerübersicht bereitstellen, während Karte und Token-Steuerung vollständig auf dem Laptop bleiben.
 
 ### Umfang
 
-- ApplicationV2-basiertes Dashboard
-- Fenster öffnen, schließen und minimieren
-- Position und Größe merken
+- feste Aufteilung: 30 Prozent nativer Statblock und 70 Prozent Dashboard
 - nur für GMs anzeigen
 - Gegner des aktuellen Encounters auflisten
 - Status darstellen:
   - aktiver Zug
   - sichtbar oder versteckt
-  - besiegt
   - Token auf aktueller Szene vorhanden
-- Name anklicken: Token auswählen
-- Name doppelklicken: Statblock öffnen
+- Name anklicken: Token ohne Kamerabewegung auswählen und Statblock anzeigen
+- Doppelklick bewegt die Kamera ebenfalls nicht
 - Hover: Token lokal hervorheben
+- stabile Farbzuordnung zwischen Listenzeile und lokaler Token-Markierung
+- besiegte Gegner sofort ausblenden
 - Aktualisierung bei Actor-, Token-, Combatant- und Combat-Änderungen
 - Aktualisierungen bündeln, um Flackern zu vermeiden
 - leerer Zustand ohne Encounter oder ohne Gegner

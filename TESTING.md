@@ -291,3 +291,59 @@ Run these checks once with a simple NPC and once with the Adult Red Dragon or an
 - [ ] No duplicate sheets, duplicate rolls, or module errors occur.
 
 Do not approve Stage 2B if the configured native sheet cannot be embedded, its actions stop working, it opens on the laptop, selection priority is wrong, or switching NPCs creates duplicate applications.
+
+---
+
+## Stage 3 – Encounter dashboard (0.5.0)
+
+Complete and approve Stage 2B first. Keep the map on the laptop and the companion workspace maximized on the second monitor.
+
+### A. Layout and empty states
+
+- [ ] Update GM Combat Workspace and confirm version `0.5.0`.
+- [ ] Hard-reload both Foundry windows once with Ctrl+F5.
+- [ ] Confirm that the native statblock uses roughly 30 percent and the dashboard roughly 70 percent of the companion width.
+- [ ] Confirm that the Adult Red Dragon sheet remains readable, scrollable, and clickable in the narrower column.
+- [ ] Without an encounter, confirm that the dashboard shows a clear empty state.
+- [ ] With an encounter containing no undefeated NPCs, confirm that no enemy rows appear.
+
+### B. Enemy list and status
+
+- [ ] Add 1, then 10 NPCs and confirm that every undefeated NPC appears exactly once.
+- [ ] Confirm that player characters and placeholder combatants do not appear.
+- [ ] Confirm that the active NPC row is visibly highlighted.
+- [ ] Hide an NPC token and confirm that its row changes to `Versteckt`.
+- [ ] Unhide it and confirm that its row returns to `Bereit`.
+- [ ] Mark an NPC defeated and confirm that its row disappears immediately.
+- [ ] Remove the defeated state and confirm that the row returns with the same color.
+- [ ] Add several identically named NPCs and confirm numbered names such as `Stirge 1`, `Stirge 2`, and `Stirge 3`.
+
+### C. Dashboard selection
+
+- [ ] Click an enemy row once.
+- [ ] Confirm that its native statblock appears on the left.
+- [ ] Confirm that the matching token becomes selected on the laptop.
+- [ ] Confirm that the map position and zoom do not change.
+- [ ] Double-click an enemy row and confirm that the map position and zoom still do not change.
+- [ ] Pin one enemy, then click another dashboard row and confirm that the clicked row becomes the displayed and selected enemy.
+
+### D. Color and hover
+
+- [ ] Confirm that every dashboard row has a colored stripe.
+- [ ] Confirm that the corresponding laptop token has the same colored local outline.
+- [ ] Confirm that players do not see these GM-local outlines.
+- [ ] Hover an enemy row and confirm that only its matching laptop token is highlighted.
+- [ ] Move the pointer away and confirm that the temporary hover highlight disappears.
+- [ ] Confirm that hovering never selects a token or moves the camera.
+- [ ] Change turns and confirm that colors stay assigned to the same combatants.
+
+### E. Live updates and stability
+
+- [ ] Add and remove an NPC while the dashboard is open and confirm an immediate clean update.
+- [ ] Advance through NPCs, players, grouped entries, and placeholders.
+- [ ] Move tokens and confirm that their color outlines follow them.
+- [ ] Open or focus the workspace repeatedly and confirm that no duplicate dashboard appears.
+- [ ] Complete one encounter round and confirm that both windows remain responsive.
+- [ ] Confirm that no red `gm-combat-workspace` error appears in either F12 console.
+
+Do not approve Stage 3 if the dashboard moves the laptop camera, selects the wrong token, shows defeated enemies, duplicates equal-name enemies, loses color assignments during ordinary turn changes, or interferes with native statblock actions.

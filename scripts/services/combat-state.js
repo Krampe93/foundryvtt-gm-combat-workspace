@@ -59,6 +59,7 @@ function summarizeCombatant(combatant, scene) {
     actorId: actor?.id ?? combatant.actorId ?? null,
     actorUuid: actor?.uuid ?? null,
     tokenId: token?.id ?? combatant.tokenId ?? null,
+    tokenPresent: Boolean(token),
     initiative: combatant.initiative ?? null,
     hidden: Boolean(combatant.hidden ?? token?.hidden),
     defeated: Boolean(combatant.defeated ?? combatant.isDefeated)

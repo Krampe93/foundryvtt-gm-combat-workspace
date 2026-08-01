@@ -27,6 +27,7 @@ function combatant({
   tokenId = null,
   initiative = null,
   hidden = false,
+  defeated = false,
   flags = {}
 }) {
   return {
@@ -37,6 +38,7 @@ function combatant({
     tokenId,
     initiative,
     hidden,
+    defeated,
     getFlag(moduleId, key) {
       return flags[moduleId]?.[key];
     }
@@ -133,6 +135,28 @@ test("creates a resolved active NPC snapshot", () => {
   assert.equal(snapshot.activeHidden, true);
   assert.equal(snapshot.context.actor, npc.actor);
   assert.equal(snapshot.context.token.id, "goblin-token");
+  assert.equal(snapshot.combatants[0].tokenPresent, true);
+});
+
+test("preserves hidden and defeated enemy states for the dashboard", () => {
+  const hiddenNpc = combatant({
+    id: "hidden-npc",
+    actor: actor("hidden-actor", "npc"),
+    tokenId: "hidden-token",
+    hidden: true
+  });
+  const defeatedNpc = combatant({
+    id: "defeated-npc",
+    actor: actor("defeated-actor", "npc"),
+    tokenId: "defeated-token",
+    defeated: true
+  });
+  const snapshot = createCombatSnapshot(combat({ entries: [hiddenNpc, defeatedNpc] }));
+
+  assert.equal(snapshot.combatants[0].hidden, true);
+  assert.equal(snapshot.combatants[0].defeated, false);
+  assert.equal(snapshot.combatants[1].hidden, false);
+  assert.equal(snapshot.combatants[1].defeated, true);
 });
 
 test("emits combat start and active combatant once", () => {

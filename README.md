@@ -18,7 +18,7 @@ https://raw.githubusercontent.com/Krampe93/foundryvtt-gm-combat-workspace/main/m
 
 This manifest URL is permanent. Foundry can use it to discover and install future test versions through the normal update function.
 
-Version `0.4.9` keeps successfully used features from minimizing the embedded statblock and exposes Foundry's native notifications inside the companion workspace. Recharge handling is recorded in the roadmap for a later stage.
+Version `0.5.0` adds the Stage 3 encounter dashboard to the companion workspace. It lists all undefeated NPC combatants, keeps stable color assignments between list entries and laptop tokens, and selects a token plus its statblock without moving the map camera.
 
 ## Development
 
