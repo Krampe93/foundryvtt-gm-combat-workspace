@@ -34,8 +34,14 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
 }
 
-body.gm-combat-workspace-companion > :not(#gm-combat-workspace-shell) {
+body.gm-combat-workspace-companion > :not(#gm-combat-workspace-shell):not(#notifications):not(.notifications) {
   display: none !important;
+}
+
+body.gm-combat-workspace-companion > #notifications,
+body.gm-combat-workspace-companion > .notifications {
+  display: flex !important;
+  z-index: 100010 !important;
 }
 
 #gm-combat-workspace-shell {
@@ -244,6 +250,14 @@ body.gm-combat-workspace-companion > :not(#gm-combat-workspace-shell) {
   margin: 0 !important;
   transform: none !important;
   box-shadow: none !important;
+}
+
+#gm-combat-workspace-shell .gm-workspace-embedded-sheet.minimizing,
+#gm-combat-workspace-shell .gm-workspace-embedded-sheet.minimized {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
 }
 
 #gm-combat-workspace-shell .gm-workspace-embedded-sheet .window-header {

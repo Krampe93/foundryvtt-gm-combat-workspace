@@ -60,6 +60,8 @@ export class WorkspaceBridge {
   #pinnedSelection = null;
   #displayedActor = null;
   #displayedSheet = null;
+  #sheetMinimizePatch = null;
+  #sheetStateObserver = null;
   #preparedSheetElements = new WeakSet();
   #preparedItemLinks = new WeakSet();
   #selectionRevision = 0;
@@ -272,8 +274,16 @@ export class WorkspaceBridge {
 
     document.body.append(root);
     this.#root = root;
+    this.#exposeNotifications();
     this.#registerSheetDiagnostics();
 
+  }
+
+  #exposeNotifications() {
+    const notifications = document.querySelector("#notifications, .notifications");
+    if (!notifications) return;
+    if (notifications.parentElement !== document.body) document.body.append(notifications);
+    notifications.classList.add("gm-workspace-notifications");
   }
 
   #registerSheetHooks() {
@@ -719,8 +729,66 @@ export class WorkspaceBridge {
     if (!host || !element) return;
 
     element.classList.add("gm-workspace-embedded-sheet");
+    this.#preventSheetMinimization(sheet, element);
     this.#prepareSheetElement(element);
     host.replaceChildren(element);
+  }
+
+  #preventSheetMinimization(sheet, element) {
+    if (this.#sheetMinimizePatch?.sheet !== sheet) {
+      this.#restoreSheetMinimize();
+      const hadOwn = Object.hasOwn(sheet, "minimize");
+      const ownDescriptor = Object.getOwnPropertyDescriptor(sheet, "minimize");
+      const original = sheet.minimize;
+
+      if (typeof original === "function") {
+        try {
+          Object.defineProperty(sheet, "minimize", {
+            configurable: true,
+            writable: true,
+            value: (...args) => {
+              this.#recordSheetDebug("minimize blocked", {
+                arguments: args.length,
+                snapshot: this.#sheetSnapshot(sheet)
+              });
+              return sheet;
+            }
+          });
+          this.#sheetMinimizePatch = { sheet, hadOwn, ownDescriptor, original };
+        } catch (error) {
+          this.#logger.warn("Statblock minimize could not be patched", error);
+        }
+      }
+    }
+
+    this.#sheetStateObserver?.disconnect();
+    this.#sheetStateObserver = new MutationObserver(() => {
+      if (!element.classList.contains("minimizing") && !element.classList.contains("minimized")) return;
+      this.#recordSheetDebug("minimized state recovered", this.#sheetSnapshot(sheet));
+      element.classList.remove("minimizing", "minimized");
+      try {
+        const result = sheet.maximize?.();
+        if (result?.catch) result.catch((error) => this.#logger.warn("Statblock could not be maximized", error));
+      } catch (error) {
+        this.#logger.warn("Statblock could not be maximized", error);
+      }
+    });
+    this.#sheetStateObserver.observe(element, { attributes: true, attributeFilter: ["class"] });
+  }
+
+  #restoreSheetMinimize() {
+    this.#sheetStateObserver?.disconnect();
+    this.#sheetStateObserver = null;
+    const patch = this.#sheetMinimizePatch;
+    this.#sheetMinimizePatch = null;
+    if (!patch) return;
+
+    try {
+      if (patch.hadOwn) Object.defineProperty(patch.sheet, "minimize", patch.ownDescriptor);
+      else delete patch.sheet.minimize;
+    } catch (error) {
+      this.#logger.warn("Statblock minimize patch could not be restored", error);
+    }
   }
 
   #scheduleSheetMount(sheet, renderedHtml = null) {
@@ -744,6 +812,7 @@ export class WorkspaceBridge {
     const sheet = this.#displayedSheet;
     this.#displayedSheet = null;
     this.#displayedActor = null;
+    this.#restoreSheetMinimize();
     if (!sheet?.rendered) return;
 
     try {

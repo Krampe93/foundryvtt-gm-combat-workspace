@@ -205,13 +205,13 @@ Do not approve Stage 2A if the second window disconnects the main GM client, com
 
 ---
 
-## Stage 2B – Native statblock workspace (0.4.8)
+## Stage 2B – Native statblock workspace (0.4.9)
 
 Complete Stage 2A first. Use the laptop for the map and the companion window on the second monitor.
 
 ### A. Update and layout
 
-- [ ] Update GM Combat Workspace and confirm version `0.4.8`.
+- [ ] Update GM Combat Workspace and confirm version `0.4.9`.
 - [ ] Hard-reload both Foundry windows once with Ctrl+F5.
 - [ ] Open the companion workspace.
 - [ ] Confirm that the left statblock area occupies roughly 60 percent of the width.
@@ -255,6 +255,9 @@ Run these checks once with a simple NPC and once with the Adult Red Dragon or an
 - [ ] An attack can be clicked and rolled.
 - [ ] Damage can be rolled.
 - [ ] An action or feature can be used.
+- [ ] Use Fire Breath while a use is available and confirm that the statblock remains fully visible.
+- [ ] Use Fire Breath again without an available use and confirm that Foundry's red error notification is visible in the companion workspace.
+- [ ] Confirm that the failed second use creates no chat card and the statblock remains visible.
 - [ ] An ability check or saving throw can be rolled.
 - [ ] Recharge and legendary actions remain clickable where provided by the sheet.
 - [ ] Roll cards appear normally in Foundry chat.

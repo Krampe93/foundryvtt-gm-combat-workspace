@@ -2,6 +2,18 @@
 
 All notable changes to GM Combat Workspace will be documented in this file.
 
+## [0.4.9] - 2026-08-01
+
+### Fixed
+
+- Prevents Foundry from minimizing the embedded native statblock after a successful feature use
+- Recovers the managed statblock if a sheet still enters Foundry's `minimizing` or `minimized` state
+- Keeps Foundry's native notification area visible in the fullscreen companion workspace, including errors for unavailable feature uses
+
+### Planned
+
+- Recharge display and manual recharge rolls are recorded for a later roadmap stage
+
 ## [0.4.8] - 2026-08-01
 
 ### Added

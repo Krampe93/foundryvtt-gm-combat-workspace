@@ -473,6 +473,15 @@ Bei Spielerzügen verfügbare Legendary Actions und verbleibende Ressourcen schn
 
 Ressourcen werden erst verändert, wenn die Aktivität tatsächlich verwendet wurde. Abgebrochene Dialoge dürfen keine Kosten verbrauchen.
 
+### Vorgemerkt: Recharge-Aktionen
+
+- aktuellen und maximalen Nutzungsstand anzeigen
+- Recharge-Schwelle aus den D&D5e-Daten lesen, zum Beispiel 5–6
+- einen manuellen „Recharge würfeln“-Knopf anbieten
+- eine Nutzung ausschließlich bei erfolgreichem Recharge-Wurf wiederherstellen
+- Fehlschlag und fehlende Nutzung verständlich anzeigen
+- vor der Umsetzung entscheiden, ob zusätzlich eine Erinnerung zu Beginn des Monsterzugs gewünscht ist
+
 ### Foundry-Test
 
 - Monster ohne Legendary Actions
