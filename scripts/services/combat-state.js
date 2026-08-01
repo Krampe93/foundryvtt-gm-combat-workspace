@@ -51,6 +51,8 @@ export function resolveCombatantToken(combatant, scene) {
 function summarizeCombatant(combatant, scene) {
   const actor = combatant.actor ?? null;
   const token = resolveCombatantToken(combatant, scene);
+  const hp = actor?.system?.attributes?.hp ?? {};
+  const ac = actor?.system?.attributes?.ac ?? {};
 
   return {
     id: combatant.id ?? null,
@@ -58,11 +60,16 @@ function summarizeCombatant(combatant, scene) {
     type: classifyCombatant(combatant),
     actorId: actor?.id ?? combatant.actorId ?? null,
     actorUuid: actor?.uuid ?? null,
+    actorLinked: Boolean(token?.actorLink),
     tokenId: token?.id ?? combatant.tokenId ?? null,
     tokenPresent: Boolean(token),
     initiative: combatant.initiative ?? null,
     hidden: Boolean(combatant.hidden || token?.hidden),
-    defeated: Boolean(combatant.defeated ?? combatant.isDefeated)
+    defeated: Boolean(combatant.defeated ?? combatant.isDefeated),
+    armorClass: Number(ac.value ?? ac) || 0,
+    hpValue: Number(hp.value) || 0,
+    hpMax: Number(hp.max) || 0,
+    hpTemp: Number(hp.temp) || 0
   };
 }
 

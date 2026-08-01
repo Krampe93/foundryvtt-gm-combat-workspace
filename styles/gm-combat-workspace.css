@@ -262,10 +262,25 @@ body.gm-combat-workspace-companion > .notifications {
   margin-top: 0.75rem;
 }
 
+#gm-combat-workspace-shell .gm-workspace-bulk-tools {
+  display: grid;
+  grid-template-columns: auto minmax(70px, 0.55fr) repeat(3, minmax(90px, auto)) 36px;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-bulk-tools input,
+#gm-combat-workspace-shell .gm-workspace-bulk-tools button {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+
 #gm-combat-workspace-shell .gm-workspace-enemy {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: 28px minmax(160px, 1.35fr) 58px minmax(155px, 0.9fr) auto;
   gap: 0.25rem 1rem;
   width: 100%;
   min-height: 58px;
@@ -275,6 +290,77 @@ body.gm-combat-workspace-companion > .notifications {
   border: 1px solid var(--gm-combat-border);
   border-radius: 4px;
   text-align: left;
+}
+
+#gm-combat-workspace-shell .gm-workspace-enemy-check {
+  align-self: center;
+  margin: 0;
+}
+
+#gm-combat-workspace-shell .gm-workspace-enemy-open {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-width: 0;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  text-align: left;
+}
+
+#gm-combat-workspace-shell .gm-workspace-enemy-open:hover,
+#gm-combat-workspace-shell .gm-workspace-enemy-open:focus-visible {
+  color: #fff;
+  box-shadow: none;
+}
+
+#gm-combat-workspace-shell .gm-workspace-enemy-ac,
+#gm-combat-workspace-shell .gm-workspace-enemy-hp {
+  align-self: center;
+}
+
+#gm-combat-workspace-shell .gm-workspace-enemy-ac {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#gm-combat-workspace-shell .gm-workspace-enemy-ac small,
+#gm-combat-workspace-shell .gm-workspace-enemy-hp small {
+  color: var(--gm-combat-muted);
+  font-size: 0.68rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-enemy-hp {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+}
+
+#gm-combat-workspace-shell .gm-workspace-enemy-hp input {
+  width: 54px;
+  height: 28px;
+  margin: 0 0.15rem;
+  text-align: center;
+}
+
+#gm-combat-workspace-shell .gm-workspace-hp-bar {
+  display: block;
+  height: 6px;
+  overflow: hidden;
+  background: #151719;
+  border-radius: 999px;
+}
+
+#gm-combat-workspace-shell .gm-workspace-hp-bar i {
+  display: block;
+  height: 100%;
+  background: #62b36f;
 }
 
 #gm-combat-workspace-shell .gm-workspace-enemy::before {
@@ -354,7 +440,7 @@ body.gm-combat-workspace-companion > .notifications {
 }
 
 #gm-combat-workspace-shell .gm-workspace-enemy-meta {
-  grid-column: 1 / -1;
+  margin-top: 0.2rem;
 }
 
 #gm-combat-workspace-shell .gm-workspace-enemy-empty {

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0 – 2026-08-01
+
+- Rüstungsklasse sowie aktuelle und maximale TP in der Gegnerübersicht ergänzt.
+- Direkte TP-Eingaben zum Setzen, Schädigen und Heilen ergänzt.
+- Mehrfachauswahl mit Schaden, halbem Schaden und Heilung ohne Bestätigungsdialog ergänzt.
+- Temporäre TP werden nicht angezeigt, bei Schaden aber zuerst verbraucht.
+- Verknüpfte Actors werden bei Mehrfachaktionen nur einmal verändert; synthetische Token-Actors bleiben unabhängig.
+
 All notable changes to GM Combat Workspace will be documented in this file.
 
 ## [0.5.3] - 2026-08-01

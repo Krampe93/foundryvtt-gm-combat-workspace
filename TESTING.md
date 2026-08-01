@@ -1,5 +1,22 @@
 # Manual test checklist
 
+## Stage 4 – Version 0.6.0
+
+- [ ] Bei jedem Gegner stimmen RK sowie aktuelle/maximale TP mit dem Statblock überein.
+- [ ] `50` plus Enter setzt die aktuellen TP auf 50.
+- [ ] `-20` plus Enter verursacht genau 20 Schaden.
+- [ ] `+10` plus Enter heilt genau 10 TP und niemals über das Maximum.
+- [ ] Ein ungültiger Wert verändert keine TP und zeigt eine Warnung.
+- [ ] Bei vorhandenen temporären TP verbraucht Schaden zuerst diese; temporäre TP erscheinen nicht im Dashboard.
+- [ ] Mehrere Checkboxen auswählen und **Schaden**, **½ Schaden** sowie **Heilen** testen.
+- [ ] Halber Schaden rundet bei einer ungeraden Zahl ab (9 wird 4).
+- [ ] Die Mehrfachaktion wird ohne Bestätigungsdialog ausgeführt.
+- [ ] Zwei verknüpfte Tokens desselben World-Actors verändern diesen Actor nur einmal.
+- [ ] Zwei unverknüpfte Tokens desselben Basis-Actors werden unabhängig verändert.
+- [ ] Bei TP 0 verschwindet der besiegte Gegner aus der Liste.
+- [ ] Statblock-, Tokenauswahl-, Hover- und Zugmarkierung funktionieren weiterhin.
+
+
 ## Stage 0 – Development and test foundation
 
 Test this pull request in a disposable or backed-up Foundry VTT world.

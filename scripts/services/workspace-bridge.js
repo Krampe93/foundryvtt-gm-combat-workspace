@@ -1,5 +1,6 @@
 import { MODULE_ID } from "../config.js";
 import { createLogger } from "../core/logger.js";
+import { calculateHpUpdate, halfDamage, parseHpInput, uniqueHpTargets } from "./hp-operations.js";
 
 const CHANNEL_NAME = `${MODULE_ID}.workspace`;
 const WORKSPACE_PARAMETER = "gmCombatWorkspace";
@@ -106,6 +107,7 @@ export class WorkspaceBridge {
   #colorCombatId = null;
   #nextColorIndex = 0;
   #remoteEnemyColors = [];
+  #bulkSelection = new Set();
 
   constructor({ eventBus, getSnapshot, logger = createLogger("WorkspaceBridge") }) {
     this.#eventBus = eventBus;
@@ -311,6 +313,14 @@ export class WorkspaceBridge {
               <span>Aktueller Zug</span>
               <strong data-field="current-turn-name">Kein laufender Kampf</strong>
             </div>
+            <div class="gm-workspace-bulk-tools">
+              <strong><span data-field="bulk-count">0</span> ausgewählt</strong>
+              <input type="number" min="0" step="1" placeholder="Wert" data-role="bulk-value">
+              <button type="button" data-action="bulk-damage">Schaden</button>
+              <button type="button" data-action="bulk-half">½ Schaden</button>
+              <button type="button" data-action="bulk-heal">Heilen</button>
+              <button type="button" data-action="bulk-clear" title="Auswahl aufheben"><i class="fa-solid fa-xmark"></i></button>
+            </div>
             <div class="gm-workspace-enemy-list" data-role="enemy-list"></div>
           </section>
           <section class="gm-workspace-controls">
@@ -343,6 +353,12 @@ export class WorkspaceBridge {
 
     root.querySelector('[data-role="enemy-list"]')
       .addEventListener("click", (event) => this.#onEnemyClick(event));
+    root.querySelector('[data-role="enemy-list"]')
+      .addEventListener("change", (event) => this.#onEnemySelection(event));
+    root.querySelector('[data-role="enemy-list"]')
+      .addEventListener("keydown", (event) => this.#onHpInput(event));
+    root.querySelector('.gm-workspace-bulk-tools')
+      .addEventListener("click", (event) => this.#onBulkAction(event));
     root.querySelector('[data-role="enemy-list"]')
       .addEventListener("pointerover", (event) => this.#onEnemyHover(event, true));
     root.querySelector('[data-role="enemy-list"]')
@@ -660,6 +676,16 @@ export class WorkspaceBridge {
       return;
     }
 
+    if (message.type === "applyHpOperation" && !this.#workspaceMode) {
+      this.#applyHpOperation(message);
+      return;
+    }
+
+    if (message.type === "hpOperationResult" && this.#workspaceMode) {
+      if (message.error) ui.notifications?.error(message.error);
+      return;
+    }
+
     if (message.type === "enemyColors" && !this.#workspaceMode) {
       this.#remoteEnemyColors = Array.isArray(message.entries) ? message.entries : [];
       this.#syncTokenColors();
@@ -701,6 +727,9 @@ export class WorkspaceBridge {
     const list = this.#root?.querySelector('[data-role="enemy-list"]');
     if (!list) return;
     const entries = this.#enemyEntries();
+    const validIds = new Set(entries.map(({ id }) => id));
+    this.#bulkSelection = new Set([...this.#bulkSelection].filter((id) => validIds.has(id)));
+    this.#set("bulk-count", this.#bulkSelection.size, "0");
     this.#channel?.postMessage({
       type: "enemyColors",
       entries: entries.map(({ tokenId, sceneId, color, active }) => ({ tokenId, sceneId, color, active }))
@@ -717,23 +746,32 @@ export class WorkspaceBridge {
 
     const selectedTokenId = this.#selectedToken?.tokenId ?? null;
     list.innerHTML = entries.map((entry) => `
-      <button type="button"
+      <div
         class="gm-workspace-enemy${entry.active ? " is-active" : ""}${entry.tokenId === selectedTokenId ? " is-selected" : ""}"
         style="--gm-enemy-color:${entry.color}"
         data-combatant-id="${entry.id}"
         data-token-id="${entry.tokenId ?? ""}"
         data-scene-id="${entry.sceneId ?? ""}">
-        <span class="gm-workspace-enemy-name">${foundry.utils.escapeHTML(entry.displayName ?? "Unbenannter Gegner")}</span>
+        <input type="checkbox" class="gm-workspace-enemy-check" data-action="bulk-select" ${this.#bulkSelection.has(entry.id) ? "checked" : ""} aria-label="Für Mehrfachaktion auswählen">
+        <button type="button" class="gm-workspace-enemy-open" data-action="select-enemy">
+          <span class="gm-workspace-enemy-name">${foundry.utils.escapeHTML(entry.displayName ?? "Unbenannter Gegner")}</span>
+          <span class="gm-workspace-enemy-meta">${entry.hidden ? "versteckt" : "sichtbar"} · ${entry.onCurrentScene ? "auf Szene" : "nicht auf aktueller Szene"}</span>
+        </button>
+        <span class="gm-workspace-enemy-ac"><small>RK</small><strong>${entry.armorClass}</strong></span>
+        <label class="gm-workspace-enemy-hp">
+          <span><small>TP</small> <input type="text" inputmode="numeric" value="${entry.hpValue}" data-action="hp-input" data-current-value="${entry.hpValue}" title="50 = setzen · -20 = Schaden · +10 = Heilung"> / ${entry.hpMax}</span>
+          <span class="gm-workspace-hp-bar"><i style="width:${entry.hpMax > 0 ? Math.max(0, Math.min(100, entry.hpValue / entry.hpMax * 100)) : 0}%"></i></span>
+        </label>
         <span class="gm-workspace-enemy-indicators">
           ${entry.active ? '<span class="gm-workspace-turn-badge"><i class="fa-solid fa-swords" aria-hidden="true"></i> Am Zug</span>' : ""}
           ${entry.tokenId === selectedTokenId ? '<span class="gm-workspace-selected-badge"><i class="fa-solid fa-crosshairs" aria-hidden="true"></i> Ausgewählt</span>' : ""}
         </span>
-        <span class="gm-workspace-enemy-meta">${entry.hidden ? "versteckt" : "sichtbar"} · ${entry.onCurrentScene ? "auf Szene" : "nicht auf aktueller Szene"}</span>
-      </button>
+      </div>
     `).join("");
   }
 
   #onEnemyClick(event) {
+    if (!event.target.closest?.('[data-action="select-enemy"]')) return;
     const row = event.target.closest?.("[data-combatant-id]");
     if (!row) return;
     const entry = this.#enemyEntries().find(({ id }) => id === row.dataset.combatantId);
@@ -754,6 +792,87 @@ export class WorkspaceBridge {
     };
     this.#channel?.postMessage({ type: "selectToken", tokenId: entry.tokenId, sceneId: entry.sceneId });
     this.#render();
+  }
+
+  #onEnemySelection(event) {
+    const checkbox = event.target.closest?.('[data-action="bulk-select"]');
+    const row = checkbox?.closest?.("[data-combatant-id]");
+    if (!checkbox || !row) return;
+    if (checkbox.checked) this.#bulkSelection.add(row.dataset.combatantId);
+    else this.#bulkSelection.delete(row.dataset.combatantId);
+    this.#set("bulk-count", this.#bulkSelection.size, "0");
+  }
+
+  #onHpInput(event) {
+    const input = event.target.closest?.('[data-action="hp-input"]');
+    if (!input || event.key !== "Enter") return;
+    event.preventDefault();
+    const operation = parseHpInput(input.value);
+    const row = input.closest("[data-combatant-id]");
+    const entry = this.#enemyEntries().find(({ id }) => id === row?.dataset.combatantId);
+    if (!operation || !entry) {
+      input.value = input.dataset.currentValue;
+      ui.notifications?.warn("Ungültige TP-Eingabe. Erlaubt sind 50, -20 oder +10.");
+      return;
+    }
+    this.#requestHpOperation(operation.mode, operation.amount, [entry]);
+  }
+
+  #onBulkAction(event) {
+    const button = event.target.closest?.("[data-action]");
+    if (!button?.dataset.action?.startsWith("bulk-")) return;
+    if (button.dataset.action === "bulk-clear") {
+      this.#bulkSelection.clear();
+      this.#renderEnemyList();
+      return;
+    }
+    const input = this.#root.querySelector('[data-role="bulk-value"]');
+    const amount = Math.max(0, Math.trunc(Number(input?.value)));
+    const targets = this.#enemyEntries().filter(({ id }) => this.#bulkSelection.has(id));
+    if (!amount || !targets.length) {
+      ui.notifications?.warn(targets.length ? "Bitte einen gültigen Wert eingeben." : "Bitte zuerst mindestens einen Gegner auswählen.");
+      return;
+    }
+    const action = button.dataset.action;
+    this.#requestHpOperation(
+      action === "bulk-heal" ? "heal" : "damage",
+      action === "bulk-half" ? halfDamage(amount) : amount,
+      targets
+    );
+  }
+
+  #requestHpOperation(mode, amount, targets) {
+    this.#channel?.postMessage({
+      type: "applyHpOperation",
+      mode,
+      amount,
+      targets: targets.map(({ actorId, actorUuid, actorLinked, tokenId, sceneId }) => ({
+        actorId, actorUuid, linked: actorLinked, tokenId, sceneId
+      }))
+    });
+  }
+
+  async #applyHpOperation(message) {
+    try {
+      for (const target of uniqueHpTargets(message.targets)) {
+        const scene = game.scenes?.get(target.sceneId) ?? null;
+        const token = scene?.tokens?.get(target.tokenId) ?? null;
+        const actor = token?.actor ?? game.actors?.get(target.actorId) ?? null;
+        if (!actor) continue;
+        const hp = actor.system?.attributes?.hp ?? {};
+        const next = calculateHpUpdate(hp, message.mode, message.amount);
+        const update = { "system.attributes.hp.value": next.value };
+        if (next.temp !== (Number(hp.temp) || 0)) update["system.attributes.hp.temp"] = next.temp;
+        await actor.update(update);
+      }
+      this.#channel?.postMessage({ type: "hpOperationResult" });
+    } catch (error) {
+      this.#logger.error("HP operation failed", error);
+      this.#channel?.postMessage({
+        type: "hpOperationResult",
+        error: `TP konnten nicht geändert werden: ${error.message}`
+      });
+    }
   }
 
   #onEnemyHover(event, active) {

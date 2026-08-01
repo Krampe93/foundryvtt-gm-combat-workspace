@@ -233,7 +233,7 @@ Das Modul baut keinen Ersatz-Statblock. Angriffe, Features, Rettungswürfe, Rech
 
 ## Etappe 3 – Dashboard-Grundfenster und Gegnerliste
 
-**Status:** `[-]` – Version 0.5.3 im Foundry-Test
+**Status:** `[x]` – Abgenommen am 2026-08-01 mit Version 0.5.3
 
 ### Ziel
 
@@ -287,7 +287,7 @@ Die rechte Seite des Companion-Workspaces als Gegnerübersicht bereitstellen, w�
 
 ## Etappe 4 – HP, RK und Mehrfachauswahl
 
-**Status:** `[ ]`
+**Status:** `[~]` – Version 0.6.0 im Foundry-Test
 
 ### Ziel
 
@@ -297,7 +297,7 @@ Die wichtigsten Gegnerwerte direkt im Dashboard verwalten.
 
 - Rüstungsklasse anzeigen
 - aktuelle und maximale Trefferpunkte anzeigen
-- temporäre Trefferpunkte anzeigen
+- temporäre Trefferpunkte nicht im Dashboard anzeigen, bei Schaden aber regelkonform zuerst verbrauchen
 - HP-Eingabe:
   - `50` setzt aktuelle HP auf 50
   - `-20` wendet 20 Schaden an
@@ -309,9 +309,9 @@ Die wichtigsten Gegnerwerte direkt im Dashboard verwalten.
 - keine doppelten Änderungen auf demselben Actor
 - sofortige sichtbare Aktualisierung
 
-### Sicherheitsregel
+### Bedienregel
 
-Eine Mehrfachaktion zeigt vor der Ausführung klar Anzahl und Art der betroffenen Gegner. Die Auswahl bleibt sichtbar.
+Eine Mehrfachaktion zeigt Anzahl und Art der betroffenen Gegner direkt in der Werkzeugleiste. Sie wird ohne zusätzliche Bestätigungsabfrage ausgeführt; die Auswahl bleibt sichtbar.
 
 ### Foundry-Test
 
