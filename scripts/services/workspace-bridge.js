@@ -53,10 +53,8 @@ export function combatantColor(index = 0) {
 }
 
 export function isAutomaticActorDeltaStatus(effect, data = {}) {
-  const effectId = effect?.id ?? data?._id ?? data?.id ?? "";
-  const parentName = effect?.parent?.documentName ?? effect?.parent?.constructor?.name ?? "";
-  const isAutomaticDnd5eStatus = effectId.startsWith("dnd5edead") || effectId.startsWith("dnd5ebloodied");
-  return isAutomaticDnd5eStatus && parentName.includes("ActorDelta");
+  const effectIds = [effect?.id, data?._id, data?.id].filter((id) => typeof id === "string");
+  return effectIds.some((id) => id.startsWith("dnd5edead") || id.startsWith("dnd5ebloodied"));
 }
 
 function applicationElement(application, renderedHtml = null) {

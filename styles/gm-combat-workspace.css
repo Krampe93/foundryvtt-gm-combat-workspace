@@ -110,7 +110,7 @@ body.gm-combat-workspace-companion > .notifications {
 #gm-combat-workspace-shell .gm-workspace-columns {
   flex: 1 1 auto;
   display: grid;
-  grid-template-columns: minmax(430px, 3fr) minmax(600px, 7fr);
+  grid-template-columns: minmax(640px, 35fr) minmax(600px, 65fr);
   min-height: 0;
 }
 

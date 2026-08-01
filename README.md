@@ -18,7 +18,7 @@ https://raw.githubusercontent.com/Krampe93/foundryvtt-gm-combat-workspace/main/m
 
 This manifest URL is permanent. Foundry can use it to discover and install future test versions through the normal update function.
 
-Version `0.5.1` refines the Stage 3 encounter dashboard with separate current-turn and selected states, synchronized unique encounter colors, live token visibility, a complete encounter-end reset, and a companion-only guard against duplicate automatic D&D5e Dead/Bloodied effects.
+Version `0.5.2` uses a 35/65 statblock-dashboard split and strengthens the companion-only guard against duplicate automatic D&D5e Dead/Bloodied effects by identifying the canonical effect ids independently of Foundry's temporary parent representation.
 
 ## Development
 

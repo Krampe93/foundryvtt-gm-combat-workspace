@@ -294,15 +294,15 @@ Do not approve Stage 2B if the configured native sheet cannot be embedded, its a
 
 ---
 
-## Stage 3 – Encounter dashboard (0.5.1)
+## Stage 3 – Encounter dashboard (0.5.2)
 
 Complete and approve Stage 2B first. Keep the map on the laptop and the companion workspace maximized on the second monitor.
 
 ### A. Layout and empty states
 
-- [ ] Update GM Combat Workspace and confirm version `0.5.1`.
+- [ ] Update GM Combat Workspace and confirm version `0.5.2`.
 - [ ] Hard-reload both Foundry windows once with Ctrl+F5.
-- [ ] Confirm that the native statblock uses roughly 30 percent and the dashboard roughly 70 percent of the companion width.
+- [ ] Confirm that the native statblock uses roughly 35 percent and the dashboard roughly 65 percent of the companion width.
 - [ ] Confirm that the Adult Red Dragon sheet remains readable, scrollable, and clickable in the narrower column.
 - [ ] Without an encounter, confirm that the dashboard shows a clear empty state.
 - [ ] With an encounter containing no undefeated NPCs, confirm that no enemy rows appear.

@@ -233,7 +233,7 @@ Das Modul baut keinen Ersatz-Statblock. Angriffe, Features, Rettungswürfe, Rech
 
 ## Etappe 3 – Dashboard-Grundfenster und Gegnerliste
 
-**Status:** `[-]` – Version 0.5.1 im Foundry-Test
+**Status:** `[-]` – Version 0.5.2 im Foundry-Test
 
 ### Ziel
 
@@ -241,7 +241,7 @@ Die rechte Seite des Companion-Workspaces als Gegnerübersicht bereitstellen, w�
 
 ### Umfang
 
-- feste Aufteilung: 30 Prozent nativer Statblock und 70 Prozent Dashboard
+- feste Aufteilung: 35 Prozent nativer Statblock und 65 Prozent Dashboard
 - nur für GMs anzeigen
 - Gegner des aktuellen Encounters auflisten
 - Status darstellen:

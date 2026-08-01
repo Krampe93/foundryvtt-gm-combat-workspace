@@ -2,6 +2,14 @@
 
 All notable changes to GM Combat Workspace will be documented in this file.
 
+## [0.5.2] - 2026-08-01
+
+### Fixed
+
+- Expands the native statblock column to 35 percent with a 640 pixel minimum width
+- Identifies automatic D&D5e Dead and Bloodied effects across all pre-create representations instead of depending on the temporary parent document type
+- Keeps the broader status guard isolated to the companion client and the two canonical D&D5e status ids
+
 ## [0.5.1] - 2026-08-01
 
 ### Fixed
