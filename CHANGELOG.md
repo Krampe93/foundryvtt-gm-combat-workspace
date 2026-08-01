@@ -2,6 +2,12 @@
 
 All notable changes to GM Combat Workspace will be documented in this file.
 
+## [0.3.1] - 2026-08-01
+
+### Fixed
+
+- Moved the workspace launcher beside Combat Wall and raised its display layer so other modules cannot cover it
+
 ## [0.3.0] - 2026-08-01
 
 Stage 2A test release for the dual-monitor foundation.

@@ -18,7 +18,7 @@ https://raw.githubusercontent.com/Krampe93/foundryvtt-gm-combat-workspace/main/m
 
 This manifest URL is permanent. Foundry can use it to discover and install future test versions through the normal update function.
 
-Version `0.3.0` is the Stage 2A connection-test release. It adds a separate GM companion window and synchronizes combat state and selected enemy tokens between both Foundry windows. The native statblock and full dashboard are intentionally not part of this test yet.
+Version `0.3.1` is the Stage 2A connection-test release. It adds a separate GM companion window and synchronizes combat state and selected enemy tokens between both Foundry windows. The native statblock and full dashboard are intentionally not part of this test yet.
 
 ## Development
 

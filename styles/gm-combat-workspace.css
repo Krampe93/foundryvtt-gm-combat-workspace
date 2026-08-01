@@ -15,8 +15,8 @@
 
 #gm-combat-workspace-launcher {
   position: fixed;
-  z-index: 100;
-  left: 16px;
+  z-index: 100000;
+  left: 155px;
   bottom: 82px;
   display: flex;
   align-items: center;
@@ -27,6 +27,13 @@
   border: 1px solid #d17b28;
   border-radius: 5px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+@media (max-width: 700px) {
+  #gm-combat-workspace-launcher {
+    left: 16px;
+    bottom: 130px;
+  }
 }
 
 body.gm-combat-workspace-companion > :not(#gm-combat-workspace-connection-test) {
