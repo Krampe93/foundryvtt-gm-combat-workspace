@@ -2,6 +2,14 @@
 
 All notable changes to GM Combat Workspace will be documented in this file.
 
+## [0.4.6] - 2026-08-01
+
+### Fixed
+
+- Plain item-action clicks in 5e Statblock Sheet are intercepted at the action link before its delegated ApplicationV2 handler
+- The normal D&D5e `item.use()` workflow is invoked exactly once with a clean, unmodified click event
+- Explicit modifier-key clicks continue through the native Statblock Sheet handler unchanged
+
 ## [0.4.5] - 2026-08-01
 
 ### Fixed

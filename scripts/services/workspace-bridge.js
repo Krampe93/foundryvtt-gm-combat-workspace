@@ -58,6 +58,7 @@ export class WorkspaceBridge {
   #displayedActor = null;
   #displayedSheet = null;
   #preparedSheetElements = new WeakSet();
+  #preparedItemLinks = new WeakSet();
   #selectionRevision = 0;
   #workspaceMode = isWorkspaceWindow();
   #workspaceWindow = null;
@@ -284,13 +285,61 @@ export class WorkspaceBridge {
   }
 
   #prepareSheetElement(element) {
-    if (this.#preparedSheetElements.has(element)) return;
-    this.#preparedSheetElements.add(element);
+    if (!this.#preparedSheetElements.has(element)) {
+      this.#preparedSheetElements.add(element);
 
-    element.addEventListener("click", (event) => {
-      if (event.altKey || event.ctrlKey || event.shiftKey || event.metaKey) return;
-      this.#releaseStaleModifiers();
-    }, { capture: true });
+      element.addEventListener("click", (event) => {
+        if (event.altKey || event.ctrlKey || event.shiftKey || event.metaKey) return;
+        this.#releaseStaleModifiers();
+      }, { capture: true });
+    }
+
+    for (const link of element.querySelectorAll('.roll-link[data-action="use"][data-item-id]')) {
+      if (this.#preparedItemLinks.has(link)) continue;
+      this.#preparedItemLinks.add(link);
+      link.addEventListener("click", (event) => this.#useItemWithoutStaleModifiers(event, link));
+    }
+  }
+
+  #useItemWithoutStaleModifiers(event, link) {
+    if (event.altKey || event.ctrlKey || event.shiftKey || event.metaKey) return;
+
+    const itemId = link.closest("[data-item-id]")?.dataset?.itemId;
+    const item = this.#displayedActor?.items?.get(itemId) ?? null;
+    if (!item || link.ariaDisabled === "true") return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    event.stopPropagation();
+    this.#releaseStaleModifiers();
+
+    const cleanEvent = new MouseEvent("click", {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      view: window,
+      detail: event.detail,
+      screenX: event.screenX,
+      screenY: event.screenY,
+      clientX: event.clientX,
+      clientY: event.clientY,
+      button: event.button,
+      buttons: event.buttons,
+      relatedTarget: event.relatedTarget,
+      ctrlKey: false,
+      shiftKey: false,
+      altKey: false,
+      metaKey: false
+    });
+
+    try {
+      const result = item.use({ event: cleanEvent });
+      result?.catch?.((error) => {
+        this.#logger.error(`Item use failed: ${item.name}`, error);
+      });
+    } catch (error) {
+      this.#logger.error(`Item use failed: ${item.name}`, error);
+    }
   }
 
   #broadcastControlledToken() {
