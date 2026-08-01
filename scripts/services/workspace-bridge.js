@@ -49,6 +49,7 @@ export class WorkspaceBridge {
   #channel = null;
   #unsubscribe = null;
   #controlTokenHook = null;
+  #rollAttackHook = null;
   #sheetRenderHooks = [];
   #sheetMountTimers = new Set();
   #windowFocusHandler = null;
@@ -60,6 +61,11 @@ export class WorkspaceBridge {
   #preparedSheetElements = new WeakSet();
   #preparedItemLinks = new WeakSet();
   #selectionRevision = 0;
+  #rollDebug = {
+    status: "Noch kein Item im Workspace benutzt.",
+    click: null,
+    roll: null
+  };
   #workspaceMode = isWorkspaceWindow();
   #workspaceWindow = null;
 
@@ -89,6 +95,7 @@ export class WorkspaceBridge {
     if (this.#workspaceMode) {
       this.#registerSheetHooks();
       this.#registerModifierReset();
+      this.#registerRollDiagnostics();
       this.#renderWorkspace();
       this.#channel.postMessage({ type: "workspaceReady" });
     } else {
@@ -105,6 +112,11 @@ export class WorkspaceBridge {
     if (this.#controlTokenHook !== null) {
       Hooks.off("controlToken", this.#controlTokenHook);
       this.#controlTokenHook = null;
+    }
+
+    if (this.#rollAttackHook !== null) {
+      Hooks.off("dnd5e.rollAttackV2", this.#rollAttackHook);
+      this.#rollAttackHook = null;
     }
 
     for (const [hookName, hookId] of this.#sheetRenderHooks) {
@@ -231,6 +243,11 @@ export class WorkspaceBridge {
             <h2>Dashboard</h2>
             <p>Gegnerliste, TP, RK, Bewegung und Rettungswürfe folgen nach Abnahme des nativen Statblocks.</p>
           </section>
+          <section class="gm-workspace-diagnostics">
+            <h2>Roll-Diagnose</h2>
+            <p>Zeigt den letzten Workspace-Klick und den daraus entstandenen D&D5e-Angriff.</p>
+            <pre data-role="roll-debug">Noch kein Item im Workspace benutzt.</pre>
+          </section>
         </aside>
       </section>
     `;
@@ -258,6 +275,31 @@ export class WorkspaceBridge {
     this.#windowFocusHandler = () => this.#releaseStaleModifiers();
     window.addEventListener("focus", this.#windowFocusHandler);
     queueMicrotask(() => this.#releaseStaleModifiers());
+  }
+
+  #registerRollDiagnostics() {
+    this.#rollAttackHook = Hooks.on("dnd5e.rollAttackV2", (rolls, data) => {
+      const roll = rolls?.[0] ?? null;
+      const d20 = roll?.d20 ?? roll?.terms?.find?.((term) => Number(term?.faces) === 20) ?? null;
+      this.#rollDebug.roll = {
+        item: data?.subject?.item?.name ?? null,
+        activity: data?.subject?.name ?? null,
+        formula: roll?.formula ?? null,
+        total: roll?.total ?? null,
+        advantageMode: roll?.options?.advantageMode ?? null,
+        advantage: roll?.options?.advantage ?? false,
+        disadvantage: roll?.options?.disadvantage ?? false,
+        d20Number: d20?.number ?? null,
+        d20Modifiers: Array.from(d20?.modifiers ?? []),
+        results: Array.from(d20?.results ?? []).map((result) => ({
+          result: result.result,
+          active: result.active !== false,
+          discarded: result.discarded === true
+        }))
+      };
+      this.#rollDebug.status = "D&D5e-Angriff empfangen";
+      this.#renderRollDebug();
+    });
   }
 
   #releaseStaleModifiers() {
@@ -308,10 +350,33 @@ export class WorkspaceBridge {
     const item = this.#displayedActor?.items?.get(itemId) ?? null;
     if (!item || link.ariaDisabled === "true") return;
 
+    const downKeysBefore = Array.from(game.keyboard?.downKeys ?? []).sort();
+    const bindings = this.#rollKeybindings();
+
     event.preventDefault();
     event.stopImmediatePropagation();
     event.stopPropagation();
     this.#releaseStaleModifiers();
+
+    this.#rollDebug = {
+      status: "Item-Klick erfasst; warte auf D&D5e-Angriff …",
+      click: {
+        item: item.name,
+        itemId: item.id,
+        eventModifiers: {
+          alt: event.altKey,
+          control: event.ctrlKey,
+          shift: event.shiftKey,
+          meta: event.metaKey
+        },
+        downKeysBefore,
+        downKeysAfter: Array.from(game.keyboard?.downKeys ?? []).sort(),
+        keybindings: bindings,
+        route: "Workspace → item.use(cleanEvent)"
+      },
+      roll: null
+    };
+    this.#renderRollDebug();
 
     const cleanEvent = new MouseEvent("click", {
       bubbles: true,
@@ -340,6 +405,28 @@ export class WorkspaceBridge {
     } catch (error) {
       this.#logger.error(`Item use failed: ${item.name}`, error);
     }
+  }
+
+  #rollKeybindings() {
+    const actions = [
+      "skipDialogNormal",
+      "skipDialogAdvantage",
+      "skipDialogDisadvantage"
+    ];
+
+    return Object.fromEntries(actions.map((action) => [
+      action,
+      Array.from(game.keybindings?.get?.("dnd5e", action) ?? []).map((binding) => ({
+        key: binding.key,
+        modifiers: Array.from(binding.modifiers ?? [])
+      }))
+    ]));
+  }
+
+  #renderRollDebug() {
+    const output = this.#root?.querySelector('[data-role="roll-debug"]');
+    if (!output) return;
+    output.textContent = JSON.stringify(this.#rollDebug, null, 2);
   }
 
   #broadcastControlledToken() {

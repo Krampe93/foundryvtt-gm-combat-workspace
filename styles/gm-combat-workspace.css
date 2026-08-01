@@ -77,6 +77,24 @@ body.gm-combat-workspace-companion > :not(#gm-combat-workspace-shell) {
   color: var(--gm-combat-muted);
 }
 
+#gm-combat-workspace-shell .gm-workspace-diagnostics p {
+  margin-top: 0.65rem;
+  color: var(--gm-combat-muted);
+}
+
+#gm-combat-workspace-shell .gm-workspace-diagnostics pre {
+  max-height: 320px;
+  margin: 0.65rem 0 0;
+  overflow: auto;
+  padding: 0.65rem;
+  color: #d8e9d8;
+  background: #111315;
+  border: 1px solid var(--gm-combat-border);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
 #gm-combat-workspace-shell .gm-workspace-status {
   padding: 0.4rem 0.75rem;
   background: var(--gm-combat-ready);

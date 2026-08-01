@@ -2,6 +2,18 @@
 
 All notable changes to GM Combat Workspace will be documented in this file.
 
+## [0.4.7] - 2026-08-01
+
+### Added
+
+- Read-only roll diagnostics panel in the companion workspace
+- Captures click modifiers, keyboard state before and after cleanup, and configured D&D5e fast-roll keybindings
+- Captures the resulting D&D5e attack formula, advantage mode, option flags, d20 count, modifiers, individual results, and active/discarded state
+
+### Changed
+
+- This release intentionally adds observation only and does not attempt another roll-behavior correction
+
 ## [0.4.6] - 2026-08-01
 
 ### Fixed
