@@ -52,6 +52,7 @@ export class WorkspaceBridge {
   #sheetRenderHooks = [];
   #sheetMountTimers = new Set();
   #windowFocusHandler = null;
+  #windowResizeHandler = null;
   #root = null;
   #selectedToken = null;
   #pinnedSelection = null;
@@ -116,6 +117,11 @@ export class WorkspaceBridge {
     if (this.#windowFocusHandler) {
       window.removeEventListener("focus", this.#windowFocusHandler);
       this.#windowFocusHandler = null;
+    }
+
+    if (this.#windowResizeHandler) {
+      window.removeEventListener("resize", this.#windowResizeHandler);
+      this.#windowResizeHandler = null;
     }
 
     this.#closeDisplayedSheet();
@@ -237,6 +243,9 @@ export class WorkspaceBridge {
 
     document.body.append(root);
     this.#root = root;
+
+    this.#windowResizeHandler = () => this.#positionDisplayedSheet();
+    window.addEventListener("resize", this.#windowResizeHandler);
   }
 
   #registerSheetHooks() {
@@ -244,7 +253,7 @@ export class WorkspaceBridge {
       const hookId = Hooks.on(hookName, (application, html) => {
         const actor = application?.actor ?? application?.document ?? application?.object ?? null;
         if (!this.#workspaceMode || actor !== this.#displayedActor) return;
-        this.#scheduleSheetMount(application, html);
+        this.#scheduleSheetMount(application);
       });
       this.#sheetRenderHooks.push([hookName, hookId]);
     }
@@ -449,25 +458,27 @@ export class WorkspaceBridge {
     this.#mountSheet(sheet);
   }
 
-  #mountSheet(sheet, renderedHtml = null) {
+  #mountSheet(sheet) {
     if (!this.#root || sheet !== this.#displayedSheet) return;
     const host = this.#root.querySelector('[data-role="sheet-host"]');
-    const element = applicationElement(sheet, renderedHtml);
+    const element = applicationElement(sheet);
     if (!host || !element) return;
 
     element.classList.add("gm-workspace-embedded-sheet");
-    host.replaceChildren(element);
+    if (element.parentElement !== document.body) document.body.append(element);
+    host.classList.add("has-embedded-sheet");
+    this.#positionSheetElement(element, host);
   }
 
-  #scheduleSheetMount(sheet, renderedHtml = null) {
-    const mount = (html = null) => {
+  #scheduleSheetMount(sheet) {
+    const mount = () => {
       if (sheet !== this.#displayedSheet) return;
-      this.#mountSheet(sheet, html);
+      this.#mountSheet(sheet);
     };
 
-    queueMicrotask(() => mount(renderedHtml));
+    queueMicrotask(mount);
 
-    for (const delay of [50, 200]) {
+    for (const delay of [50, 200, 500]) {
       const timer = setTimeout(() => {
         this.#sheetMountTimers.delete(timer);
         mount();
@@ -476,10 +487,25 @@ export class WorkspaceBridge {
     }
   }
 
+  #positionDisplayedSheet() {
+    if (!this.#displayedSheet) return;
+    this.#mountSheet(this.#displayedSheet);
+  }
+
+  #positionSheetElement(element, host) {
+    const rect = host.getBoundingClientRect();
+    element.style.setProperty("--gm-workspace-sheet-left", `${rect.left}px`);
+    element.style.setProperty("--gm-workspace-sheet-top", `${rect.top}px`);
+    element.style.setProperty("--gm-workspace-sheet-width", `${rect.width}px`);
+    element.style.setProperty("--gm-workspace-sheet-height", `${rect.height}px`);
+  }
+
   async #closeDisplayedSheet() {
     const sheet = this.#displayedSheet;
     this.#displayedSheet = null;
     this.#displayedActor = null;
+    this.#root?.querySelector('[data-role="sheet-host"]')
+      ?.classList.remove("has-embedded-sheet");
     if (!sheet?.rendered) return;
 
     try {

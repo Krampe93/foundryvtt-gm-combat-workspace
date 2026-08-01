@@ -2,6 +2,14 @@
 
 All notable changes to GM Combat Workspace will be documented in this file.
 
+## [0.4.3] - 2026-08-01
+
+### Fixed
+
+- Native sheets now remain top-level Foundry applications and are positioned over the statblock panel instead of being reparented inside it
+- Feature and resource rerenders can replace the native application element without leaving an empty embedded frame
+- The positioned sheet follows companion-window resizing while preserving the two-column appearance
+
 ## [0.4.2] - 2026-08-01
 
 ### Fixed
