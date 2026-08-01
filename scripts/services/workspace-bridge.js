@@ -33,10 +33,8 @@ function displayValue(value, fallback = "–") {
   return value === null || value === undefined || value === "" ? fallback : String(value);
 }
 
-function combatantColor(id = "") {
-  let hash = 0;
-  for (const character of String(id)) hash = ((hash << 5) - hash + character.charCodeAt(0)) | 0;
-  const hue = Math.abs(hash) % 360;
+export function combatantColor(index = 0) {
+  const hue = (10 + Number(index) * 137.508) % 360;
   const saturation = 68;
   const lightness = 58;
   const chroma = (1 - Math.abs((2 * lightness / 100) - 1)) * saturation / 100;
@@ -52,6 +50,13 @@ function combatantColor(id = "") {
   return `#${[red, green, blue]
     .map((value) => Math.round((value + match) * 255).toString(16).padStart(2, "0"))
     .join("")}`;
+}
+
+export function isAutomaticActorDeltaStatus(effect, data = {}) {
+  const effectId = effect?.id ?? data?._id ?? data?.id ?? "";
+  const parentName = effect?.parent?.documentName ?? effect?.parent?.constructor?.name ?? "";
+  const isAutomaticDnd5eStatus = effectId.startsWith("dnd5edead") || effectId.startsWith("dnd5ebloodied");
+  return isAutomaticDnd5eStatus && parentName.includes("ActorDelta");
 }
 
 function applicationElement(application, renderedHtml = null) {
@@ -71,6 +76,7 @@ export class WorkspaceBridge {
   #unsubscribe = null;
   #controlTokenHook = null;
   #canvasReadyHook = null;
+  #systemStatusGuardHook = null;
   #rollAttackHook = null;
   #sheetRenderHooks = [];
   #sheetDiagnosticHooks = [];
@@ -97,6 +103,10 @@ export class WorkspaceBridge {
   #workspaceWindow = null;
   #tokenColorOverlays = new Map();
   #hoveredToken = null;
+  #combatantColors = new Map();
+  #colorCombatId = null;
+  #nextColorIndex = 0;
+  #remoteEnemyColors = [];
 
   constructor({ eventBus, getSnapshot, logger = createLogger("WorkspaceBridge") }) {
     this.#eventBus = eventBus;
@@ -111,7 +121,8 @@ export class WorkspaceBridge {
   start() {
     this.#channel = new BroadcastChannel(CHANNEL_NAME);
     this.#channel.addEventListener("message", (event) => this.#receive(event.data));
-    this.#unsubscribe = this.#eventBus.on("combatStateChanged", () => {
+    this.#unsubscribe = this.#eventBus.on("combatStateChanged", (event) => {
+      this.#handleEncounterTransition(event);
       this.#render();
       this.#broadcastState();
       this.#syncTokenColors();
@@ -126,6 +137,16 @@ export class WorkspaceBridge {
       this.#clearTokenColors();
       this.#syncTokenColors();
     });
+
+    if (this.#workspaceMode) {
+      this.#systemStatusGuardHook = Hooks.on("preCreateActiveEffect", (effect, data) => {
+        if (!isAutomaticActorDeltaStatus(effect, data)) return;
+        const effectId = effect?.id ?? data?._id ?? data?.id ?? "";
+        const parentName = effect?.parent?.documentName ?? effect?.parent?.constructor?.name ?? "";
+        this.#recordSheetDebug("duplicate system status blocked", { effectId, parentName });
+        return false;
+      });
+    }
 
     if (this.#workspaceMode) {
       this.#registerSheetHooks();
@@ -153,6 +174,11 @@ export class WorkspaceBridge {
     if (this.#canvasReadyHook !== null) {
       Hooks.off("canvasReady", this.#canvasReadyHook);
       this.#canvasReadyHook = null;
+    }
+
+    if (this.#systemStatusGuardHook !== null) {
+      Hooks.off("preCreateActiveEffect", this.#systemStatusGuardHook);
+      this.#systemStatusGuardHook = null;
     }
 
     if (this.#rollAttackHook !== null) {
@@ -272,6 +298,10 @@ export class WorkspaceBridge {
               </div>
               <span class="gm-workspace-enemy-count" data-field="enemy-count">0 Gegner</span>
             </header>
+            <div class="gm-workspace-current-turn" data-role="current-turn">
+              <span>Aktueller Zug</span>
+              <strong data-field="current-turn-name">Kein laufender Kampf</strong>
+            </div>
             <div class="gm-workspace-enemy-list" data-role="enemy-list"></div>
           </section>
           <section class="gm-workspace-controls">
@@ -613,18 +643,38 @@ export class WorkspaceBridge {
 
     if (message.type === "hoverToken" && !this.#workspaceMode) {
       this.#hoverLaptopToken(message);
+      return;
+    }
+
+    if (message.type === "clearTokenSelection" && !this.#workspaceMode) {
+      this.#clearLaptopSelection();
+      return;
+    }
+
+    if (message.type === "enemyColors" && !this.#workspaceMode) {
+      this.#remoteEnemyColors = Array.isArray(message.entries) ? message.entries : [];
+      this.#syncTokenColors();
     }
   }
 
   #enemyEntries() {
     const snapshot = this.#getSnapshot?.();
-    if (!snapshot?.combatId) return [];
+    if (!snapshot?.combatId || !snapshot.started) return [];
+    if (this.#colorCombatId !== snapshot.combatId) {
+      this.#combatantColors.clear();
+      this.#colorCombatId = snapshot.combatId;
+      this.#nextColorIndex = 0;
+    }
     const allEnemies = snapshot.combatants.filter((combatant) => combatant.type === "npc");
     const totals = new Map();
     for (const enemy of allEnemies) totals.set(enemy.name, (totals.get(enemy.name) ?? 0) + 1);
     const occurrences = new Map();
 
     return allEnemies.map((combatant) => {
+      if (!this.#combatantColors.has(combatant.id)) {
+        this.#combatantColors.set(combatant.id, combatantColor(this.#nextColorIndex));
+        this.#nextColorIndex += 1;
+      }
       const occurrence = (occurrences.get(combatant.name) ?? 0) + 1;
       occurrences.set(combatant.name, occurrence);
       return {
@@ -633,7 +683,7 @@ export class WorkspaceBridge {
         sceneId: snapshot.sceneId,
         active: combatant.id === snapshot.activeCombatantId,
         onCurrentScene: snapshot.sceneId === canvas?.scene?.id && combatant.tokenPresent,
-        color: combatantColor(combatant.id)
+        color: this.#combatantColors.get(combatant.id)
       };
     }).filter((combatant) => !combatant.defeated);
   }
@@ -642,13 +692,17 @@ export class WorkspaceBridge {
     const list = this.#root?.querySelector('[data-role="enemy-list"]');
     if (!list) return;
     const entries = this.#enemyEntries();
+    this.#channel?.postMessage({
+      type: "enemyColors",
+      entries: entries.map(({ tokenId, sceneId, color, active }) => ({ tokenId, sceneId, color, active }))
+    });
     this.#set("enemy-count", `${entries.length} ${entries.length === 1 ? "Gegner" : "Gegner"}`);
 
     if (!entries.length) {
       const snapshot = this.#getSnapshot?.();
-      list.innerHTML = `<div class="gm-workspace-enemy-empty">${snapshot?.combatId
+      list.innerHTML = `<div class="gm-workspace-enemy-empty">${snapshot?.started
         ? "Keine kampffähigen Gegner im Encounter."
-        : "Kein Encounter auf der aktuellen Szene."}</div>`;
+        : "Kein laufender Encounter."}</div>`;
       return;
     }
 
@@ -661,7 +715,10 @@ export class WorkspaceBridge {
         data-token-id="${entry.tokenId ?? ""}"
         data-scene-id="${entry.sceneId ?? ""}">
         <span class="gm-workspace-enemy-name">${foundry.utils.escapeHTML(entry.displayName ?? "Unbenannter Gegner")}</span>
-        <span class="gm-workspace-enemy-state">${entry.active ? "Aktiv" : entry.hidden ? "Versteckt" : "Bereit"}</span>
+        <span class="gm-workspace-enemy-indicators">
+          ${entry.active ? '<span class="gm-workspace-turn-badge"><i class="fa-solid fa-swords" aria-hidden="true"></i> Am Zug</span>' : ""}
+          ${entry.tokenId === selectedTokenId ? '<span class="gm-workspace-selected-badge"><i class="fa-solid fa-crosshairs" aria-hidden="true"></i> Ausgewählt</span>' : ""}
+        </span>
         <span class="gm-workspace-enemy-meta">${entry.hidden ? "versteckt" : "sichtbar"} · ${entry.onCurrentScene ? "auf Szene" : "nicht auf aktueller Szene"}</span>
       </button>
     `).join("");
@@ -710,6 +767,32 @@ export class WorkspaceBridge {
     token.control({ releaseOthers: true });
   }
 
+  #handleEncounterTransition(event) {
+    const previous = event?.previousSnapshot ?? null;
+    const current = event?.snapshot ?? this.#getSnapshot?.();
+    const ended = Boolean(previous?.started) && (!current?.started || previous.combatId !== current?.combatId);
+    if (!ended) return;
+
+    this.#combatantColors.clear();
+    this.#colorCombatId = null;
+    this.#nextColorIndex = 0;
+    this.#remoteEnemyColors = [];
+
+    if (this.#workspaceMode) {
+      this.#pinnedSelection = null;
+      this.#selectedToken = null;
+      this.#selectionRevision += 1;
+      this.#channel?.postMessage({ type: "clearTokenSelection" });
+    } else {
+      this.#clearLaptopSelection();
+    }
+  }
+
+  #clearLaptopSelection() {
+    canvas?.tokens?.releaseAll?.();
+    this.#hoverLaptopToken({ active: false });
+  }
+
   #hoverLaptopToken({ tokenId, sceneId, active }) {
     if (this.#hoveredToken && (!active || this.#hoveredToken.id !== tokenId)) {
       this.#hoveredToken.hover = false;
@@ -726,7 +809,7 @@ export class WorkspaceBridge {
 
   #syncTokenColors() {
     if (this.#workspaceMode || !canvas?.ready) return;
-    const desired = new Map(this.#enemyEntries()
+    const desired = new Map(this.#remoteEnemyColors
       .filter(({ tokenId, sceneId }) => tokenId && sceneId === canvas.scene?.id)
       .map((entry) => [entry.tokenId, entry]));
 
@@ -789,7 +872,7 @@ export class WorkspaceBridge {
   #activeSelection() {
     const snapshot = this.#getSnapshot?.();
     const active = snapshot?.combatants?.find(({ id }) => id === snapshot.activeCombatantId) ?? null;
-    if (snapshot?.activeType !== "npc" || !active) return null;
+    if (!snapshot?.started || snapshot?.activeType !== "npc" || !active) return null;
 
     return {
       actor: snapshot.context?.actor ?? null,
@@ -871,6 +954,10 @@ export class WorkspaceBridge {
     this.#set("active-name", active?.name);
     this.#set("active-type", snapshot?.activeType);
     this.#set("selected-name", this.#selectedToken?.actorName ?? this.#selectedToken?.tokenName);
+    this.#set("current-turn-name", snapshot?.started ? active?.name : null, "Kein laufender Kampf");
+    const currentTurn = this.#root.querySelector('[data-role="current-turn"]');
+    currentTurn.classList.toggle("is-player-turn", snapshot?.started && snapshot?.activeType === "player");
+    currentTurn.classList.toggle("is-npc-turn", snapshot?.started && snapshot?.activeType === "npc");
     this.#renderEnemyList();
 
     const revision = ++this.#selectionRevision;

@@ -2,6 +2,21 @@
 
 All notable changes to GM Combat Workspace will be documented in this file.
 
+## [0.5.1] - 2026-08-01
+
+### Fixed
+
+- Separates the prominent current-turn marker from the independently selected dashboard row
+- Shows the current player name without marking an enemy as active during a player turn
+- Assigns collision-free encounter palette colors in the companion and broadcasts the authoritative mapping to laptop token outlines
+- Reads token visibility even when the Combatant document itself is not hidden
+- Clears pinning, selection, statblock, hover, colors, enemy list, and laptop token control when an encounter ends
+- Blocks duplicate automatic D&D5e Dead and Bloodied ActiveEffect creation only inside the companion client for synthetic ActorDelta tokens
+
+### Changed
+
+- Selected enemies use a blue dashed outline and label; the active enemy uses a strong gold `Am Zug` treatment
+
 ## [0.5.0] - 2026-08-01
 
 ### Added

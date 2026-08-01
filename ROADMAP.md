@@ -233,7 +233,7 @@ Das Modul baut keinen Ersatz-Statblock. Angriffe, Features, Rettungswürfe, Rech
 
 ## Etappe 3 – Dashboard-Grundfenster und Gegnerliste
 
-**Status:** `[-]` – Version 0.5.0 im Foundry-Test
+**Status:** `[-]` – Version 0.5.1 im Foundry-Test
 
 ### Ziel
 

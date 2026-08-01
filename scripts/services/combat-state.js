@@ -61,7 +61,7 @@ function summarizeCombatant(combatant, scene) {
     tokenId: token?.id ?? combatant.tokenId ?? null,
     tokenPresent: Boolean(token),
     initiative: combatant.initiative ?? null,
-    hidden: Boolean(combatant.hidden ?? token?.hidden),
+    hidden: Boolean(combatant.hidden || token?.hidden),
     defeated: Boolean(combatant.defeated ?? combatant.isDefeated)
   };
 }
@@ -106,7 +106,7 @@ export function createCombatSnapshot(combat) {
     activeType: classifyCombatant(activeCombatant),
     activeActorId: activeActor?.id ?? activeCombatant?.actorId ?? null,
     activeTokenId: activeToken?.id ?? activeCombatant?.tokenId ?? null,
-    activeHidden: Boolean(activeCombatant?.hidden ?? activeToken?.hidden),
+    activeHidden: Boolean(activeCombatant?.hidden || activeToken?.hidden),
     combatants
   };
 

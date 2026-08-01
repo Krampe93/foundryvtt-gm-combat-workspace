@@ -18,7 +18,7 @@ https://raw.githubusercontent.com/Krampe93/foundryvtt-gm-combat-workspace/main/m
 
 This manifest URL is permanent. Foundry can use it to discover and install future test versions through the normal update function.
 
-Version `0.5.0` adds the Stage 3 encounter dashboard to the companion workspace. It lists all undefeated NPC combatants, keeps stable color assignments between list entries and laptop tokens, and selects a token plus its statblock without moving the map camera.
+Version `0.5.1` refines the Stage 3 encounter dashboard with separate current-turn and selected states, synchronized unique encounter colors, live token visibility, a complete encounter-end reset, and a companion-only guard against duplicate automatic D&D5e Dead/Bloodied effects.
 
 ## Development
 

@@ -222,6 +222,40 @@ body.gm-combat-workspace-companion > .notifications {
   white-space: nowrap;
 }
 
+#gm-combat-workspace-shell .gm-workspace-current-turn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  padding: 0.8rem 1rem;
+  color: var(--gm-combat-muted);
+  background: #25292d;
+  border: 2px solid var(--gm-combat-border);
+  border-radius: 5px;
+}
+
+#gm-combat-workspace-shell .gm-workspace-current-turn > span {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+#gm-combat-workspace-shell .gm-workspace-current-turn > strong {
+  color: var(--gm-combat-text);
+  font-size: 1.05rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-current-turn.is-player-turn {
+  background: #243544;
+  border-color: #58a6d8;
+}
+
+#gm-combat-workspace-shell .gm-workspace-current-turn.is-npc-turn {
+  background: #46351f;
+  border-color: #f0ad4e;
+}
+
 #gm-combat-workspace-shell .gm-workspace-enemy-list {
   display: grid;
   gap: 0.45rem;
@@ -259,13 +293,44 @@ body.gm-combat-workspace-companion > .notifications {
 }
 
 #gm-combat-workspace-shell .gm-workspace-enemy.is-active {
-  background: #3b3329;
-  box-shadow: inset 0 0 0 1px var(--gm-enemy-color);
+  background: #46351f;
+  border-color: #f0ad4e;
+  box-shadow: inset 0 0 0 2px #f0ad4e;
 }
 
 #gm-combat-workspace-shell .gm-workspace-enemy.is-selected {
-  outline: 2px solid var(--gm-enemy-color);
+  outline: 2px dashed #72c7f0;
   outline-offset: 1px;
+}
+
+#gm-combat-workspace-shell .gm-workspace-enemy-indicators {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: 0.35rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-turn-badge,
+#gm-combat-workspace-shell .gm-workspace-selected-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+#gm-combat-workspace-shell .gm-workspace-turn-badge {
+  color: #1a1308;
+  background: #f0ad4e;
+}
+
+#gm-combat-workspace-shell .gm-workspace-selected-badge {
+  color: #0b1b24;
+  background: #72c7f0;
 }
 
 #gm-combat-workspace-shell .gm-workspace-enemy-name {

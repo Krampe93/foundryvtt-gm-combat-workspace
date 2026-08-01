@@ -294,13 +294,13 @@ Do not approve Stage 2B if the configured native sheet cannot be embedded, its a
 
 ---
 
-## Stage 3 – Encounter dashboard (0.5.0)
+## Stage 3 – Encounter dashboard (0.5.1)
 
 Complete and approve Stage 2B first. Keep the map on the laptop and the companion workspace maximized on the second monitor.
 
 ### A. Layout and empty states
 
-- [ ] Update GM Combat Workspace and confirm version `0.5.0`.
+- [ ] Update GM Combat Workspace and confirm version `0.5.1`.
 - [ ] Hard-reload both Foundry windows once with Ctrl+F5.
 - [ ] Confirm that the native statblock uses roughly 30 percent and the dashboard roughly 70 percent of the companion width.
 - [ ] Confirm that the Adult Red Dragon sheet remains readable, scrollable, and clickable in the narrower column.
@@ -347,3 +347,16 @@ Complete and approve Stage 2B first. Keep the map on the laptop and the companio
 - [ ] Confirm that no red `gm-combat-workspace` error appears in either F12 console.
 
 Do not approve Stage 3 if the dashboard moves the laptop camera, selects the wrong token, shows defeated enemies, duplicates equal-name enemies, loses color assignments during ordinary turn changes, or interferes with native statblock actions.
+
+### F. Version 0.5.1 regression patch
+
+- [ ] Select an NPC while a player is active and confirm that the NPC shows only `Ausgewählt`, never `Am Zug`.
+- [ ] Confirm that the player name is prominently displayed above the enemy list.
+- [ ] Advance to an NPC and confirm that only this NPC receives the gold `Am Zug` marker.
+- [ ] Select a different NPC and confirm that `Am Zug` and `Ausgewählt` remain visibly distinct.
+- [ ] Confirm that no two current enemies share the same dashboard color.
+- [ ] Hide and reveal a token and confirm an immediate `Versteckt`/`Bereit` update.
+- [ ] On an unlinked token, set HP to zero through the token HUD and confirm that Dead/Bloodied is applied without duplicate ActorDelta errors.
+- [ ] Repeat the HP-zero test with a linked token.
+- [ ] End the encounter and confirm that pin, statblock, dashboard rows, token colors, hover, and laptop token selection all clear.
+- [ ] Start a new encounter and confirm that no enemy from the previous encounter remains selected or pinned.

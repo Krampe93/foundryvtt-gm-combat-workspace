@@ -27,6 +27,7 @@ function combatant({
   tokenId = null,
   initiative = null,
   hidden = false,
+  tokenHidden = hidden,
   defeated = false,
   flags = {}
 }) {
@@ -38,6 +39,7 @@ function combatant({
     tokenId,
     initiative,
     hidden,
+    tokenHidden,
     defeated,
     getFlag(moduleId, key) {
       return flags[moduleId]?.[key];
@@ -62,7 +64,7 @@ function combat({
           entry.tokenId,
           {
             id: entry.tokenId,
-            hidden: entry.hidden
+            hidden: entry.tokenHidden
           }
         ])
     )
@@ -157,6 +159,20 @@ test("preserves hidden and defeated enemy states for the dashboard", () => {
   assert.equal(snapshot.combatants[0].defeated, false);
   assert.equal(snapshot.combatants[1].hidden, false);
   assert.equal(snapshot.combatants[1].defeated, true);
+});
+
+test("treats a hidden token as hidden when the combatant itself is visible", () => {
+  const npc = combatant({
+    id: "hidden-token-npc",
+    actor: actor("hidden-token-actor", "npc"),
+    tokenId: "hidden-token",
+    hidden: false,
+    tokenHidden: true
+  });
+  const snapshot = createCombatSnapshot(combat({ entries: [npc] }));
+
+  assert.equal(snapshot.combatants[0].hidden, true);
+  assert.equal(snapshot.activeHidden, true);
 });
 
 test("emits combat start and active combatant once", () => {
