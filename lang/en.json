@@ -11,5 +11,6 @@
   "GMCOMBAT.Settings.PanToActiveNpc.Name": "Pan to the active enemy",
   "GMCOMBAT.Settings.PanToActiveNpc.Hint": "Moves the map view when an enemy turn begins.",
   "GMCOMBAT.Settings.HiddenMovement.Name": "Track hidden movement",
-  "GMCOMBAT.Settings.HiddenMovement.Hint": "Shows the movement path of the active hidden enemy."
+  "GMCOMBAT.Settings.HiddenMovement.Hint": "Shows the movement path of the active hidden enemy.",
+  "GMCOMBAT.Workspace.PopupBlocked": "The browser blocked the workspace window. Allow pop-ups for Foundry and try again."
 }

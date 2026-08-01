@@ -139,3 +139,66 @@ For each user action, count only the named coordinator events. Foundry may print
 - [ ] Foundry, D&D5e, and optional module versions are recorded with the result.
 
 Do not approve Stage 1 if an action produces duplicate named events, the active participant is classified incorrectly, a placeholder produces an error, or events continue from the wrong scene.
+
+---
+
+## Stage 2A – Dual-monitor connection test
+
+Use the normal GM Foundry window as the laptop/map window. The newly opened companion window represents the second monitor. The statblock and finished enemy dashboard are not included in this release.
+
+### A. Update and startup
+
+- [ ] Update GM Combat Workspace through Foundry and confirm version `0.3.0`.
+- [ ] Activate the module and reload the world.
+- [ ] Confirm that exactly one **GM Workspace öffnen** button appears at the lower-left edge.
+- [ ] Confirm that the normal map remains usable and no existing Foundry control is blocked.
+- [ ] Confirm that no red `gm-combat-workspace` error appears in F12.
+
+### B. Open the companion window
+
+- [ ] Click **GM Workspace öffnen**.
+- [ ] If the browser reports a blocked pop-up, allow pop-ups for the Foundry address and click again.
+- [ ] Confirm that a second Foundry window opens.
+- [ ] Confirm that the second window shows **GM Combat Workspace – Zwei-Fenster-Verbindungstest**.
+- [ ] Confirm that its status reads **Verbunden**.
+- [ ] Move it to the second monitor and maximize it.
+- [ ] Confirm that the original laptop window stays logged in and fully usable.
+- [ ] Click the launcher again and confirm that the existing companion window is reused instead of creating unlimited new windows.
+
+### C. Combat synchronization
+
+- [ ] Start with no active encounter and confirm **Kein gestarteter Kampf**.
+- [ ] Start an encounter in the laptop window.
+- [ ] Confirm that combat ID, round, turn, and active participant appear in the companion window.
+- [ ] Advance one turn and confirm that the companion updates without reloading.
+- [ ] Advance into the next round and confirm that round and turn update.
+- [ ] End the encounter and confirm that the companion returns to the inactive state.
+
+### D. Token selection synchronization
+
+- [ ] Select an NPC token on the laptop map.
+- [ ] Confirm that its name, type, Actor ID, and Token ID appear under **Auf Laptop angeklickt**.
+- [ ] Select a different NPC and confirm that all four values change.
+- [ ] Select two tokens that use the same Actor and confirm that the Token ID changes correctly.
+- [ ] Select a player token and confirm that the displayed type changes to `character`.
+- [ ] Confirm that selecting and moving tokens on the laptop remains normal.
+
+### E. Stability and optional modules
+
+- [ ] Keep both windows open and advance through at least one complete combat round.
+- [ ] Reload only the companion window and confirm that the current combat state returns.
+- [ ] Close the companion window, reopen it with the launcher, and confirm that synchronization resumes.
+- [ ] Test with RSReforged and Monk's Combat Details enabled, if installed.
+- [ ] Confirm that neither Foundry window shows a red module error.
+- [ ] Record whether both windows remained connected with the same GM account.
+
+### F. Acceptance
+
+- [ ] The laptop map remains completely usable.
+- [ ] The companion window stays open on the second monitor.
+- [ ] Combat state updates without manual reloads.
+- [ ] Laptop token selections reach the companion window reliably.
+- [ ] Opening the second window does not log out, freeze, or disconnect the first window.
+- [ ] Screenshots and F12 output are attached for every failed item.
+
+Do not approve Stage 2A if the second window disconnects the main GM client, combat updates require manual reloads, token selection does not cross between windows, or either window produces a red module error.

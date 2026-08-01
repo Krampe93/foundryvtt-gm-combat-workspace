@@ -2,6 +2,24 @@
 
 All notable changes to GM Combat Workspace will be documented in this file.
 
+## [0.3.0] - 2026-08-01
+
+Stage 2A test release for the dual-monitor foundation.
+
+### Added
+
+- GM-only **GM Workspace öffnen** launcher
+- Separate full Foundry client in companion/workspace mode
+- Live display of encounter, round, turn, and active participant
+- Cross-window synchronization of enemy token selections through BroadcastChannel
+- Public module API for opening the companion workspace
+- Responsive connection-test layout for the second monitor
+- Warning when the browser blocks the companion window
+
+### Changed
+
+- The planned primary workflow now keeps the map on the laptop and reserves a second monitor for the native statblock and enemy dashboard
+
 ## [0.2.0] - 2026-07-30
 
 Stage 1 test release. Manual Foundry acceptance is still pending.

@@ -11,5 +11,6 @@
   "GMCOMBAT.Settings.PanToActiveNpc.Name": "Kamera zum aktiven Gegner bewegen",
   "GMCOMBAT.Settings.PanToActiveNpc.Hint": "Verschiebt die Kartenansicht beim Beginn eines Gegnerzuges.",
   "GMCOMBAT.Settings.HiddenMovement.Name": "Verborgene Bewegung verfolgen",
-  "GMCOMBAT.Settings.HiddenMovement.Hint": "Zeigt den Bewegungspfad des aktiven verborgenen Gegners."
+  "GMCOMBAT.Settings.HiddenMovement.Hint": "Zeigt den Bewegungspfad des aktiven verborgenen Gegners.",
+  "GMCOMBAT.Workspace.PopupBlocked": "Das Workspace-Fenster wurde vom Browser blockiert. Bitte Pop-ups für Foundry erlauben."
 }

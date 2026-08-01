@@ -12,3 +12,100 @@
 .gm-combat-workspace .resource-used {
   opacity: 0.55;
 }
+
+#gm-combat-workspace-launcher {
+  position: fixed;
+  z-index: 100;
+  left: 16px;
+  bottom: 82px;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.75rem;
+  color: #f3f3f3;
+  background: rgba(18, 18, 20, 0.94);
+  border: 1px solid #d17b28;
+  border-radius: 5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+body.gm-combat-workspace-companion > :not(#gm-combat-workspace-connection-test) {
+  display: none !important;
+}
+
+#gm-combat-workspace-connection-test {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  overflow: auto;
+  padding: 1.25rem;
+  color: #ececec;
+  background: #17191c;
+}
+
+#gm-combat-workspace-connection-test .gm-workspace-test-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #555a60;
+}
+
+#gm-combat-workspace-connection-test h1,
+#gm-combat-workspace-connection-test h2,
+#gm-combat-workspace-connection-test p {
+  margin: 0;
+}
+
+#gm-combat-workspace-connection-test .gm-workspace-status {
+  padding: 0.4rem 0.75rem;
+  background: #3f7d51;
+  border-radius: 999px;
+}
+
+#gm-combat-workspace-connection-test .gm-workspace-test-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+#gm-combat-workspace-connection-test article {
+  padding: 1rem;
+  background: #24272b;
+  border: 1px solid #555a60;
+  border-radius: 6px;
+}
+
+#gm-combat-workspace-connection-test article h2 {
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid #555a60;
+}
+
+#gm-combat-workspace-connection-test dl {
+  display: grid;
+  grid-template-columns: minmax(90px, auto) 1fr;
+  gap: 0.55rem 1rem;
+}
+
+#gm-combat-workspace-connection-test dt {
+  color: #b9bec4;
+}
+
+#gm-combat-workspace-connection-test dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+#gm-combat-workspace-connection-test footer {
+  margin-top: 1rem;
+  color: #b9bec4;
+}
+
+@media (max-width: 900px) {
+  #gm-combat-workspace-connection-test .gm-workspace-test-grid {
+    grid-template-columns: 1fr;
+  }
+}
