@@ -51,6 +51,8 @@ export class WorkspaceBridge {
   #controlTokenHook = null;
   #rollAttackHook = null;
   #sheetRenderHooks = [];
+  #sheetDiagnosticHooks = [];
+  #sheetHostObserver = null;
   #sheetMountTimers = new Set();
   #windowFocusHandler = null;
   #root = null;
@@ -66,6 +68,7 @@ export class WorkspaceBridge {
     click: null,
     roll: null
   };
+  #sheetDebug = [];
   #workspaceMode = isWorkspaceWindow();
   #workspaceWindow = null;
 
@@ -123,6 +126,13 @@ export class WorkspaceBridge {
       Hooks.off(hookName, hookId);
     }
     this.#sheetRenderHooks = [];
+
+    for (const [hookName, hookId] of this.#sheetDiagnosticHooks) {
+      Hooks.off(hookName, hookId);
+    }
+    this.#sheetDiagnosticHooks = [];
+    this.#sheetHostObserver?.disconnect();
+    this.#sheetHostObserver = null;
 
     for (const timer of this.#sheetMountTimers) clearTimeout(timer);
     this.#sheetMountTimers.clear();
@@ -248,6 +258,11 @@ export class WorkspaceBridge {
             <p>Zeigt den letzten Workspace-Klick und den daraus entstandenen D&D5e-Angriff.</p>
             <pre data-role="roll-debug">Noch kein Item im Workspace benutzt.</pre>
           </section>
+          <section class="gm-workspace-diagnostics">
+            <h2>Statblock-Diagnose</h2>
+            <p>Protokolliert Render-, Actor-Update-, Close- und Container-Ereignisse.</p>
+            <pre data-role="sheet-debug">Noch kein Statblock-Ereignis aufgezeichnet.</pre>
+          </section>
         </aside>
       </section>
     `;
@@ -257,6 +272,7 @@ export class WorkspaceBridge {
 
     document.body.append(root);
     this.#root = root;
+    this.#registerSheetDiagnostics();
 
   }
 
@@ -265,9 +281,51 @@ export class WorkspaceBridge {
       const hookId = Hooks.on(hookName, (application, html) => {
         const actor = application?.actor ?? application?.document ?? application?.object ?? null;
         if (!this.#workspaceMode || actor !== this.#displayedActor) return;
+        this.#recordSheetDebug(hookName, this.#sheetSnapshot(application, html));
         this.#scheduleSheetMount(application, html);
       });
       this.#sheetRenderHooks.push([hookName, hookId]);
+    }
+  }
+
+  #registerSheetDiagnostics() {
+    for (const hookName of ["closeActorSheet", "closeActorSheetV2"]) {
+      const hookId = Hooks.on(hookName, (application) => {
+        const actor = application?.actor ?? application?.document ?? application?.object ?? null;
+        if (actor !== this.#displayedActor) return;
+        this.#recordSheetDebug(hookName, this.#sheetSnapshot(application));
+      });
+      this.#sheetDiagnosticHooks.push([hookName, hookId]);
+    }
+
+    const updateActorHook = Hooks.on("updateActor", (actor, changes) => {
+      if (actor !== this.#displayedActor) return;
+      let changedPaths = Object.keys(changes ?? {});
+      try {
+        changedPaths = Object.keys(foundry.utils.flattenObject(changes ?? {}));
+      } catch (_error) {
+        // Top-level paths are enough when flattenObject is unavailable.
+      }
+      this.#recordSheetDebug("updateActor", {
+        actor: actor.name,
+        changedPaths
+      });
+      this.#scheduleSheetSnapshots("after updateActor");
+    });
+    this.#sheetDiagnosticHooks.push(["updateActor", updateActorHook]);
+
+    const host = this.#root?.querySelector('[data-role="sheet-host"]');
+    if (host) {
+      this.#sheetHostObserver = new MutationObserver((mutations) => {
+        const directChanges = mutations.filter((mutation) => mutation.target === host);
+        if (!directChanges.length) return;
+        this.#recordSheetDebug("sheetHost childList", {
+          added: directChanges.reduce((total, mutation) => total + mutation.addedNodes.length, 0),
+          removed: directChanges.reduce((total, mutation) => total + mutation.removedNodes.length, 0),
+          snapshot: this.#sheetSnapshot(this.#displayedSheet)
+        });
+      });
+      this.#sheetHostObserver.observe(host, { childList: true });
     }
   }
 
@@ -377,6 +435,11 @@ export class WorkspaceBridge {
       roll: null
     };
     this.#renderRollDebug();
+    this.#recordSheetDebug("item click", {
+      item: item.name,
+      itemId: item.id,
+      snapshot: this.#sheetSnapshot(this.#displayedSheet)
+    });
 
     const cleanEvent = new MouseEvent("click", {
       bubbles: true,
@@ -405,6 +468,7 @@ export class WorkspaceBridge {
     } catch (error) {
       this.#logger.error(`Item use failed: ${item.name}`, error);
     }
+    this.#scheduleSheetSnapshots(`after item.use: ${item.name}`);
   }
 
   #rollKeybindings() {
@@ -427,6 +491,51 @@ export class WorkspaceBridge {
     const output = this.#root?.querySelector('[data-role="roll-debug"]');
     if (!output) return;
     output.textContent = JSON.stringify(this.#rollDebug, null, 2);
+  }
+
+  #sheetSnapshot(application = this.#displayedSheet, renderedHtml = null) {
+    const element = applicationElement(application, renderedHtml);
+    const host = this.#root?.querySelector('[data-role="sheet-host"]') ?? null;
+    return {
+      actor: this.#displayedActor?.name ?? null,
+      applicationClass: application?.constructor?.name ?? null,
+      rendered: application?.rendered ?? null,
+      elementFound: Boolean(element),
+      elementConnected: element?.isConnected ?? false,
+      elementParent: element?.parentElement?.id || element?.parentElement?.className || null,
+      elementClasses: element ? Array.from(element.classList) : [],
+      elementChildren: element?.childElementCount ?? null,
+      elementTextLength: element?.textContent?.trim()?.length ?? null,
+      hostChildren: host?.childElementCount ?? null,
+      hostTextLength: host?.textContent?.trim()?.length ?? null
+    };
+  }
+
+  #scheduleSheetSnapshots(reason) {
+    for (const delay of [0, 50, 200, 500, 1000]) {
+      const timer = setTimeout(() => {
+        this.#sheetMountTimers.delete(timer);
+        this.#recordSheetDebug(`${reason} +${delay}ms`, this.#sheetSnapshot());
+      }, delay);
+      this.#sheetMountTimers.add(timer);
+    }
+  }
+
+  #recordSheetDebug(event, data = {}) {
+    this.#sheetDebug.push({
+      time: new Date().toLocaleTimeString("de-DE", { hour12: false }),
+      event,
+      ...data
+    });
+    if (this.#sheetDebug.length > 40) this.#sheetDebug.splice(0, this.#sheetDebug.length - 40);
+    this.#renderSheetDebug();
+  }
+
+  #renderSheetDebug() {
+    const output = this.#root?.querySelector('[data-role="sheet-debug"]');
+    if (!output) return;
+    output.textContent = JSON.stringify(this.#sheetDebug, null, 2);
+    output.scrollTop = output.scrollHeight;
   }
 
   #broadcastControlledToken() {
@@ -588,6 +697,7 @@ export class WorkspaceBridge {
     await this.#closeDisplayedSheet();
     this.#displayedActor = actor;
     this.#showSheetLoading(actor.name);
+    this.#recordSheetDebug("showActorSheet start", { actor: actor.name });
 
     const sheet = actor.sheet;
     if (!sheet) throw new Error(`Für ${actor.name} ist kein Actor-Sheet verfügbar.`);
@@ -598,6 +708,7 @@ export class WorkspaceBridge {
       ? sheet.render({ force: true, focus: false })
       : sheet.render(true, { focus: false });
     if (renderResult?.then) await renderResult;
+    this.#recordSheetDebug("showActorSheet render returned", this.#sheetSnapshot(sheet));
     this.#mountSheet(sheet);
   }
 

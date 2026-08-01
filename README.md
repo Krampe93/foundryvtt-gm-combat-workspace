@@ -18,7 +18,7 @@ https://raw.githubusercontent.com/Krampe93/foundryvtt-gm-combat-workspace/main/m
 
 This manifest URL is permanent. Foundry can use it to discover and install future test versions through the normal update function.
 
-Version `0.4.7` is the Stage 2B diagnostic release. The companion window includes a read-only roll diagnosis panel for identifying the remaining unintended-disadvantage source before another behavioral fix is attempted.
+Version `0.4.8` is the Stage 2B diagnostic release. The companion window includes read-only roll and native-sheet lifecycle diagnosis panels so remaining failures can be observed before another behavioral fix is attempted.
 
 ## Development
 

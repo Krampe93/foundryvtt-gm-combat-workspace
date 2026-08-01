@@ -2,6 +2,18 @@
 
 All notable changes to GM Combat Workspace will be documented in this file.
 
+## [0.4.8] - 2026-08-01
+
+### Added
+
+- Read-only statblock lifecycle diagnostics in the companion workspace
+- Records native sheet render and close hooks, Actor update paths, direct host replacements, and item-use timing
+- Captures sheet and host connectivity, parent, child count, and text length at 0, 50, 200, 500, and 1000 milliseconds after an item use or Actor update
+
+### Changed
+
+- This release intentionally observes the disappearing-statblock failure without attempting another lifecycle fix
+
 ## [0.4.7] - 2026-08-01
 
 ### Added
