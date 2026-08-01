@@ -2,6 +2,13 @@
 
 All notable changes to GM Combat Workspace will be documented in this file.
 
+## [0.4.5] - 2026-08-01
+
+### Fixed
+
+- Restored the proven visible in-panel sheet mount after the top-level positioning experiment could remain stuck in the loading state with 5e Statblock Sheet
+- Retained the direct D&D5e keyboard-state cleanup from 0.4.4 for isolated roll testing
+
 ## [0.4.4] - 2026-08-01
 
 ### Fixed

@@ -34,7 +34,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
 }
 
-body.gm-combat-workspace-companion > :not(#gm-combat-workspace-shell):not(.gm-workspace-embedded-sheet) {
+body.gm-combat-workspace-companion > :not(#gm-combat-workspace-shell) {
   display: none !important;
 }
 
@@ -137,10 +137,6 @@ body.gm-combat-workspace-companion > :not(#gm-combat-workspace-shell):not(.gm-wo
   padding: 0.5rem;
 }
 
-#gm-combat-workspace-shell .gm-workspace-sheet-host.has-embedded-sheet {
-  overflow: hidden;
-}
-
 #gm-combat-workspace-shell .gm-workspace-empty {
   display: flex;
   flex-direction: column;
@@ -219,14 +215,13 @@ body.gm-combat-workspace-companion > :not(#gm-combat-workspace-shell):not(.gm-wo
 
 /* Native Foundry/D&D5e actor sheet embedded in the left workspace column. */
 #gm-combat-workspace-shell .gm-workspace-embedded-sheet {
-  position: fixed !important;
-  z-index: 100001 !important;
+  position: relative !important;
   inset: auto !important;
-  top: var(--gm-workspace-sheet-top) !important;
-  left: var(--gm-workspace-sheet-left) !important;
-  width: var(--gm-workspace-sheet-width) !important;
+  top: auto !important;
+  left: auto !important;
+  width: 100% !important;
   max-width: none !important;
-  height: var(--gm-workspace-sheet-height) !important;
+  height: 100% !important;
   max-height: none !important;
   margin: 0 !important;
   transform: none !important;
