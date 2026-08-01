@@ -3,6 +3,7 @@ import { createLogger } from "../core/logger.js";
 
 const CHANNEL_NAME = `${MODULE_ID}.workspace`;
 const WORKSPACE_PARAMETER = "gmCombatWorkspace";
+const WORKSPACE_TARGET = `${MODULE_ID}-companion`;
 
 function isWorkspaceWindow() {
   return new URL(window.location.href).searchParams.get(WORKSPACE_PARAMETER) === "1";
@@ -14,22 +15,31 @@ function workspaceUrl() {
   return url.href;
 }
 
-function selectedTokenSummary(token) {
+function tokenSummary(token) {
   const document = token?.document ?? token ?? null;
   const actor = token?.actor ?? document?.actor ?? null;
 
-  return {
-    tokenId: document?.id ?? token?.id ?? null,
-    tokenName: document?.name ?? token?.name ?? null,
-    actorId: actor?.id ?? document?.actorId ?? null,
+  return document ? {
+    tokenId: document.id ?? token?.id ?? null,
+    tokenName: document.name ?? token?.name ?? null,
+    actorId: actor?.id ?? document.actorId ?? null,
     actorName: actor?.name ?? null,
     actorType: actor?.type ?? null,
-    sceneId: document?.parent?.id ?? canvas?.scene?.id ?? null
-  };
+    sceneId: document.parent?.id ?? canvas?.scene?.id ?? null
+  } : null;
 }
 
 function displayValue(value, fallback = "–") {
   return value === null || value === undefined || value === "" ? fallback : String(value);
+}
+
+function applicationElement(application, renderedHtml = null) {
+  const candidate = application?.element ?? renderedHtml ?? null;
+  if (!candidate) return null;
+  if (candidate instanceof HTMLElement) return candidate;
+  if (candidate?.jquery && candidate[0] instanceof HTMLElement) return candidate[0];
+  if (candidate[0] instanceof HTMLElement) return candidate[0];
+  return null;
 }
 
 export class WorkspaceBridge {
@@ -39,8 +49,13 @@ export class WorkspaceBridge {
   #channel = null;
   #unsubscribe = null;
   #controlTokenHook = null;
+  #sheetRenderHooks = [];
   #root = null;
   #selectedToken = null;
+  #pinnedSelection = null;
+  #displayedActor = null;
+  #displayedSheet = null;
+  #selectionRevision = 0;
   #workspaceMode = isWorkspaceWindow();
   #workspaceWindow = null;
 
@@ -61,13 +76,14 @@ export class WorkspaceBridge {
       this.#render();
       this.#broadcastState();
     });
-    this.#controlTokenHook = Hooks.on("controlToken", (token, controlled) => {
-      if (!controlled || this.#workspaceMode) return;
-      this.#selectedToken = selectedTokenSummary(token);
-      this.#channel?.postMessage({ type: "tokenSelected", token: this.#selectedToken });
+
+    this.#controlTokenHook = Hooks.on("controlToken", () => {
+      if (this.#workspaceMode) return;
+      queueMicrotask(() => this.#broadcastControlledToken());
     });
 
     if (this.#workspaceMode) {
+      this.#registerSheetHooks();
       this.#renderWorkspace();
       this.#channel.postMessage({ type: "workspaceReady" });
     } else {
@@ -86,6 +102,12 @@ export class WorkspaceBridge {
       this.#controlTokenHook = null;
     }
 
+    for (const [hookName, hookId] of this.#sheetRenderHooks) {
+      Hooks.off(hookName, hookId);
+    }
+    this.#sheetRenderHooks = [];
+
+    this.#closeDisplayedSheet();
     this.#channel?.close();
     this.#channel = null;
     this.#root?.remove();
@@ -99,10 +121,9 @@ export class WorkspaceBridge {
       return true;
     }
 
-    const target = `${MODULE_ID}-companion`;
     const popup = window.open(
       "",
-      target,
+      WORKSPACE_TARGET,
       "popup=yes,width=1400,height=900,resizable=yes,scrollbars=yes"
     );
 
@@ -113,8 +134,8 @@ export class WorkspaceBridge {
 
     let alreadyWorkspace = false;
     try {
-      const currentUrl = new URL(popup.location.href);
-      alreadyWorkspace = currentUrl.searchParams.get(WORKSPACE_PARAMETER) === "1";
+      alreadyWorkspace = new URL(popup.location.href)
+        .searchParams.get(WORKSPACE_PARAMETER) === "1";
     } catch (_error) {
       alreadyWorkspace = false;
     }
@@ -140,49 +161,87 @@ export class WorkspaceBridge {
     document.body.classList.add("gm-combat-workspace-companion");
 
     const root = document.createElement("main");
-    root.id = "gm-combat-workspace-connection-test";
+    root.id = "gm-combat-workspace-shell";
     root.className = "gm-combat-workspace";
     root.innerHTML = `
-      <header class="gm-workspace-test-header">
+      <header class="gm-workspace-header">
         <div>
           <h1>GM Combat Workspace</h1>
-          <p>Zwei-Fenster-Verbindungstest</p>
+          <p>Statblock-Arbeitsplatz · Version 0.4</p>
         </div>
-        <span class="gm-workspace-status" data-field="connection">Verbunden</span>
+        <span class="gm-workspace-status">Verbunden</span>
       </header>
-      <section class="gm-workspace-test-grid" aria-label="Synchronisierte Foundry-Daten">
-        <article>
-          <h2>Kampf</h2>
-          <dl>
-            <dt>Status</dt><dd data-field="combat-status">–</dd>
-            <dt>Runde</dt><dd data-field="round">–</dd>
-            <dt>Zug</dt><dd data-field="turn">–</dd>
-            <dt>Kampf-ID</dt><dd data-field="combat-id">–</dd>
-          </dl>
-        </article>
-        <article>
-          <h2>Aktiver Teilnehmer</h2>
-          <dl>
-            <dt>Name</dt><dd data-field="active-name">–</dd>
-            <dt>Typ</dt><dd data-field="active-type">–</dd>
-            <dt>Actor-ID</dt><dd data-field="active-actor-id">–</dd>
-            <dt>Token-ID</dt><dd data-field="active-token-id">–</dd>
-          </dl>
-        </article>
-        <article>
-          <h2>Auf Laptop angeklickt</h2>
-          <dl>
-            <dt>Name</dt><dd data-field="selected-name">Noch kein Token ausgewählt</dd>
-            <dt>Typ</dt><dd data-field="selected-type">–</dd>
-            <dt>Actor-ID</dt><dd data-field="selected-actor-id">–</dd>
-            <dt>Token-ID</dt><dd data-field="selected-token-id">–</dd>
-          </dl>
-        </article>
+      <section class="gm-workspace-columns">
+        <section class="gm-workspace-statblock-panel" aria-label="Statblock">
+          <header class="gm-workspace-panel-header">
+            <div>
+              <span class="gm-workspace-eyebrow">Statblock</span>
+              <h2 data-field="displayed-name">Kein Gegner ausgewählt</h2>
+            </div>
+            <span class="gm-workspace-source" data-field="selection-source">Keine Auswahl</span>
+          </header>
+          <div class="gm-workspace-sheet-host" data-role="sheet-host">
+            <div class="gm-workspace-empty">
+              <i class="fa-solid fa-dragon" aria-hidden="true"></i>
+              <strong>Wähle auf dem Laptop einen Gegner aus oder starte dessen Zug.</strong>
+            </div>
+          </div>
+        </section>
+        <aside class="gm-workspace-context-panel">
+          <section>
+            <h2>Auswahlkontrolle</h2>
+            <dl>
+              <dt>Aktiver Teilnehmer</dt><dd data-field="active-name">–</dd>
+              <dt>Typ</dt><dd data-field="active-type">–</dd>
+              <dt>Auf Laptop angeklickt</dt><dd data-field="selected-name">–</dd>
+              <dt>Angezeigt durch</dt><dd data-field="selection-source-detail">Keine Auswahl</dd>
+            </dl>
+          </section>
+          <section>
+            <h2>Statblock-Steuerung</h2>
+            <button type="button" class="gm-workspace-pin" data-action="toggle-pin" disabled>
+              <i class="fa-solid fa-thumbtack" aria-hidden="true"></i>
+              <span>Gegner anpinnen</span>
+            </button>
+            <p class="gm-workspace-help">Ein angepinnter Gegner bleibt sichtbar, auch wenn sich Zug oder Tokenauswahl ändern.</p>
+          </section>
+          <section>
+            <h2>Kampf</h2>
+            <dl>
+              <dt>Status</dt><dd data-field="combat-status">–</dd>
+              <dt>Runde</dt><dd data-field="round">–</dd>
+              <dt>Zug</dt><dd data-field="turn">–</dd>
+            </dl>
+          </section>
+          <section class="gm-workspace-future">
+            <h2>Dashboard</h2>
+            <p>Gegnerliste, TP, RK, Bewegung und Rettungswürfe folgen nach Abnahme des nativen Statblocks.</p>
+          </section>
+        </aside>
       </section>
-      <footer>Dieses Fenster darf auf den zweiten Monitor verschoben und maximiert werden.</footer>
     `;
+
+    root.querySelector('[data-action="toggle-pin"]')
+      .addEventListener("click", () => this.#togglePin());
+
     document.body.append(root);
     this.#root = root;
+  }
+
+  #registerSheetHooks() {
+    for (const hookName of ["renderActorSheet", "renderActorSheetV2"]) {
+      const hookId = Hooks.on(hookName, (application, html) => {
+        if (!this.#workspaceMode || application?.actor !== this.#displayedActor) return;
+        this.#mountSheet(application, html);
+      });
+      this.#sheetRenderHooks.push([hookName, hookId]);
+    }
+  }
+
+  #broadcastControlledToken() {
+    const controlled = Array.from(canvas?.tokens?.controlled ?? []);
+    this.#selectedToken = tokenSummary(controlled.at(-1) ?? null);
+    this.#channel?.postMessage({ type: "tokenSelected", token: this.#selectedToken });
   }
 
   #receive(message) {
@@ -190,9 +249,7 @@ export class WorkspaceBridge {
 
     if (message.type === "workspaceReady" && !this.#workspaceMode) {
       this.#broadcastState();
-      if (this.#selectedToken) {
-        this.#channel?.postMessage({ type: "tokenSelected", token: this.#selectedToken });
-      }
+      this.#broadcastControlledToken();
       return;
     }
 
@@ -213,6 +270,66 @@ export class WorkspaceBridge {
     });
   }
 
+  #activeSelection() {
+    const snapshot = this.#getSnapshot?.();
+    const active = snapshot?.combatants?.find(({ id }) => id === snapshot.activeCombatantId) ?? null;
+    if (snapshot?.activeType !== "npc" || !active) return null;
+
+    return {
+      actor: snapshot.context?.actor ?? null,
+      summary: {
+        tokenId: snapshot.activeTokenId,
+        tokenName: active.name,
+        actorId: snapshot.activeActorId,
+        actorName: snapshot.context?.actor?.name ?? active.name,
+        actorType: "npc",
+        sceneId: snapshot.sceneId
+      },
+      source: "Aktiver Kampfteilnehmer"
+    };
+  }
+
+  async #clickedSelection() {
+    const selection = this.#selectedToken;
+    if (selection?.actorType !== "npc") return null;
+
+    const scene = game.scenes?.get(selection.sceneId) ?? null;
+    const tokenDocument = scene?.tokens?.get(selection.tokenId) ?? null;
+    const actor = tokenDocument?.actor ?? game.actors?.get(selection.actorId) ?? null;
+    if (!actor || actor.type !== "npc") return null;
+
+    return {
+      actor,
+      summary: selection,
+      source: "Auf Laptop angeklickt"
+    };
+  }
+
+  async #desiredSelection() {
+    if (this.#pinnedSelection?.actor) {
+      return { ...this.#pinnedSelection, source: "Angepinnt" };
+    }
+
+    return await this.#clickedSelection() ?? this.#activeSelection();
+  }
+
+  #togglePin() {
+    if (this.#pinnedSelection) {
+      this.#pinnedSelection = null;
+    } else if (this.#displayedActor) {
+      this.#pinnedSelection = {
+        actor: this.#displayedActor,
+        summary: {
+          actorId: this.#displayedActor.id,
+          actorName: this.#displayedActor.name,
+          actorType: this.#displayedActor.type
+        }
+      };
+    }
+
+    this.#render();
+  }
+
   #set(field, value, fallback) {
     const element = this.#root?.querySelector?.(`[data-field="${field}"]`);
     if (element) element.textContent = displayValue(value, fallback);
@@ -226,14 +343,120 @@ export class WorkspaceBridge {
     this.#set("combat-status", snapshot?.started ? "Gestartet" : "Kein gestarteter Kampf");
     this.#set("round", snapshot?.round);
     this.#set("turn", snapshot?.turn === null || snapshot?.turn === undefined ? null : snapshot.turn + 1);
-    this.#set("combat-id", snapshot?.combatId);
     this.#set("active-name", active?.name);
     this.#set("active-type", snapshot?.activeType);
-    this.#set("active-actor-id", snapshot?.activeActorId);
-    this.#set("active-token-id", snapshot?.activeTokenId);
-    this.#set("selected-name", this.#selectedToken?.actorName ?? this.#selectedToken?.tokenName, "Noch kein Token ausgewählt");
-    this.#set("selected-type", this.#selectedToken?.actorType);
-    this.#set("selected-actor-id", this.#selectedToken?.actorId);
-    this.#set("selected-token-id", this.#selectedToken?.tokenId);
+    this.#set("selected-name", this.#selectedToken?.actorName ?? this.#selectedToken?.tokenName);
+
+    const revision = ++this.#selectionRevision;
+    this.#desiredSelection()
+      .then((selection) => {
+        if (revision !== this.#selectionRevision) return;
+        return this.#applySelection(selection);
+      })
+      .catch((error) => this.#showSheetError(error));
+  }
+
+  async #applySelection(selection) {
+    const actor = selection?.actor ?? null;
+    const source = selection?.source ?? "Keine Auswahl";
+    this.#set("displayed-name", actor?.name, "Kein Gegner ausgewählt");
+    this.#set("selection-source", source);
+    this.#set("selection-source-detail", source);
+
+    const pinButton = this.#root.querySelector('[data-action="toggle-pin"]');
+    pinButton.disabled = !actor;
+    pinButton.classList.toggle("is-pinned", Boolean(this.#pinnedSelection));
+    pinButton.querySelector("span").textContent = this.#pinnedSelection
+      ? "Anheften lösen"
+      : "Gegner anpinnen";
+
+    if (!actor) {
+      await this.#closeDisplayedSheet();
+      this.#showEmptySheet();
+      return;
+    }
+
+    if (this.#displayedActor === actor && this.#displayedSheet?.rendered) {
+      this.#mountSheet(this.#displayedSheet);
+      return;
+    }
+
+    await this.#showActorSheet(actor);
+  }
+
+  async #showActorSheet(actor) {
+    await this.#closeDisplayedSheet();
+    this.#displayedActor = actor;
+    this.#showSheetLoading(actor.name);
+
+    const sheet = actor.sheet;
+    if (!sheet) throw new Error(`Für ${actor.name} ist kein Actor-Sheet verfügbar.`);
+    this.#displayedSheet = sheet;
+
+    const ApplicationV2 = foundry?.applications?.api?.ApplicationV2;
+    const renderResult = ApplicationV2 && sheet instanceof ApplicationV2
+      ? sheet.render({ force: true, focus: false })
+      : sheet.render(true, { focus: false });
+    if (renderResult?.then) await renderResult;
+    this.#mountSheet(sheet);
+  }
+
+  #mountSheet(sheet, renderedHtml = null) {
+    if (!this.#root || sheet !== this.#displayedSheet) return;
+    const host = this.#root.querySelector('[data-role="sheet-host"]');
+    const element = applicationElement(sheet, renderedHtml);
+    if (!host || !element) return;
+
+    element.classList.add("gm-workspace-embedded-sheet");
+    host.replaceChildren(element);
+  }
+
+  async #closeDisplayedSheet() {
+    const sheet = this.#displayedSheet;
+    this.#displayedSheet = null;
+    this.#displayedActor = null;
+    if (!sheet?.rendered) return;
+
+    try {
+      const result = sheet.close({ animate: false });
+      if (result?.then) await result;
+    } catch (error) {
+      this.#logger.warn("Previous statblock could not be closed", error);
+    }
+  }
+
+  #showEmptySheet() {
+    const host = this.#root?.querySelector('[data-role="sheet-host"]');
+    if (!host) return;
+    host.innerHTML = `
+      <div class="gm-workspace-empty">
+        <i class="fa-solid fa-dragon" aria-hidden="true"></i>
+        <strong>Wähle auf dem Laptop einen Gegner aus oder starte dessen Zug.</strong>
+      </div>
+    `;
+  }
+
+  #showSheetLoading(name) {
+    const host = this.#root?.querySelector('[data-role="sheet-host"]');
+    if (!host) return;
+    host.innerHTML = `
+      <div class="gm-workspace-empty">
+        <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+        <strong>Statblock für ${name} wird geladen …</strong>
+      </div>
+    `;
+  }
+
+  #showSheetError(error) {
+    this.#logger.error("Native statblock could not be embedded", error);
+    const host = this.#root?.querySelector('[data-role="sheet-host"]');
+    if (!host) return;
+    host.innerHTML = `
+      <div class="gm-workspace-empty gm-workspace-error">
+        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+        <strong>Der native Statblock konnte nicht eingebettet werden.</strong>
+        <span>Details stehen in der F12-Konsole.</span>
+      </div>
+    `;
   }
 }

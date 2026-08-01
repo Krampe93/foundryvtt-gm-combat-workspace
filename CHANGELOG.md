@@ -2,6 +2,25 @@
 
 All notable changes to GM Combat Workspace will be documented in this file.
 
+## [0.4.0] - 2026-08-01
+
+Stage 2B native-statblock test release.
+
+### Added
+
+- Final two-column companion layout with native statblock area on the left
+- Automatic NPC selection from the active combatant
+- Laptop token selection with higher priority than the active combatant
+- Visible selection source for active, clicked, and pinned enemies
+- Pin and unpin control for keeping a chosen enemy visible
+- Native Actor Sheet embedding for classic Foundry applications and ApplicationV2 sheets
+- Empty, loading, and error states for the statblock area
+
+### Changed
+
+- Replaced the Stage 2A diagnostic cards with the first permanent workspace shell
+- Clearing the final laptop token selection now returns control to the active NPC
+
 ## [0.3.2] - 2026-08-01
 
 ### Fixed

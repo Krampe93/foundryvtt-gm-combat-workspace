@@ -184,53 +184,50 @@ Im Entwicklungsmodus wird für jedes tatsächlich neue Ereignis genau ein strukt
 
 ---
 
-## Etappe 2 – Automatischer Gegner-Statblock
+## Etappe 2 – Zwei-Monitor-Workspace und nativer Gegner-Statblock
 
-**Status:** `[ ]`
+**Status:** `[-]` – Etappe 2A abgenommen, Etappe 2B als Version 0.4.0 im Foundry-Test
 
 ### Ziel
 
-Beim Beginn eines Gegnerzuges automatisch dessen normalen D&D5e-Statblock öffnen, damit alle Attacken und Features wie gewohnt anklickbar bleiben.
+Die Karte und Tokensteuerung bleiben vollständig im Laptop-Fenster. Ein zweiter vollständiger Foundry-Client zeigt den GM Workspace und bettet links den normalen D&D5e-Statblock des aktiven, angeklickten oder angepinnten Gegners ein.
 
-### Umfang
+### Etappe 2A – Zwei-Fenster-Verbindung
 
-- normalen Actor-Sheet/Statblock des aktiven NPCs öffnen
-- zuvor automatisch geöffneten NPC-Statblock optional schließen
-- manuell geöffnete Sheets möglichst nicht unbeabsichtigt schließen
-- Fensterposition und Fenstergröße durch Foundry beibehalten
-- aktiven Token optional auswählen
-- Token lokal hervorheben
-- Kamera standardmäßig nicht bewegen
-- optionale Kamerabewegung über Einstellung
-- Verhalten bei Spielerzug konfigurierbar machen:
-  - letzten Gegner-Statblock geöffnet lassen, oder
-  - automatisch geöffneten Statblock schließen
-- Verhalten bei mehreren Tokens desselben Actors korrekt behandeln
+**Status:** `[x]`
+
+- getrenntes Companion-Fenster über den GM-Workspace-Knopf öffnen
+- Kampfzustand und aktive Teilnehmer zwischen beiden Fenstern synchronisieren
+- Laptop-Tokenauswahl über BroadcastChannel übertragen
+- bestehendes Companion-Fenster fokussieren, ohne es neu zu laden
+- denselben GM-Account in beiden Fenstern verwenden
+
+### Etappe 2B – Nativer Statblock
+
+**Status:** `[-]` – Version 0.4.0
+
+- endgültiges Zweispalten-Grundlayout im Companion-Fenster
+- nativen, konfigurierten Actor-Sheet-Typ links einbetten
+- Auswahlpriorität: angepinnt, auf Laptop angeklickt, aktiver NPC
+- Auswahlquelle sichtbar anzeigen
+- Gegner anpinnen und Anheftung lösen
+- Spieler und Placeholders nicht als Gegner-Statblock öffnen
+- klassischen ActorSheet- und ApplicationV2-Renderweg unterstützen
+- große Statblocks innerhalb der linken Spalte scrollbar halten
 
 ### Wichtige Funktionsregel
 
-Das Modul baut keinen eigenen Ersatz-Statblock. Es öffnet das normale D&D5e-Actor-Sheet. Dadurch bleiben native D&D5e-Aktivitäten und optionale RSReforged-Funktionen erhalten.
-
-### Foundry-Test
-
-1. Gegnerzug starten.
-2. prüfen, dass genau ein Statblock geöffnet wird.
-3. Angriff anklicken und Angriffswurf ausführen.
-4. Schaden ausführen.
-5. Feature und Rettungswurf aus dem Statblock ausführen.
-6. zum nächsten Gegner wechseln.
-7. zu einem Spieler-Placeholder wechseln.
-8. zu einem versteckten Gegner wechseln.
-9. dieselben Tests mit aktiviertem RSReforged wiederholen.
-10. dieselben Tests ohne RSReforged wiederholen.
+Das Modul baut keinen Ersatz-Statblock. Angriffe, Features, Rettungswürfe, Recharge und legendäre Aktionen müssen über das konfigurierte native D&D5e-Sheet und optionale RSReforged-Abläufe funktionieren.
 
 ### Abnahme
 
-- Richtiger Gegner-Statblock öffnet sich bei jedem NPC-Zug.
-- Angriffe, Features und Werte bleiben normal klick- und würfelbar.
-- Kein Spieler-Statblock wird durch einen Placeholder erzwungen.
-- Die Map bewegt sich mit Standardeinstellungen nicht.
-- Manuell geöffnete, nicht vom Modul verwaltete Sheets werden nicht wahllos geschlossen.
+- Der Laptop erhält niemals ein automatisch geöffnetes Sheet.
+- Der richtige NPC-Statblock erscheint vollständig im Companion-Workspace.
+- Angriffe, Features und Würfe bleiben normal verwendbar.
+- Aktive, angeklickte und angepinnte Auswahl funktionieren in der festgelegten Priorität.
+- Beim Wechsel entstehen keine doppelten Sheets oder Würfe.
+- Große Statblocks bleiben scrollbar und vollständig erreichbar.
+- Beide Foundry-Fenster bleiben nach der Erstladung flüssig und fehlerfrei.
 
 ---
 

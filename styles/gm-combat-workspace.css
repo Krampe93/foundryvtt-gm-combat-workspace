@@ -2,6 +2,11 @@
   --gm-combat-accent: #d17b28;
   --gm-combat-danger: #a83232;
   --gm-combat-ready: #3f7d51;
+  --gm-combat-bg: #17191c;
+  --gm-combat-panel: #24272b;
+  --gm-combat-border: #555a60;
+  --gm-combat-text: #ececec;
+  --gm-combat-muted: #b9bec4;
 }
 
 .gm-combat-workspace .active-combatant {
@@ -29,90 +34,224 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
 }
 
-@media (max-width: 700px) {
-  #gm-combat-workspace-launcher {
-    left: 16px;
-    bottom: 130px;
-  }
-}
-
-body.gm-combat-workspace-companion > :not(#gm-combat-workspace-connection-test) {
+body.gm-combat-workspace-companion > :not(#gm-combat-workspace-shell) {
   display: none !important;
 }
 
-#gm-combat-workspace-connection-test {
+#gm-combat-workspace-shell {
   position: fixed;
   inset: 0;
   z-index: 100000;
-  overflow: auto;
-  padding: 1.25rem;
-  color: #ececec;
-  background: #17191c;
+  display: flex;
+  flex-direction: column;
+  min-width: 720px;
+  min-height: 500px;
+  overflow: hidden;
+  color: var(--gm-combat-text);
+  background: var(--gm-combat-bg);
 }
 
-#gm-combat-workspace-connection-test .gm-workspace-test-header {
+#gm-combat-workspace-shell .gm-workspace-header {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #555a60;
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--gm-combat-border);
 }
 
-#gm-combat-workspace-connection-test h1,
-#gm-combat-workspace-connection-test h2,
-#gm-combat-workspace-connection-test p {
+#gm-combat-workspace-shell h1,
+#gm-combat-workspace-shell h2,
+#gm-combat-workspace-shell p {
   margin: 0;
 }
 
-#gm-combat-workspace-connection-test .gm-workspace-status {
+#gm-combat-workspace-shell .gm-workspace-header h1 {
+  font-size: 1.45rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-header p,
+#gm-combat-workspace-shell .gm-workspace-help,
+#gm-combat-workspace-shell .gm-workspace-future p {
+  color: var(--gm-combat-muted);
+}
+
+#gm-combat-workspace-shell .gm-workspace-status {
   padding: 0.4rem 0.75rem;
-  background: #3f7d51;
+  background: var(--gm-combat-ready);
   border-radius: 999px;
 }
 
-#gm-combat-workspace-connection-test .gm-workspace-test-grid {
+#gm-combat-workspace-shell .gm-workspace-columns {
+  flex: 1 1 auto;
   display: grid;
-  grid-template-columns: repeat(3, minmax(240px, 1fr));
+  grid-template-columns: minmax(430px, 3fr) minmax(280px, 2fr);
+  min-height: 0;
+}
+
+#gm-combat-workspace-shell .gm-workspace-statblock-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  border-right: 1px solid var(--gm-combat-border);
+}
+
+#gm-combat-workspace-shell .gm-workspace-panel-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 1rem;
-  margin-top: 1rem;
+  padding: 0.7rem 1rem;
+  background: var(--gm-combat-panel);
+  border-bottom: 1px solid var(--gm-combat-border);
 }
 
-#gm-combat-workspace-connection-test article {
+#gm-combat-workspace-shell .gm-workspace-eyebrow {
+  display: block;
+  color: var(--gm-combat-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+#gm-combat-workspace-shell .gm-workspace-panel-header h2 {
+  font-size: 1.15rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-source {
+  padding: 0.3rem 0.55rem;
+  color: var(--gm-combat-muted);
+  background: #30343a;
+  border: 1px solid var(--gm-combat-border);
+  border-radius: 4px;
+}
+
+#gm-combat-workspace-shell .gm-workspace-sheet-host {
+  flex: 1 1 auto;
+  position: relative;
+  min-height: 0;
+  overflow: auto;
+  padding: 0.5rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 100%;
+  padding: 2rem;
+  color: var(--gm-combat-muted);
+  text-align: center;
+}
+
+#gm-combat-workspace-shell .gm-workspace-empty > i {
+  font-size: 2rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-error {
+  color: #f0a0a0;
+}
+
+#gm-combat-workspace-shell .gm-workspace-context-panel {
+  min-width: 0;
+  overflow: auto;
   padding: 1rem;
-  background: #24272b;
-  border: 1px solid #555a60;
-  border-radius: 6px;
+  background: #1d2023;
 }
 
-#gm-combat-workspace-connection-test article h2 {
-  padding-bottom: 0.6rem;
-  border-bottom: 1px solid #555a60;
+#gm-combat-workspace-shell .gm-workspace-context-panel section {
+  margin-bottom: 1.25rem;
+  padding: 0.85rem;
+  background: var(--gm-combat-panel);
+  border: 1px solid var(--gm-combat-border);
+  border-radius: 5px;
 }
 
-#gm-combat-workspace-connection-test dl {
+#gm-combat-workspace-shell .gm-workspace-context-panel h2 {
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--gm-combat-border);
+  font-size: 1rem;
+}
+
+#gm-combat-workspace-shell dl {
   display: grid;
-  grid-template-columns: minmax(90px, auto) 1fr;
-  gap: 0.55rem 1rem;
+  grid-template-columns: minmax(115px, auto) 1fr;
+  gap: 0.55rem 0.8rem;
+  margin-bottom: 0;
 }
 
-#gm-combat-workspace-connection-test dt {
-  color: #b9bec4;
+#gm-combat-workspace-shell dt {
+  color: var(--gm-combat-muted);
 }
 
-#gm-combat-workspace-connection-test dd {
+#gm-combat-workspace-shell dd {
   min-width: 0;
   margin: 0;
   overflow-wrap: anywhere;
 }
 
-#gm-combat-workspace-connection-test footer {
-  margin-top: 1rem;
-  color: #b9bec4;
+#gm-combat-workspace-shell .gm-workspace-pin {
+  width: 100%;
+  margin-top: 0.8rem;
+  padding: 0.55rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-pin.is-pinned {
+  color: #fff;
+  background: #8b5521;
+  border-color: var(--gm-combat-accent);
+}
+
+#gm-combat-workspace-shell .gm-workspace-help,
+#gm-combat-workspace-shell .gm-workspace-future p {
+  margin-top: 0.65rem;
+  line-height: 1.35;
+}
+
+/* Native Foundry/D&D5e actor sheet embedded in the left workspace column. */
+#gm-combat-workspace-shell .gm-workspace-embedded-sheet {
+  position: relative !important;
+  inset: auto !important;
+  top: auto !important;
+  left: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+  height: 100% !important;
+  max-height: none !important;
+  margin: 0 !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+#gm-combat-workspace-shell .gm-workspace-embedded-sheet .window-header {
+  cursor: default;
 }
 
 @media (max-width: 900px) {
-  #gm-combat-workspace-connection-test .gm-workspace-test-grid {
+  #gm-combat-workspace-shell {
+    min-width: 0;
+    overflow: auto;
+  }
+
+  #gm-combat-workspace-shell .gm-workspace-columns {
     grid-template-columns: 1fr;
+  }
+
+  #gm-combat-workspace-shell .gm-workspace-statblock-panel {
+    min-height: 600px;
+    border-right: 0;
+    border-bottom: 1px solid var(--gm-combat-border);
+  }
+}
+
+@media (max-width: 700px) {
+  #gm-combat-workspace-launcher {
+    left: 16px;
+    bottom: 130px;
   }
 }

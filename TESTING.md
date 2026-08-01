@@ -202,3 +202,89 @@ Use the normal GM Foundry window as the laptop/map window. The newly opened comp
 - [ ] Screenshots and F12 output are attached for every failed item.
 
 Do not approve Stage 2A if the second window disconnects the main GM client, combat updates require manual reloads, token selection does not cross between windows, or either window produces a red module error.
+
+---
+
+## Stage 2B – Native statblock workspace (0.4.0)
+
+Complete Stage 2A first. Use the laptop for the map and the companion window on the second monitor.
+
+### A. Update and layout
+
+- [ ] Update GM Combat Workspace and confirm version `0.4.0`.
+- [ ] Hard-reload both Foundry windows once with Ctrl+F5.
+- [ ] Open the companion workspace.
+- [ ] Confirm that the left statblock area occupies roughly 60 percent of the width.
+- [ ] Confirm that selection control and combat status appear on the right.
+- [ ] Confirm that no sections overlap at the maximized second-monitor resolution.
+- [ ] Confirm that the laptop map remains usable.
+
+### B. Active-enemy selection
+
+- [ ] Start an encounter with an NPC as active participant.
+- [ ] Confirm that the NPC name appears over the left statblock area.
+- [ ] Confirm that **Aktiver Kampfteilnehmer** is shown as the source.
+- [ ] Confirm that the configured native NPC sheet appears on the left.
+- [ ] Advance to another NPC and confirm that the statblock changes exactly once.
+- [ ] Advance to a player or placeholder and confirm that no player sheet opens.
+
+### C. Laptop token selection
+
+- [ ] Click a different NPC token on the laptop.
+- [ ] Confirm that its statblock replaces the active NPC statblock.
+- [ ] Confirm that **Auf Laptop angeklickt** is shown as the source.
+- [ ] Click another NPC and confirm one clean change.
+- [ ] Clear the laptop token selection.
+- [ ] Confirm that the active NPC statblock returns.
+- [ ] Select two unlinked tokens based on the same Actor and confirm the correct token Actor is used.
+
+### D. Pinning
+
+- [ ] Display an NPC and click **Gegner anpinnen**.
+- [ ] Confirm that the button changes to **Anheften lösen**.
+- [ ] Advance the combat turn and confirm that the pinned statblock remains.
+- [ ] Click another NPC on the laptop and confirm that the pinned statblock remains.
+- [ ] Click **Anheften lösen**.
+- [ ] Confirm that the currently clicked NPC, otherwise the active NPC, is displayed immediately.
+
+### E. Native sheet interaction
+
+Run these checks once with a simple NPC and once with the Adult Red Dragon or another large NPC.
+
+- [ ] The complete sheet is reachable with vertical scrolling.
+- [ ] An attack can be clicked and rolled.
+- [ ] Damage can be rolled.
+- [ ] An action or feature can be used.
+- [ ] An ability check or saving throw can be rolled.
+- [ ] Recharge and legendary actions remain clickable where provided by the sheet.
+- [ ] Roll cards appear normally in Foundry chat.
+- [ ] No second sheet opens over the laptop map.
+- [ ] The sheet does not become a separate floating window on the companion monitor.
+
+### F. Switching and stability
+
+- [ ] Switch repeatedly between at least three differently sized NPC sheets.
+- [ ] Confirm that only one statblock exists at a time.
+- [ ] Confirm that the same NPC is not reloaded when selected again.
+- [ ] Confirm that the sheet does not flicker continuously.
+- [ ] Keep both Foundry windows open for one complete encounter round.
+- [ ] Confirm that the laptop map remains responsive after the companion has loaded.
+- [ ] Confirm that reopening the launcher only focuses the companion.
+
+### G. Compatibility
+
+- [ ] Repeat one attack and damage workflow with RSReforged enabled, if installed.
+- [ ] Keep Monk's Combat Details enabled and advance through grouped or placeholder entries.
+- [ ] Confirm that no red `gm-combat-workspace` error appears in either F12 console.
+- [ ] Record the configured NPC sheet module and version, especially when using 5e Statblock Sheet.
+
+### H. Acceptance
+
+- [ ] The native sheet is embedded entirely inside the companion workspace.
+- [ ] Attacks, features, checks, saves, recharge, and damage use the normal D&D5e workflow.
+- [ ] Active, clicked, and pinned selection priorities are correct.
+- [ ] The laptop never receives an automatic statblock window.
+- [ ] Large sheets remain usable.
+- [ ] No duplicate sheets, duplicate rolls, or module errors occur.
+
+Do not approve Stage 2B if the configured native sheet cannot be embedded, its actions stop working, it opens on the laptop, selection priority is wrong, or switching NPCs creates duplicate applications.
