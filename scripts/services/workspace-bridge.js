@@ -50,6 +50,8 @@ export class WorkspaceBridge {
   #unsubscribe = null;
   #controlTokenHook = null;
   #sheetRenderHooks = [];
+  #sheetMountTimers = new Set();
+  #windowFocusHandler = null;
   #root = null;
   #selectedToken = null;
   #pinnedSelection = null;
@@ -84,6 +86,7 @@ export class WorkspaceBridge {
 
     if (this.#workspaceMode) {
       this.#registerSheetHooks();
+      this.#registerModifierReset();
       this.#renderWorkspace();
       this.#channel.postMessage({ type: "workspaceReady" });
     } else {
@@ -106,6 +109,14 @@ export class WorkspaceBridge {
       Hooks.off(hookName, hookId);
     }
     this.#sheetRenderHooks = [];
+
+    for (const timer of this.#sheetMountTimers) clearTimeout(timer);
+    this.#sheetMountTimers.clear();
+
+    if (this.#windowFocusHandler) {
+      window.removeEventListener("focus", this.#windowFocusHandler);
+      this.#windowFocusHandler = null;
+    }
 
     this.#closeDisplayedSheet();
     this.#channel?.close();
@@ -233,9 +244,36 @@ export class WorkspaceBridge {
       const hookId = Hooks.on(hookName, (application, html) => {
         const actor = application?.actor ?? application?.document ?? application?.object ?? null;
         if (!this.#workspaceMode || actor !== this.#displayedActor) return;
-        this.#mountSheet(application, html);
+        this.#scheduleSheetMount(application, html);
       });
       this.#sheetRenderHooks.push([hookName, hookId]);
+    }
+  }
+
+  #registerModifierReset() {
+    this.#windowFocusHandler = () => this.#releaseStaleModifiers();
+    window.addEventListener("focus", this.#windowFocusHandler);
+    queueMicrotask(() => this.#releaseStaleModifiers());
+  }
+
+  #releaseStaleModifiers() {
+    if (!this.#workspaceMode) return;
+
+    for (const [key, code] of [
+      ["Control", "ControlLeft"],
+      ["Control", "ControlRight"],
+      ["Alt", "AltLeft"],
+      ["Alt", "AltRight"],
+      ["Shift", "ShiftLeft"],
+      ["Shift", "ShiftRight"],
+      ["Meta", "MetaLeft"],
+      ["Meta", "MetaRight"]
+    ]) {
+      window.dispatchEvent(new KeyboardEvent("keyup", {
+        key,
+        code,
+        bubbles: true
+      }));
     }
   }
 
@@ -419,6 +457,23 @@ export class WorkspaceBridge {
 
     element.classList.add("gm-workspace-embedded-sheet");
     host.replaceChildren(element);
+  }
+
+  #scheduleSheetMount(sheet, renderedHtml = null) {
+    const mount = (html = null) => {
+      if (sheet !== this.#displayedSheet) return;
+      this.#mountSheet(sheet, html);
+    };
+
+    queueMicrotask(() => mount(renderedHtml));
+
+    for (const delay of [50, 200]) {
+      const timer = setTimeout(() => {
+        this.#sheetMountTimers.delete(timer);
+        mount();
+      }, delay);
+      this.#sheetMountTimers.add(timer);
+    }
   }
 
   async #closeDisplayedSheet() {

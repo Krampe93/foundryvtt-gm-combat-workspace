@@ -2,6 +2,13 @@
 
 All notable changes to GM Combat Workspace will be documented in this file.
 
+## [0.4.2] - 2026-08-01
+
+### Fixed
+
+- Native sheets are remounted after their complete render lifecycle so feature and resource updates no longer leave an empty application frame
+- The companion releases stale Control, Alt, Shift, and Meta key states when it gains focus, preventing a Ctrl+F5 reload from leaking a false roll modifier into later attacks
+
 ## [0.4.1] - 2026-08-01
 
 ### Fixed
