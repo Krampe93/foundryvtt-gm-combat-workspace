@@ -280,8 +280,8 @@ body.gm-combat-workspace-companion > .notifications {
 #gm-combat-workspace-shell .gm-workspace-enemy {
   position: relative;
   display: grid;
-  grid-template-columns: 28px minmax(160px, 1.35fr) 58px minmax(155px, 0.9fr) auto;
-  gap: 0.25rem 1rem;
+  grid-template-columns: 28px minmax(140px, 1.15fr) 50px minmax(145px, 0.85fr) minmax(450px, 3fr) auto;
+  gap: 0.25rem 0.65rem;
   width: 100%;
   min-height: 58px;
   padding: 0.65rem 0.75rem 0.65rem 1.15rem;
@@ -361,6 +361,63 @@ body.gm-combat-workspace-companion > .notifications {
   display: block;
   height: 100%;
   background: #62b36f;
+}
+
+#gm-combat-workspace-shell .gm-workspace-saves {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(64px, 1fr));
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+#gm-combat-workspace-shell .gm-workspace-save-group {
+  display: grid;
+  grid-template-columns: minmax(40px, 1fr) 22px;
+  grid-template-rows: 1fr 1fr;
+  gap: 2px;
+  height: 48px;
+}
+
+#gm-combat-workspace-shell .gm-workspace-save-main,
+#gm-combat-workspace-shell .gm-workspace-save-mode {
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+}
+
+#gm-combat-workspace-shell .gm-workspace-save-main {
+  grid-row: 1 / 3;
+  display: grid;
+  place-items: center;
+  line-height: 1.05;
+}
+
+#gm-combat-workspace-shell .gm-workspace-save-main small {
+  color: var(--gm-combat-muted);
+  font-size: 0.68rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-save-mode {
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+#gm-combat-workspace-shell .gm-workspace-save-mode.is-advantage {
+  background: #294332;
+  border-color: #4d805b;
+}
+
+#gm-combat-workspace-shell .gm-workspace-save-mode.is-disadvantage {
+  background: #4b2929;
+  border-color: #8d4e4e;
+}
+
+#gm-combat-workspace-shell .gm-workspace-save-main:disabled,
+#gm-combat-workspace-shell .gm-workspace-save-mode:disabled {
+  cursor: wait;
+  opacity: 0.55;
 }
 
 #gm-combat-workspace-shell .gm-workspace-enemy::before {

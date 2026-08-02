@@ -5,6 +5,26 @@ import { calculateHpUpdate, halfDamage, parseHpInput, uniqueHpTargets } from "./
 const CHANNEL_NAME = `${MODULE_ID}.workspace`;
 const WORKSPACE_PARAMETER = "gmCombatWorkspace";
 const WORKSPACE_TARGET = `${MODULE_ID}-companion`;
+const SAVE_ABILITIES = Object.freeze([
+  ["str", "STR"], ["dex", "DEX"], ["con", "CON"],
+  ["int", "INT"], ["wis", "WIS"], ["cha", "CHA"]
+]);
+
+function formatModifier(value) {
+  const modifier = Number(value) || 0;
+  return modifier >= 0 ? `+${modifier}` : String(modifier);
+}
+
+export function savingThrowConfig(ability, mode = "normal") {
+  return {
+    config: {
+      ability,
+      advantage: mode === "advantage",
+      disadvantage: mode === "disadvantage"
+    },
+    dialog: { configure: false }
+  };
+}
 
 function isWorkspaceWindow() {
   return new URL(window.location.href).searchParams.get(WORKSPACE_PARAMETER) === "1";
@@ -762,6 +782,17 @@ export class WorkspaceBridge {
           <span><small>TP</small> <input type="text" inputmode="numeric" value="${entry.hpValue}" data-action="hp-input" data-current-value="${entry.hpValue}" title="50 = setzen · -20 = Schaden · +10 = Heilung"> / ${entry.hpMax}</span>
           <span class="gm-workspace-hp-bar"><i style="width:${entry.hpMax > 0 ? Math.max(0, Math.min(100, entry.hpValue / entry.hpMax * 100)) : 0}%"></i></span>
         </label>
+        <span class="gm-workspace-saves">
+          ${SAVE_ABILITIES.map(([abilityId, label]) => `
+            <span class="gm-workspace-save-group">
+              <button type="button" class="gm-workspace-save-main" data-action="roll-save" data-ability="${abilityId}" data-mode="normal" aria-label="${label}-Rettungswurf normal">
+                <small>${label}</small><strong>${formatModifier(entry.savingThrows?.[abilityId])}</strong>
+              </button>
+              <button type="button" class="gm-workspace-save-mode is-advantage" data-action="roll-save" data-ability="${abilityId}" data-mode="advantage" aria-label="${label}-Rettungswurf mit Vorteil">V</button>
+              <button type="button" class="gm-workspace-save-mode is-disadvantage" data-action="roll-save" data-ability="${abilityId}" data-mode="disadvantage" aria-label="${label}-Rettungswurf mit Nachteil">N</button>
+            </span>
+          `).join("")}
+        </span>
         <span class="gm-workspace-enemy-indicators">
           ${entry.active ? '<span class="gm-workspace-turn-badge"><i class="fa-solid fa-swords" aria-hidden="true"></i> Am Zug</span>' : ""}
           ${entry.tokenId === selectedTokenId ? '<span class="gm-workspace-selected-badge"><i class="fa-solid fa-crosshairs" aria-hidden="true"></i> Ausgewählt</span>' : ""}
@@ -771,6 +802,14 @@ export class WorkspaceBridge {
   }
 
   #onEnemyClick(event) {
+    const saveButton = event.target.closest?.('[data-action="roll-save"]');
+    if (saveButton) {
+      this.#rollSavingThrow(saveButton).catch((error) => {
+        this.#logger.error("Saving throw failed", error);
+        ui.notifications?.error(`Rettungswurf fehlgeschlagen: ${error.message}`);
+      });
+      return;
+    }
     if (!event.target.closest?.('[data-action="select-enemy"]')) return;
     const row = event.target.closest?.("[data-combatant-id]");
     if (!row) return;
@@ -792,6 +831,33 @@ export class WorkspaceBridge {
     };
     this.#channel?.postMessage({ type: "selectToken", tokenId: entry.tokenId, sceneId: entry.sceneId });
     this.#render();
+  }
+
+  async #rollSavingThrow(button) {
+    const row = button.closest("[data-combatant-id]");
+    const entry = this.#enemyEntries().find(({ id }) => id === row?.dataset.combatantId);
+    if (!entry) throw new Error("Der Gegner wurde nicht gefunden.");
+
+    const scene = game.scenes?.get(entry.sceneId) ?? null;
+    const tokenDocument = scene?.tokens?.get(entry.tokenId) ?? null;
+    const actor = tokenDocument?.actor ?? game.actors?.get(entry.actorId) ?? null;
+    if (!actor || typeof actor.rollSavingThrow !== "function") {
+      throw new Error("Für diesen Gegner ist kein Rettungswurf verfügbar.");
+    }
+
+    const { config, dialog } = savingThrowConfig(button.dataset.ability, button.dataset.mode);
+    const speaker = ChatMessage.getSpeaker({
+      actor,
+      token: tokenDocument,
+      scene: tokenDocument?.parent ?? scene
+    });
+
+    button.disabled = true;
+    try {
+      await actor.rollSavingThrow(config, dialog, { data: { speaker } });
+    } finally {
+      button.disabled = false;
+    }
   }
 
   #onEnemySelection(event) {

@@ -1,5 +1,22 @@
 # Manual test checklist
 
+## Stage 5 – Version 0.7.0
+
+- [ ] Im Workspace-Kopf steht exakt **Version 0.7.0**.
+- [ ] STR, DEX, CON, INT, WIS und CHA stimmen bei mehreren Gegnern mit dem Statblock überein.
+- [ ] Klick auf den großen Modifikator würfelt ohne Abfrage genau einen W20.
+- [ ] Klick auf `V` würfelt ohne Abfrage mit Vorteil und verwendet das höhere Ergebnis.
+- [ ] Klick auf `N` würfelt ohne Abfrage mit Nachteil und verwendet das niedrigere Ergebnis.
+- [ ] Jeder Klick erzeugt genau eine Rettungswurf-Auswertung im Chat.
+- [ ] Chatkarte und Sprecher gehören zum richtigen Gegner beziehungsweise Token.
+- [ ] Negative, neutrale und positive Modifikatoren werden korrekt angezeigt und verrechnet.
+- [ ] Rettungswürfe funktionieren bei sichtbaren und versteckten Gegnern.
+- [ ] Der Statblock bleibt nach jedem Wurf sichtbar und bedienbar.
+- [ ] Karte, Kamera und Tokenauswahl bleiben unverändert.
+- [ ] HP-Eingaben, Mehrfachaktionen, Hover, Farbrand und Zuganzeige funktionieren weiterhin.
+- [ ] Es erscheinen weder im Hauptfenster noch im Workspace rote Modulfehler.
+
+
 ## Stage 4 – Version 0.6.0
 
 - [ ] Bei jedem Gegner stimmen RK sowie aktuelle/maximale TP mit dem Statblock überein.

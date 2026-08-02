@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0 – 2026-08-02
+
+- Alle sechs Rettungswurf-Modifikatoren direkt in jeder Gegnerzeile ergänzt.
+- Normaler Rettungswurf wird über den großen Werteknopf sofort und ohne Dialog ausgeführt.
+- Separate kompakte Knöpfe für Vorteil (`V`) und Nachteil (`N`) ergänzt.
+- Native D&D5e-Rettungswurf- und Chat-Auswertung mit dem zugehörigen Token als Sprecher beibehalten.
+- Etappe 4 nach vollständigem Foundry-Test abgenommen.
+
 ## 0.6.0 – 2026-08-01
 
 - Rüstungsklasse sowie aktuelle und maximale TP in der Gegnerübersicht ergänzt.

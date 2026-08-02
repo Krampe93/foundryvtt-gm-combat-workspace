@@ -17,7 +17,15 @@ function actor(id, type, ownership = {}) {
     uuid: `Actor.${id}`,
     name: id,
     type,
-    ownership
+    ownership,
+    system: {
+      attributes: { ac: { value: 15 }, hp: { value: 18, max: 24, temp: 3 } },
+      abilities: {
+        str: { mod: 2, save: { value: 5 } }, dex: { mod: 1, save: { value: 1 } },
+        con: { mod: 3, save: { value: 6 } }, int: { mod: -1, save: { value: -1 } },
+        wis: { mod: 0, save: { value: 0 } }, cha: { mod: -2, save: { value: -2 } }
+      }
+    }
   };
 }
 
@@ -138,6 +146,11 @@ test("creates a resolved active NPC snapshot", () => {
   assert.equal(snapshot.context.actor, npc.actor);
   assert.equal(snapshot.context.token.id, "goblin-token");
   assert.equal(snapshot.combatants[0].tokenPresent, true);
+  assert.equal(snapshot.combatants[0].armorClass, 15);
+  assert.equal(snapshot.combatants[0].hpValue, 18);
+  assert.deepEqual(snapshot.combatants[0].savingThrows, {
+    str: 5, dex: 1, con: 6, int: -1, wis: 0, cha: -2
+  });
 });
 
 test("preserves hidden and defeated enemy states for the dashboard", () => {

@@ -53,6 +53,14 @@ function summarizeCombatant(combatant, scene) {
   const token = resolveCombatantToken(combatant, scene);
   const hp = actor?.system?.attributes?.hp ?? {};
   const ac = actor?.system?.attributes?.ac ?? {};
+  const savingThrows = Object.fromEntries(
+    ["str", "dex", "con", "int", "wis", "cha"].map((abilityId) => {
+      const ability = actor?.system?.abilities?.[abilityId] ?? {};
+      const candidates = [ability?.save?.value, ability?.saveBonus, ability?.mod, 0];
+      const modifier = candidates.map(Number).find(Number.isFinite) ?? 0;
+      return [abilityId, modifier];
+    })
+  );
 
   return {
     id: combatant.id ?? null,
@@ -69,7 +77,8 @@ function summarizeCombatant(combatant, scene) {
     armorClass: Number(ac.value ?? ac) || 0,
     hpValue: Number(hp.value) || 0,
     hpMax: Number(hp.max) || 0,
-    hpTemp: Number(hp.temp) || 0
+    hpTemp: Number(hp.temp) || 0,
+    savingThrows
   };
 }
 

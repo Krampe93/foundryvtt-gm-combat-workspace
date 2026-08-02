@@ -3,7 +3,8 @@ import test from "node:test";
 
 import {
   combatantColor,
-  isAutomaticActorDeltaStatus
+  isAutomaticActorDeltaStatus,
+  savingThrowConfig
 } from "../scripts/services/workspace-bridge.js";
 
 test("assigns 30 distinct encounter palette colors", () => {
@@ -22,4 +23,13 @@ test("targets only automatic Dead and Bloodied effect ids", () => {
   assert.equal(isAutomaticActorDeltaStatus({ id: "poisoned", parent: actorDelta }), false);
   assert.equal(isAutomaticActorDeltaStatus({ id: "dnd5edead0000000", parent: actor }), true);
   assert.equal(isAutomaticActorDeltaStatus({ id: "temporary", parent: actorDelta }, { _id: "dnd5ebloodied000" }), true);
+});
+
+test("builds dialog-free normal, advantage, and disadvantage saves", () => {
+  assert.deepEqual(savingThrowConfig("dex", "normal"), {
+    config: { ability: "dex", advantage: false, disadvantage: false },
+    dialog: { configure: false }
+  });
+  assert.equal(savingThrowConfig("wis", "advantage").config.advantage, true);
+  assert.equal(savingThrowConfig("cha", "disadvantage").config.disadvantage, true);
 });

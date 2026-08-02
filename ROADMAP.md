@@ -287,7 +287,7 @@ Die rechte Seite des Companion-Workspaces als Gegnerübersicht bereitstellen, w�
 
 ## Etappe 4 – HP, RK und Mehrfachauswahl
 
-**Status:** `[~]` – Version 0.6.0 im Foundry-Test
+**Status:** `[x]` – Abgenommen am 2026-08-02 mit Version 0.6.0
 
 ### Ziel
 
@@ -335,7 +335,7 @@ Eine Mehrfachaktion zeigt Anzahl und Art der betroffenen Gegner direkt in der We
 
 ## Etappe 5 – Rettungswürfe
 
-**Status:** `[ ]`
+**Status:** `[~]` – Version 0.7.0 im Foundry-Test
 
 ### Ziel
 
@@ -345,9 +345,11 @@ Alle sechs Rettungswürfe eines Gegners direkt aus dem Dashboard auslösen.
 
 - STR, DEX, CON, INT, WIS und CHA mit Modifikator anzeigen
 - native D&D5e-Rettungswurf-API verwenden
+- großer Werteknopf würfelt sofort normal und ohne Abfragedialog
+- kleine Knöpfe `V` und `N` würfeln sofort mit Vorteil beziehungsweise Nachteil
 - korrekten Actor-, Token- und Scene-Speaker setzen
 - Würfe pro Gegner ausführen
-- optionaler Sammelrettungswurf für ausgewählte Gegner erst nach Einzelwurf-Abnahme
+- Sammelrettungswürfe sind nicht Teil dieser Etappe
 - normale D&D5e- und RSReforged-Chatkarten erhalten
 
 ### Foundry-Test
