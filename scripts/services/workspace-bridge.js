@@ -311,7 +311,13 @@ export class WorkspaceBridge {
               <span class="gm-workspace-eyebrow">Statblock</span>
               <h2 data-field="displayed-name">Kein Gegner ausgewählt</h2>
             </div>
-            <span class="gm-workspace-source" data-field="selection-source">Keine Auswahl</span>
+            <div class="gm-workspace-statblock-actions">
+              <span class="gm-workspace-source" data-field="selection-source">Keine Auswahl</span>
+              <button type="button" class="gm-workspace-pin" data-action="toggle-pin" disabled>
+                <i class="fa-solid fa-thumbtack" aria-hidden="true"></i>
+                <span>Anpinnen</span>
+              </button>
+            </div>
           </header>
           <div class="gm-workspace-sheet-host" data-role="sheet-host">
             <div class="gm-workspace-empty">
@@ -342,14 +348,6 @@ export class WorkspaceBridge {
               <button type="button" data-action="bulk-clear" title="Auswahl aufheben"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="gm-workspace-enemy-list" data-role="enemy-list"></div>
-          </section>
-          <section class="gm-workspace-controls">
-            <h2>Statblock-Steuerung</h2>
-            <button type="button" class="gm-workspace-pin" data-action="toggle-pin" disabled>
-              <i class="fa-solid fa-thumbtack" aria-hidden="true"></i>
-              <span>Gegner anpinnen</span>
-            </button>
-            <p class="gm-workspace-help">Ein angepinnter Gegner bleibt sichtbar, auch wenn sich Zug oder Tokenauswahl ändern.</p>
           </section>
           <details class="gm-workspace-diagnostics">
             <summary>Diagnose</summary>
@@ -1186,7 +1184,7 @@ export class WorkspaceBridge {
     pinButton.classList.toggle("is-pinned", Boolean(this.#pinnedSelection));
     pinButton.querySelector("span").textContent = this.#pinnedSelection
       ? "Anheften lösen"
-      : "Gegner anpinnen";
+      : "Anpinnen";
 
     if (!actor) {
       await this.#closeDisplayedSheet();

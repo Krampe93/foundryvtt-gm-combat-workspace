@@ -1,5 +1,18 @@
 # Manual test checklist
 
+## Stage 5 design bugfix – Version 0.7.2
+
+- [ ] Im Workspace-Kopf steht exakt **Version 0.7.2**.
+- [ ] Die obere Anzeige „Aktueller Zug“ ist bei einem NPC neutral dunkel und nicht golden.
+- [ ] Nur die Zeile des aktiven NPCs ist golden hervorgehoben.
+- [ ] Der separate Bereich „Statblock-Steuerung“ ist vollständig entfernt.
+- [ ] `Anpinnen` steht kompakt im Statblock-Kopf neben der Auswahlquelle.
+- [ ] Nach dem Anpinnen steht dort `Anheften lösen`.
+- [ ] Ein angepinnter Gegner bleibt bei Zug- und Tokenwechsel sichtbar.
+- [ ] Nach dem Lösen greift wieder die normale Auswahlpriorität.
+- [ ] Die Diagnose folgt direkt unterhalb der Gegnerübersicht.
+
+
 ## Stage 5 layout bugfix – Version 0.7.1
 
 - [ ] Im Workspace-Kopf steht exakt **Version 0.7.1**.

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.2 – 2026-08-02
+
+- Die obere Anzeige des aktuellen NPC-Zugs neutral gestaltet; Gold kennzeichnet nur noch die aktive Gegnerzeile.
+- Den separaten Bereich „Statblock-Steuerung“ entfernt.
+- Die Anheftfunktion kompakt in den Statblock-Kopf neben die Auswahlquelle verschoben.
+
 ## 0.7.1 – 2026-08-02
 
 - Statusanzeigen zwischen Gegnername und RK in eine feste Spalte verschoben.
