@@ -377,6 +377,8 @@ export class WorkspaceBridge {
       .addEventListener("change", (event) => this.#onEnemySelection(event));
     root.querySelector('[data-role="enemy-list"]')
       .addEventListener("keydown", (event) => this.#onHpInput(event));
+    root.querySelector('[data-role="enemy-list"]')
+      .addEventListener("focusin", (event) => this.#selectHpInput(event));
     root.querySelector('.gm-workspace-bulk-tools')
       .addEventListener("click", (event) => this.#onBulkAction(event));
     root.querySelector('[data-role="enemy-list"]')
@@ -777,6 +779,10 @@ export class WorkspaceBridge {
           <span class="gm-workspace-enemy-name">${foundry.utils.escapeHTML(entry.displayName ?? "Unbenannter Gegner")}</span>
           <span class="gm-workspace-enemy-meta">${entry.hidden ? "versteckt" : "sichtbar"} · ${entry.onCurrentScene ? "auf Szene" : "nicht auf aktueller Szene"}</span>
         </button>
+        <span class="gm-workspace-enemy-indicators">
+          ${entry.active ? '<span class="gm-workspace-turn-badge"><i class="fa-solid fa-swords" aria-hidden="true"></i> Am Zug</span>' : ""}
+          ${entry.tokenId === selectedTokenId ? '<span class="gm-workspace-selected-badge"><i class="fa-solid fa-crosshairs" aria-hidden="true"></i> Ausgewählt</span>' : ""}
+        </span>
         <span class="gm-workspace-enemy-ac"><small>RK</small><strong>${entry.armorClass}</strong></span>
         <label class="gm-workspace-enemy-hp">
           <span><small>TP</small> <input type="text" inputmode="numeric" value="${entry.hpValue}" data-action="hp-input" data-current-value="${entry.hpValue}" title="50 = setzen · -20 = Schaden · +10 = Heilung"> / ${entry.hpMax}</span>
@@ -793,15 +799,16 @@ export class WorkspaceBridge {
             </span>
           `).join("")}
         </span>
-        <span class="gm-workspace-enemy-indicators">
-          ${entry.active ? '<span class="gm-workspace-turn-badge"><i class="fa-solid fa-swords" aria-hidden="true"></i> Am Zug</span>' : ""}
-          ${entry.tokenId === selectedTokenId ? '<span class="gm-workspace-selected-badge"><i class="fa-solid fa-crosshairs" aria-hidden="true"></i> Ausgewählt</span>' : ""}
-        </span>
       </div>
     `).join("");
   }
 
   #onEnemyClick(event) {
+    const hpInput = event.target.closest?.('[data-action="hp-input"]');
+    if (hpInput) {
+      hpInput.select();
+      return;
+    }
     const saveButton = event.target.closest?.('[data-action="roll-save"]');
     if (saveButton) {
       this.#rollSavingThrow(saveButton).catch((error) => {
@@ -867,6 +874,10 @@ export class WorkspaceBridge {
     if (checkbox.checked) this.#bulkSelection.add(row.dataset.combatantId);
     else this.#bulkSelection.delete(row.dataset.combatantId);
     this.#set("bulk-count", this.#bulkSelection.size, "0");
+  }
+
+  #selectHpInput(event) {
+    event.target.closest?.('[data-action="hp-input"]')?.select();
   }
 
   #onHpInput(event) {

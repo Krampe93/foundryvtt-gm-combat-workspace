@@ -280,7 +280,7 @@ body.gm-combat-workspace-companion > .notifications {
 #gm-combat-workspace-shell .gm-workspace-enemy {
   position: relative;
   display: grid;
-  grid-template-columns: 28px minmax(140px, 1.15fr) 50px minmax(145px, 0.85fr) minmax(450px, 3fr) auto;
+  grid-template-columns: 28px minmax(140px, 1.15fr) 105px 50px minmax(145px, 0.85fr) minmax(450px, 3fr);
   gap: 0.25rem 0.65rem;
   width: 100%;
   min-height: 58px;
@@ -373,13 +373,14 @@ body.gm-combat-workspace-companion > .notifications {
 #gm-combat-workspace-shell .gm-workspace-save-group {
   display: grid;
   grid-template-columns: minmax(40px, 1fr) 22px;
-  grid-template-rows: 1fr 1fr;
+  grid-template-rows: 23px 23px;
   gap: 2px;
   height: 48px;
 }
 
 #gm-combat-workspace-shell .gm-workspace-save-main,
 #gm-combat-workspace-shell .gm-workspace-save-mode {
+  box-sizing: border-box;
   min-width: 0;
   min-height: 0;
   margin: 0;
@@ -391,6 +392,7 @@ body.gm-combat-workspace-companion > .notifications {
   display: grid;
   place-items: center;
   line-height: 1.05;
+  height: 48px;
 }
 
 #gm-combat-workspace-shell .gm-workspace-save-main small {
@@ -399,6 +401,7 @@ body.gm-combat-workspace-companion > .notifications {
 }
 
 #gm-combat-workspace-shell .gm-workspace-save-mode {
+  height: 23px;
   font-size: 0.72rem;
   font-weight: 700;
   line-height: 1;
@@ -447,10 +450,11 @@ body.gm-combat-workspace-companion > .notifications {
 }
 
 #gm-combat-workspace-shell .gm-workspace-enemy-indicators {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: end;
-  gap: 0.35rem;
+  display: grid;
+  align-content: center;
+  gap: 0.25rem;
+  width: 105px;
+  min-height: 48px;
 }
 
 #gm-combat-workspace-shell .gm-workspace-turn-badge,
@@ -464,6 +468,7 @@ body.gm-combat-workspace-companion > .notifications {
   font-weight: 700;
   text-transform: uppercase;
   white-space: nowrap;
+  justify-content: center;
 }
 
 #gm-combat-workspace-shell .gm-workspace-turn-badge {

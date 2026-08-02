@@ -335,7 +335,7 @@ Eine Mehrfachaktion zeigt Anzahl und Art der betroffenen Gegner direkt in der We
 
 ## Etappe 5 – Rettungswürfe
 
-**Status:** `[~]` – Version 0.7.0 im Foundry-Test
+**Status:** `[~]` – Version 0.7.1 im Foundry-Test
 
 ### Ziel
 

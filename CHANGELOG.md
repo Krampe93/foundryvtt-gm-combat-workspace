@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.1 – 2026-08-02
+
+- Statusanzeigen zwischen Gegnername und RK in eine feste Spalte verschoben.
+- Feste Spaltenbreiten verhindern, dass RK, TP oder Rettungswürfe durch `Am Zug` und `Ausgewählt` verrutschen.
+- Der normale Rettungswurfknopf ist exakt so hoch wie die beiden Knöpfe für Vorteil und Nachteil zusammen.
+- Ein Klick oder Tastaturfokus markiert den vollständigen aktuellen TP-Wert zur direkten Eingabe.
+
 ## 0.7.0 – 2026-08-02
 
 - Alle sechs Rettungswurf-Modifikatoren direkt in jeder Gegnerzeile ergänzt.

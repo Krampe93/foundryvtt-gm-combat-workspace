@@ -1,5 +1,20 @@
 # Manual test checklist
 
+## Stage 5 layout bugfix – Version 0.7.1
+
+- [ ] Im Workspace-Kopf steht exakt **Version 0.7.1**.
+- [ ] `Am Zug` und `Ausgewählt` stehen zwischen Gegnername und RK.
+- [ ] Eine Zeile ohne Status reserviert denselben Platz wie eine Zeile mit Status.
+- [ ] Ein Gegner kann gleichzeitig `Am Zug` und `Ausgewählt` anzeigen, ohne eine Spalte zu verschieben.
+- [ ] Namen, RK, TP und alle sechs Rettungswürfe sind bei sämtlichen Gegnern exakt untereinander ausgerichtet.
+- [ ] Jeder normale Rettungswurfknopf ist so hoch wie `V` und `N` gemeinsam.
+- [ ] Klick in ein TP-Feld markiert sofort die vollständige vorhandene Zahl.
+- [ ] Nach dem Klick ersetzt `-20`, `+10` oder `50` die vorherige Zahl vollständig.
+- [ ] Fokus per Tabulator markiert ebenfalls die vollständige Zahl.
+- [ ] Enter führt die TP-Eingabe weiterhin korrekt aus.
+- [ ] Normale Rettungswürfe, Vorteil und Nachteil funktionieren weiterhin ohne Dialog.
+
+
 ## Stage 5 – Version 0.7.0
 
 - [ ] Im Workspace-Kopf steht exakt **Version 0.7.0**.
