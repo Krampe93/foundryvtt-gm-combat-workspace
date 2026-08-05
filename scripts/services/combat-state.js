@@ -1,4 +1,8 @@
 const MONKS_COMBAT_DETAILS_ID = "monks-combat-details";
+const MODULE_ID = "gm-combat-workspace";
+const REACTION_FLAG_KEY = "reactionStates";
+const LEGACY_REACTION_MODULE_ID = "reaction-tracker";
+const LEGACY_REACTION_FLAG_KEY = "states";
 
 function readFlag(document, moduleId, key) {
   try {
@@ -6,6 +10,15 @@ function readFlag(document, moduleId, key) {
   } catch (_error) {
     return undefined;
   }
+}
+
+function reactionStates(combat) {
+  const current = readFlag(combat, MODULE_ID, REACTION_FLAG_KEY) ?? {};
+  const legacy = readFlag(combat, LEGACY_REACTION_MODULE_ID, LEGACY_REACTION_FLAG_KEY) ?? {};
+  const legacyModuleActive = game.modules?.get?.(LEGACY_REACTION_MODULE_ID)?.active === true;
+  return legacyModuleActive
+    ? { ...current, ...legacy }
+    : { ...legacy, ...current };
 }
 
 export function classifyCombatant(combatant) {
@@ -95,6 +108,7 @@ export function createCombatSnapshot(combat) {
       activeActorId: null,
       activeTokenId: null,
       activeHidden: false,
+      reactionStates: {},
       combatants: [],
       context: null,
       signature: "none"
@@ -123,6 +137,7 @@ export function createCombatSnapshot(combat) {
     activeActorId: activeActor?.id ?? activeCombatant?.actorId ?? null,
     activeTokenId: activeToken?.id ?? activeCombatant?.tokenId ?? null,
     activeHidden: Boolean(activeCombatant?.hidden || activeToken?.hidden),
+    reactionStates: reactionStates(combat),
     combatants
   };
 

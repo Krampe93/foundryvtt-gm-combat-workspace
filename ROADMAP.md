@@ -335,7 +335,7 @@ Eine Mehrfachaktion zeigt Anzahl und Art der betroffenen Gegner direkt in der We
 
 ## Etappe 5 – Rettungswürfe
 
-**Status:** `[~]` – Version 0.7.2 im Foundry-Test
+**Status:** `[x]` – Abgenommen am 2026-08-05 mit Version 0.7.2
 
 ### Ziel
 
@@ -371,7 +371,7 @@ Alle sechs Rettungswürfe eines Gegners direkt aus dem Dashboard auslösen.
 
 ## Etappe 6 – Reaktionsübersicht
 
-**Status:** `[ ]`
+**Status:** `[~]` – Version 0.8.0 im Foundry-Test
 
 ### Ziel
 
@@ -390,12 +390,18 @@ Bei Spielerzügen und zwischen Spieleraktionen schnell erkennen, welche Gegner r
 - Aura- und Flächeneffekte kennzeichnen
 - Reaktionsbereich im Dashboard bei Spielerzügen hervorheben
 - Reaktion direkt ausführen, wenn eine eindeutige D&D5e-Aktivität vorhanden ist
+- Gelegenheitsangriff für jeden aktiven Gegner ergänzen
+- bei genau einem Nahkampfangriff direkt würfeln, bei mehreren eine kompakte Auswahl anbieten
+- bei fehlender eindeutiger Angriffsaktivität nur den Statblock anzeigen
 
-### Entscheidungsbedarf vor Beginn
+### Getroffene Entscheidungen
 
-- Sollen verwendete Reaktionen vollständig ausgeblendet oder durchgestrichen angezeigt werden?
-- Soll eine ausgeführte Reaktionsaktivität automatisch als verwendet gelten?
-- Sollen Reaktionen von versteckten Gegnern besonders gekennzeichnet werden?
+- verwendete Reaktionen sichtbar, abgedunkelt und durchgestrichen lassen
+- erfolgreich ausgeführte Reaktionsaktivitäten automatisch als verwendet markieren
+- manuelle Statuskorrektur weiterhin erlauben
+- versteckte Gegner mit einem Augensymbol kennzeichnen
+- Reaktionsstatus pro Gegner führen, da alle seine Reaktionen dieselbe Reaktionsressource verwenden
+- automatische Rücksetzung ausdrücklich erst in Etappe 7 implementieren
 
 ### Foundry-Test
 

@@ -1,6 +1,14 @@
 import { MODULE_ID } from "../config.js";
 import { createLogger } from "../core/logger.js";
 import { calculateHpUpdate, halfDamage, parseHpInput, uniqueHpTargets } from "./hp-operations.js";
+import {
+  LEGACY_REACTION_FLAG_KEY,
+  LEGACY_REACTION_MODULE_ID,
+  REACTION_FLAG_KEY,
+  actorMeleeAttacks,
+  actorReactions,
+  actorTurnStartEffects
+} from "./reaction-operations.js";
 
 const CHANNEL_NAME = `${MODULE_ID}.workspace`;
 const WORKSPACE_PARAMETER = "gmCombatWorkspace";
@@ -128,6 +136,8 @@ export class WorkspaceBridge {
   #nextColorIndex = 0;
   #remoteEnemyColors = [];
   #bulkSelection = new Set();
+  #openReactionChoices = new Set();
+  #reactionBusy = new Set();
 
   constructor({ eventBus, getSnapshot, logger = createLogger("WorkspaceBridge") }) {
     this.#eventBus = eventBus;
@@ -349,6 +359,17 @@ export class WorkspaceBridge {
             </div>
             <div class="gm-workspace-enemy-list" data-role="enemy-list"></div>
           </section>
+          <section class="gm-workspace-reactions" data-role="reaction-panel" aria-label="Reaktionsübersicht">
+            <header class="gm-workspace-reaction-header">
+              <div>
+                <span class="gm-workspace-eyebrow" data-field="reaction-turn">Kein Spielerzug</span>
+                <h2><i class="fa-solid fa-bolt" aria-hidden="true"></i> Reaktionen</h2>
+              </div>
+              <span class="gm-workspace-reaction-count" data-field="reaction-count">0 verfügbar</span>
+            </header>
+            <div class="gm-workspace-turn-warnings" data-role="turn-warnings"></div>
+            <div class="gm-workspace-reaction-list" data-role="reaction-list"></div>
+          </section>
           <details class="gm-workspace-diagnostics">
             <summary>Diagnose</summary>
             <section>
@@ -383,6 +404,8 @@ export class WorkspaceBridge {
       .addEventListener("pointerover", (event) => this.#onEnemyHover(event, true));
     root.querySelector('[data-role="enemy-list"]')
       .addEventListener("pointerout", (event) => this.#onEnemyHover(event, false));
+    root.querySelector('[data-role="reaction-panel"]')
+      .addEventListener("click", (event) => this.#onReactionClick(event));
 
     document.body.append(root);
     this.#root = root;
@@ -743,6 +766,138 @@ export class WorkspaceBridge {
     }).filter((combatant) => !combatant.defeated);
   }
 
+  #actorForEntry(entry) {
+    const scene = game.scenes?.get(entry?.sceneId) ?? null;
+    const tokenDocument = scene?.tokens?.get(entry?.tokenId) ?? null;
+    return tokenDocument?.actor ?? game.actors?.get(entry?.actorId) ?? null;
+  }
+
+  #reactionEntryData(entry) {
+    const actor = this.#actorForEntry(entry);
+    const state = this.#getSnapshot?.()?.reactionStates?.[entry.id] ?? {};
+    return {
+      ...entry,
+      actor,
+      reactions: actorReactions(actor),
+      meleeAttacks: actorMeleeAttacks(actor),
+      used: Boolean(state.used)
+    };
+  }
+
+  #renderReactionOverview() {
+    const panel = this.#root?.querySelector('[data-role="reaction-panel"]');
+    const list = this.#root?.querySelector('[data-role="reaction-list"]');
+    const warnings = this.#root?.querySelector('[data-role="turn-warnings"]');
+    if (!panel || !list || !warnings) return;
+
+    const snapshot = this.#getSnapshot?.();
+    const active = snapshot?.combatants?.find(({ id }) => id === snapshot.activeCombatantId) ?? null;
+    const playerTurn = Boolean(snapshot?.started && snapshot.activeType === "player");
+    const entries = this.#enemyEntries().map((entry) => this.#reactionEntryData(entry));
+    const available = entries.filter(({ used }) => !used).length;
+
+    panel.classList.toggle("is-player-turn", playerTurn);
+    this.#set("reaction-turn", playerTurn ? `Spielerzug: ${active?.name ?? "Unbekannt"}` : "Außerhalb eines Spielerzugs");
+    this.#set("reaction-count", `${available} verfügbar`);
+
+    const reminderGroups = new Map();
+    if (playerTurn) {
+      for (const entry of entries) {
+        for (const effect of actorTurnStartEffects(entry.actor)) {
+          const key = `${effect.name}:${effect.description}`;
+          const group = reminderGroups.get(key) ?? { effect, enemies: [] };
+          group.enemies.push(entry.displayName);
+          reminderGroups.set(key, group);
+        }
+      }
+    }
+
+    warnings.innerHTML = [...reminderGroups.values()].map(({ effect, enemies }) => `
+      <div class="gm-workspace-turn-warning">
+        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+        <span><strong>Vor der Aktion prüfen: ${foundry.utils.escapeHTML(effect.name)}</strong>
+        <small>${foundry.utils.escapeHTML(enemies.join(", "))} · ${foundry.utils.escapeHTML(effect.description)}</small></span>
+      </div>
+    `).join("");
+
+    if (!entries.length) {
+      list.innerHTML = `<div class="gm-workspace-reaction-empty">${snapshot?.started
+        ? "Keine kampffähigen Gegner mit Reaktionen im Encounter."
+        : "Die Reaktionsübersicht erscheint mit dem nächsten Encounter."}</div>`;
+      return;
+    }
+
+    list.innerHTML = entries.map((entry) => {
+      const hiddenText = entry.hidden
+        ? '<span class="gm-workspace-reaction-hidden"><i class="fa-solid fa-eye-slash" aria-hidden="true"></i> versteckt</span>'
+        : "sichtbar";
+      const nativeReactions = entry.reactions.map((reaction) => `
+        <div class="gm-workspace-reaction-ability">
+          <div>
+            <strong>${foundry.utils.escapeHTML(reaction.name)}</strong>
+            <small>${foundry.utils.escapeHTML(reaction.condition || reaction.description)}</small>
+            <details>
+              <summary>Vollständige Beschreibung</summary>
+              <p>${foundry.utils.escapeHTML(reaction.description)}</p>
+            </details>
+          </div>
+          ${reaction.executable
+            ? `<button type="button" data-action="execute-reaction" data-item-id="${reaction.itemId}" data-activity-id="${reaction.activityId}" ${entry.used ? "disabled" : ""}>Ausführen</button>`
+            : '<button type="button" data-action="show-reaction-actor">Statblock</button>'}
+        </div>
+      `).join("");
+
+      const choiceOpen = this.#openReactionChoices.has(entry.id);
+      let opportunityAction = '<button type="button" data-action="show-reaction-actor">Statblock</button>';
+      if (entry.meleeAttacks.length === 1) {
+        const attack = entry.meleeAttacks[0];
+        opportunityAction = `<button type="button" data-action="execute-opportunity" data-item-id="${attack.itemId}" data-activity-id="${attack.activityId}" ${entry.used ? "disabled" : ""}>Angreifen</button>`;
+      } else if (entry.meleeAttacks.length > 1) {
+        opportunityAction = `<button type="button" data-action="toggle-opportunity-choices" aria-expanded="${choiceOpen}" ${entry.used ? "disabled" : ""}>Angriff wählen</button>`;
+      }
+
+      const attackChoices = choiceOpen && entry.meleeAttacks.length > 1 ? `
+        <div class="gm-workspace-opportunity-choices">
+          ${entry.meleeAttacks.map((attack) => `
+            <button type="button" data-action="execute-opportunity" data-item-id="${attack.itemId}" data-activity-id="${attack.activityId}">
+              ${foundry.utils.escapeHTML(attack.name)}
+            </button>
+          `).join("")}
+        </div>
+      ` : "";
+
+      return `
+        <article class="gm-workspace-reaction-enemy${entry.used ? " is-used" : ""}${this.#reactionBusy.has(entry.id) ? " is-busy" : ""}"
+          style="--gm-enemy-color:${entry.color}" data-combatant-id="${entry.id}">
+          <span class="gm-workspace-reaction-color" aria-hidden="true"></span>
+          <header>
+            <button type="button" class="gm-workspace-reaction-name" data-action="show-reaction-actor">${foundry.utils.escapeHTML(entry.displayName)}</button>
+            <span>${hiddenText} · ${entry.onCurrentScene ? "auf Szene" : "nicht auf aktueller Szene"}</span>
+            <button type="button" class="gm-workspace-reaction-status ${entry.used ? "is-used" : "is-available"}" data-action="toggle-reaction-status">
+              <i class="fa-solid ${entry.used ? "fa-bolt-slash" : "fa-bolt"}" aria-hidden="true"></i>
+              ${entry.used ? "Verwendet" : "Verfügbar"}
+            </button>
+          </header>
+          <div class="gm-workspace-reaction-abilities">
+            ${nativeReactions}
+            <div class="gm-workspace-reaction-ability is-opportunity">
+              <div>
+                <strong>Gelegenheitsangriff <em>Basisreaktion</em></strong>
+                <small>${entry.meleeAttacks.length === 0
+                  ? "Kein eindeutiger Nahkampfangriff erkannt – Statblock verwenden."
+                  : entry.meleeAttacks.length === 1
+                    ? `${foundry.utils.escapeHTML(entry.meleeAttacks[0].name)} wird direkt ausgeführt.`
+                    : `${entry.meleeAttacks.length} mögliche Nahkampfangriffe.`}</small>
+              </div>
+              ${opportunityAction}
+            </div>
+            ${attackChoices}
+          </div>
+        </article>
+      `;
+    }).join("");
+  }
+
   #renderEnemyList() {
     const list = this.#root?.querySelector('[data-role="enemy-list"]');
     if (!list) return;
@@ -820,9 +975,11 @@ export class WorkspaceBridge {
     if (!row) return;
     const entry = this.#enemyEntries().find(({ id }) => id === row.dataset.combatantId);
     if (!entry) return;
-    const scene = game.scenes?.get(entry.sceneId) ?? null;
-    const tokenDocument = scene?.tokens?.get(entry.tokenId) ?? null;
-    const actor = tokenDocument?.actor ?? game.actors?.get(entry.actorId) ?? null;
+    this.#selectEnemyEntry(entry);
+  }
+
+  #selectEnemyEntry(entry) {
+    const actor = this.#actorForEntry(entry);
     if (!actor || actor.type !== "npc") return;
 
     this.#pinnedSelection = null;
@@ -836,6 +993,110 @@ export class WorkspaceBridge {
     };
     this.#channel?.postMessage({ type: "selectToken", tokenId: entry.tokenId, sceneId: entry.sceneId });
     this.#render();
+  }
+
+  #onReactionClick(event) {
+    const button = event.target.closest?.("[data-action]");
+    const row = button?.closest?.("[data-combatant-id]");
+    if (!button || !row) return;
+    const entry = this.#enemyEntries().find(({ id }) => id === row.dataset.combatantId);
+    if (!entry) return;
+
+    if (button.dataset.action === "show-reaction-actor") {
+      this.#selectEnemyEntry(entry);
+      return;
+    }
+
+    if (button.dataset.action === "toggle-opportunity-choices") {
+      if (this.#openReactionChoices.has(entry.id)) this.#openReactionChoices.delete(entry.id);
+      else this.#openReactionChoices.add(entry.id);
+      this.#renderReactionOverview();
+      return;
+    }
+
+    if (button.dataset.action === "toggle-reaction-status") {
+      const used = Boolean(this.#getSnapshot?.()?.reactionStates?.[entry.id]?.used);
+      this.#setReactionUsed(entry.id, !used, "manual").catch((error) => {
+        this.#logger.error("Reaction status update failed", error);
+        ui.notifications?.error(`Reaktionsstatus konnte nicht geändert werden: ${error.message}`);
+      });
+      return;
+    }
+
+    if (["execute-reaction", "execute-opportunity"].includes(button.dataset.action)) {
+      this.#executeReactionActivity(entry, button, button.dataset.action === "execute-opportunity").catch((error) => {
+        this.#logger.error("Reaction execution failed", error);
+        ui.notifications?.error(`Reaktion konnte nicht ausgeführt werden: ${error.message}`);
+      });
+    }
+  }
+
+  async #executeReactionActivity(entry, button, forceAttack = false) {
+    if (this.#reactionBusy.has(entry.id)) return;
+    const actor = this.#actorForEntry(entry);
+    const item = actor?.items?.get?.(button.dataset.itemId) ?? null;
+    const activity = item?.system?.activities?.get?.(button.dataset.activityId) ??
+      Array.from(item?.system?.activities?.values?.() ?? []).find(({ id }) => id === button.dataset.activityId) ?? null;
+    if (!actor || !item || !activity) throw new Error("Die zugehörige D&D5e-Aktivität wurde nicht gefunden.");
+
+    this.#reactionBusy.add(entry.id);
+    this.#renderReactionOverview();
+    this.#releaseStaleModifiers();
+
+    const cleanEvent = new MouseEvent("click", {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      view: window,
+      ctrlKey: false,
+      shiftKey: false,
+      altKey: false,
+      metaKey: false
+    });
+
+    try {
+      const activityType = String(activity.type ?? activity.system?.type ?? "").toLowerCase();
+      let result;
+      if ((forceAttack || activityType === "attack") && typeof activity.rollAttack === "function") {
+        result = await activity.rollAttack({ event: cleanEvent }, { configure: false });
+      } else if (typeof activity.use === "function") {
+        result = await activity.use({ event: cleanEvent }, { configure: false });
+      } else {
+        throw new Error("Diese Aktivität kann nicht direkt ausgeführt werden.");
+      }
+
+      const succeeded = Array.isArray(result) ? result.length > 0 : Boolean(result);
+      if (succeeded) {
+        await this.#setReactionUsed(entry.id, true, forceAttack ? "opportunity-attack" : "activity-use");
+        this.#openReactionChoices.delete(entry.id);
+      }
+    } finally {
+      this.#reactionBusy.delete(entry.id);
+      this.#renderReactionOverview();
+    }
+  }
+
+  async #setReactionUsed(combatantId, used, source) {
+    const combat = this.#getSnapshot?.()?.context?.combat ?? game.combat ?? null;
+    if (!combat?.started || !combat.combatants?.get?.(combatantId)) {
+      throw new Error("Der Gegner gehört nicht mehr zum laufenden Encounter.");
+    }
+
+    const current = foundry.utils.deepClone(combat.getFlag(MODULE_ID, REACTION_FLAG_KEY) ?? {});
+    current[combatantId] = {
+      ...(current[combatantId] ?? {}),
+      used: Boolean(used),
+      round: combat.round ?? null,
+      turn: combat.turn ?? null,
+      source
+    };
+    await combat.setFlag(MODULE_ID, REACTION_FLAG_KEY, current);
+    if (game.modules?.get?.(LEGACY_REACTION_MODULE_ID)?.active) {
+      const legacy = foundry.utils.deepClone(combat.getFlag(LEGACY_REACTION_MODULE_ID, LEGACY_REACTION_FLAG_KEY) ?? {});
+      legacy[combatantId] = { ...current[combatantId] };
+      await combat.setFlag(LEGACY_REACTION_MODULE_ID, LEGACY_REACTION_FLAG_KEY, legacy);
+    }
+    this.#renderReactionOverview();
   }
 
   async #rollSavingThrow(button) {
@@ -980,6 +1241,8 @@ export class WorkspaceBridge {
     this.#colorCombatId = null;
     this.#nextColorIndex = 0;
     this.#remoteEnemyColors = [];
+    this.#openReactionChoices.clear();
+    this.#reactionBusy.clear();
 
     if (this.#workspaceMode) {
       this.#pinnedSelection = null;
@@ -1162,6 +1425,7 @@ export class WorkspaceBridge {
     currentTurn.classList.toggle("is-player-turn", snapshot?.started && snapshot?.activeType === "player");
     currentTurn.classList.toggle("is-npc-turn", snapshot?.started && snapshot?.activeType === "npc");
     this.#renderEnemyList();
+    this.#renderReactionOverview();
 
     const revision = ++this.#selectionRevision;
     this.#desiredSelection()

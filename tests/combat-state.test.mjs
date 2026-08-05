@@ -8,7 +8,8 @@ import {
 } from "../scripts/services/combat-state.js";
 
 globalThis.game = {
-  scenes: new Map()
+  scenes: new Map(),
+  modules: new Map()
 };
 
 function actor(id, type, ownership = {}) {
@@ -61,7 +62,8 @@ function combat({
   round = 1,
   turn = 0,
   entries = [],
-  activeIndex = 0
+  activeIndex = 0,
+  flags = {}
 } = {}) {
   const scene = {
     id: "scene-1",
@@ -84,6 +86,9 @@ function combat({
     started,
     round,
     turn,
+    getFlag(moduleId, key) {
+      return flags[moduleId]?.[key];
+    },
     combatants: entries,
     combatant: entries[activeIndex] ?? null
   };
@@ -282,4 +287,46 @@ test("emits combat end when a started combat disappears", () => {
     diffCombatSnapshots(previous, empty).map(({ name }) => name),
     ["combatEnded", "combatStateChanged"]
   );
+});
+
+test("reaction state changes refresh the combat snapshot", () => {
+  const npc = combatant({
+    id: "giant",
+    actor: actor("giant-actor", "npc"),
+    tokenId: "giant-token"
+  });
+  const previous = createCombatSnapshot(combat({ entries: [npc] }));
+  const current = createCombatSnapshot(combat({
+    entries: [npc],
+    flags: {
+      "gm-combat-workspace": {
+        reactionStates: { giant: { used: true } }
+      }
+    }
+  }));
+
+  assert.equal(current.reactionStates.giant.used, true);
+  assert.deepEqual(
+    diffCombatSnapshots(previous, current).map(({ name }) => name),
+    ["combatStateChanged"]
+  );
+});
+
+test("active reaction-tracker state remains authoritative for macro compatibility", () => {
+  game.modules.set("reaction-tracker", { active: true });
+  const npc = combatant({
+    id: "mage",
+    actor: actor("mage-actor", "npc"),
+    tokenId: "mage-token"
+  });
+  const snapshot = createCombatSnapshot(combat({
+    entries: [npc],
+    flags: {
+      "gm-combat-workspace": { reactionStates: { mage: { used: true } } },
+      "reaction-tracker": { states: { mage: { used: false } } }
+    }
+  }));
+
+  assert.equal(snapshot.reactionStates.mage.used, false);
+  game.modules.clear();
 });

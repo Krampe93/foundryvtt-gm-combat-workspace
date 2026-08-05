@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.8.0 – 2026-08-05
+
+- Eigene Reaktionsübersicht unterhalb der Gegnerliste ergänzt und bei Spielerzügen hervorgehoben.
+- Explizite D&D5e-Reaktionsaktivitäten mit Auslöser, Kurztext und aufklappbarer Beschreibung erkannt.
+- Reaktionsstatus pro Gegner dauerhaft als `Verfügbar` oder `Verwendet` gespeichert und manuell umschaltbar gemacht.
+- Erfolgreich ausgeführte Reaktionen automatisch als verwendet markiert; abgebrochene oder fehlgeschlagene Verwendungen verändern den Status nicht.
+- Vorhandene Zustände des optionalen Moduls `reaction-tracker` kompatibel eingelesen, ohne eine neue Pflichtabhängigkeit einzuführen.
+- Verwendete Reaktionen abgedunkelt und durchgestrichen, versteckte Gegner mit Augensymbol gekennzeichnet und besiegte Gegner ausgeblendet.
+- Gelegenheitsangriffe für jeden Gegner ergänzt: ein eindeutiger Nahkampfangriff wird direkt gewürfelt, mehrere Angriffe werden zur Auswahl angeboten und bei fehlender Zuordnung wird der Statblock geöffnet.
+- Start-of-Turn-Auren und Flächeneffekte während Spielerzügen als gesonderte Warnung angezeigt.
+- Automatische Reaktionsrücksetzungen bleiben der folgenden Roadmap-Etappe vorbehalten.
+
 ## 0.7.2 – 2026-08-02
 
 - Die obere Anzeige des aktuellen NPC-Zugs neutral gestaltet; Gold kennzeichnet nur noch die aktive Gegnerzeile.

@@ -1,5 +1,31 @@
 # Manual test checklist
 
+## Stage 6 – Version 0.8.0
+
+- [ ] Im Workspace-Kopf steht exakt **Version 0.8.0**.
+- [ ] Unterhalb der Gegnerübersicht erscheint der Bereich **Reaktionen**.
+- [ ] Während eines Spielerzuges wird der Reaktionsbereich blau hervorgehoben und nennt den aktiven Spieler.
+- [ ] Während eines Gegnerzuges bleibt der Bereich sichtbar, ist aber nicht hervorgehoben.
+- [ ] Ein NPC ohne ausdrücklich hinterlegte Reaktion besitzt trotzdem den Eintrag **Gelegenheitsangriff · Basisreaktion**.
+- [ ] Ein NPC mit einer D&D5e-Reaktionsaktivität zeigt Name, Auslöser, Kurztext und aufklappbare vollständige Beschreibung.
+- [ ] Bei mehreren Reaktionsaktivitäten werden alle angezeigt, aber nur ein gemeinsamer Status pro Gegner geführt.
+- [ ] Ein versteckter Gegner bleibt sichtbar und trägt ein durchgestrichenes Augensymbol mit dem Text `versteckt`.
+- [ ] Ein besiegter Gegner verschwindet aus Gegner- und Reaktionsübersicht.
+- [ ] `Verfügbar` lässt sich manuell zu `Verwendet` umschalten und wieder zurücksetzen.
+- [ ] Eine verwendete Reaktion bleibt sichtbar, ist aber abgedunkelt und durchgestrichen.
+- [ ] Der Status bleibt nach Dashboard-Neurendering sowie Strg+F5 auf beiden Fenstern erhalten.
+- [ ] Eine eindeutig erkannte Reaktionsaktivität lässt sich mit **Ausführen** direkt verwenden.
+- [ ] Nach erfolgreicher Ausführung wechselt der Gegner automatisch zu `Verwendet`.
+- [ ] Eine abgebrochene oder wegen fehlender Ressource abgewiesene Aktivität bleibt `Verfügbar`.
+- [ ] Bei genau einem geeigneten Nahkampfangriff führt **Angreifen** genau diesen Angriff aus.
+- [ ] Bei mehreren Nahkampfangriffen öffnet **Angriff wählen** eine kompakte Liste und der gewählte Angriff wird genau einmal ausgeführt.
+- [ ] Ohne erkannten Nahkampfangriff öffnet die Gelegenheitsangriff-Zeile nur den Statblock und würfelt nichts.
+- [ ] Ein erfolgreicher Gelegenheitsangriff markiert die Reaktion automatisch als verwendet.
+- [ ] Ein vorhandener alter `reaction-tracker`-Status wird korrekt angezeigt, auch wenn das Fremdmodul deaktiviert ist.
+- [ ] Bei einem passenden Start-of-Turn-Aura- oder Flächeneffekt erscheint während des Spielerzuges eine rote Warnzeile.
+- [ ] Statblock, Karte, Kamera, Tokenauswahl, HP, Mehrfachaktionen und Rettungswürfe funktionieren weiterhin.
+- [ ] Es entstehen keine doppelten Würfe oder Chatkarten und keine roten Modulfehler in einem der beiden Fenster.
+
 ## Stage 5 design bugfix – Version 0.7.2
 
 - [ ] Im Workspace-Kopf steht exakt **Version 0.7.2**.
