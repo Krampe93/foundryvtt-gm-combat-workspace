@@ -18,7 +18,7 @@ https://raw.githubusercontent.com/Krampe93/foundryvtt-gm-combat-workspace/main/m
 
 This manifest URL is permanent. Foundry can use it to discover and install future test versions through the normal update function.
 
-Version `0.8.0` adds a persistent enemy-reaction overview, direct native D&D5e reaction execution, generic opportunity attacks, hidden-enemy markers, and start-of-turn area reminders. No third-party module is required; existing `reaction-tracker` combat flags are read when present.
+Version `0.8.1` adds a persistent enemy-reaction overview, direct native D&D5e reaction execution, generic opportunity attacks, hidden-enemy markers, and turn-based aura reminders. No third-party module is required; existing `reaction-tracker` combat flags are read when present.
 
 ## Development
 
@@ -101,4 +101,4 @@ When a player turn begins, the workspace prioritizes enemy reactions and legenda
 
 ## Development status
 
-Version `0.8.0` contains the two-window workspace, embedded native statblock, color-linked enemy dashboard, HP and armor controls, saving throws, and the first complete reaction overview. Automatic reaction reset is the next planned stage.
+Version `0.8.1` contains the two-window workspace, embedded native statblock, color-linked enemy dashboard, HP and armor controls, saving throws, and the first complete reaction overview. Automatic reaction reset is the next planned stage.

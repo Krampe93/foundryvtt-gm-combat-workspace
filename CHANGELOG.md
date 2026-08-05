@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.1 – 2026-08-05
+
+- Actorlose Spieler-Platzhalter als Spielerzug erkannt, damit der Reaktionsbereich zuverlässig blau hervorgehoben wird.
+- Gegnerzüge normal als `Gegnerzug: Name` bezeichnet, ohne die Reaktionsübersicht auszugrauen.
+- Gelegenheitsangriffe ohne künstliches, zielloses Klickereignis ausgeführt und damit den D&D5e-Fehler bei `target.closest()` behoben.
+- Aura-Erkennung um Zugende-Auslöser und ausdrücklich als Aura benannte Fähigkeiten erweitert; damit wird insbesondere die Bodak-Fähigkeit `Aura of Annihilation` erkannt.
+- Warntexte unterscheiden jetzt zwischen Beginn des Zuges, Ende des Zuges und allgemein zu prüfenden Auren.
+
 ## 0.8.0 – 2026-08-05
 
 - Eigene Reaktionsübersicht unterhalb der Gegnerliste ergänzt und bei Spielerzügen hervorgehoben.

@@ -54,6 +54,10 @@ export function isReactionActivation(type) {
   return String(type ?? "").toLowerCase().startsWith("reaction");
 }
 
+export function isPlayerFacingTurn(type) {
+  return type === "player" || type === "placeholder";
+}
+
 function activityActivationType(activity) {
   return activity?.activation?.type ?? activity?.system?.activation?.type ?? null;
 }
@@ -143,15 +147,25 @@ export function actorMeleeAttacks(actor) {
   return attacks.sort((a, b) => String(a.name).localeCompare(String(b.name), "de"));
 }
 
-function hasTurnStartPhrase(text) {
+function turnTiming(text) {
   const normalized = stripFoundryMarkup(text).toLowerCase();
-  return [
+  const starts = [
     "starts its turn", "starts their turn", "starts the turn",
     "at the start of its turn", "at the start of their turn",
     "at the start of the creature's turn", "at the start of a creature's turn",
     "zu beginn seines zuges", "zu beginn ihres zuges",
     "beginnt seinen zug", "beginnt ihren zug"
   ].some((phrase) => normalized.includes(phrase));
+  if (starts) return "start";
+
+  const ends = [
+    "ends its turn", "ends their turn", "ends the turn",
+    "at the end of its turn", "at the end of their turn",
+    "at the end of the creature's turn", "at the end of a creature's turn",
+    "am ende seines zuges", "am ende ihres zuges",
+    "beendet seinen zug", "beendet ihren zug"
+  ].some((phrase) => normalized.includes(phrase));
+  return ends ? "end" : null;
 }
 
 function hasAreaPhrase(item, text) {
@@ -169,13 +183,18 @@ export function actorTurnStartEffects(actor) {
 
   for (const item of collectionValues(actor?.items)) {
     const description = itemDescription(item);
-    if (!description || !hasTurnStartPhrase(description) || !hasAreaPhrase(item, description)) continue;
+    if (!description) continue;
+    const timing = turnTiming(description);
+    const auraNamed = String(item?.name ?? "").toLowerCase().includes("aura") ||
+      stripFoundryMarkup(description).toLowerCase().includes(" aura");
+    if (!auraNamed && !(timing && hasAreaPhrase(item, description))) continue;
     const id = item?.uuid ?? item?.id ?? item?.name;
     if (seen.has(id)) continue;
     seen.add(id);
     effects.push({
       id,
       name: item?.name ?? "Unbenannter Effekt",
+      timing: timing ?? "aura",
       description: shortenReactionText(description)
     });
   }

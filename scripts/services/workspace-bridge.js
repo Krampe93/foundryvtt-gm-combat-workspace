@@ -7,7 +7,8 @@ import {
   REACTION_FLAG_KEY,
   actorMeleeAttacks,
   actorReactions,
-  actorTurnStartEffects
+  actorTurnStartEffects,
+  isPlayerFacingTurn
 } from "./reaction-operations.js";
 
 const CHANNEL_NAME = `${MODULE_ID}.workspace`;
@@ -792,19 +793,26 @@ export class WorkspaceBridge {
 
     const snapshot = this.#getSnapshot?.();
     const active = snapshot?.combatants?.find(({ id }) => id === snapshot.activeCombatantId) ?? null;
-    const playerTurn = Boolean(snapshot?.started && snapshot.activeType === "player");
+    const playerTurn = Boolean(snapshot?.started && isPlayerFacingTurn(snapshot.activeType));
     const entries = this.#enemyEntries().map((entry) => this.#reactionEntryData(entry));
     const available = entries.filter(({ used }) => !used).length;
 
     panel.classList.toggle("is-player-turn", playerTurn);
-    this.#set("reaction-turn", playerTurn ? `Spielerzug: ${active?.name ?? "Unbekannt"}` : "Außerhalb eines Spielerzugs");
+    const turnLabel = !snapshot?.started
+      ? "Kein laufender Encounter"
+      : playerTurn
+        ? `Spielerzug: ${active?.name ?? "Unbekannt"}`
+        : snapshot.activeType === "npc"
+          ? `Gegnerzug: ${active?.name ?? "Unbekannt"}`
+          : `Aktueller Zug: ${active?.name ?? "Unbekannt"}`;
+    this.#set("reaction-turn", turnLabel);
     this.#set("reaction-count", `${available} verfügbar`);
 
     const reminderGroups = new Map();
     if (playerTurn) {
       for (const entry of entries) {
         for (const effect of actorTurnStartEffects(entry.actor)) {
-          const key = `${effect.name}:${effect.description}`;
+          const key = `${effect.name}:${effect.timing}:${effect.description}`;
           const group = reminderGroups.get(key) ?? { effect, enemies: [] };
           group.enemies.push(entry.displayName);
           reminderGroups.set(key, group);
@@ -812,13 +820,20 @@ export class WorkspaceBridge {
       }
     }
 
-    warnings.innerHTML = [...reminderGroups.values()].map(({ effect, enemies }) => `
+    warnings.innerHTML = [...reminderGroups.values()].map(({ effect, enemies }) => {
+      const timingLabel = effect.timing === "start"
+        ? "Zu Beginn des Zuges prüfen"
+        : effect.timing === "end"
+          ? "Am Ende des Zuges prüfen"
+          : "Aura während des Zuges prüfen";
+      return `
       <div class="gm-workspace-turn-warning">
         <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
-        <span><strong>Vor der Aktion prüfen: ${foundry.utils.escapeHTML(effect.name)}</strong>
+        <span><strong>${timingLabel}: ${foundry.utils.escapeHTML(effect.name)}</strong>
         <small>${foundry.utils.escapeHTML(enemies.join(", "))} · ${foundry.utils.escapeHTML(effect.description)}</small></span>
       </div>
-    `).join("");
+    `;
+    }).join("");
 
     if (!entries.length) {
       list.innerHTML = `<div class="gm-workspace-reaction-empty">${snapshot?.started
@@ -1043,24 +1058,13 @@ export class WorkspaceBridge {
     this.#renderReactionOverview();
     this.#releaseStaleModifiers();
 
-    const cleanEvent = new MouseEvent("click", {
-      bubbles: true,
-      cancelable: true,
-      composed: true,
-      view: window,
-      ctrlKey: false,
-      shiftKey: false,
-      altKey: false,
-      metaKey: false
-    });
-
     try {
       const activityType = String(activity.type ?? activity.system?.type ?? "").toLowerCase();
       let result;
       if ((forceAttack || activityType === "attack") && typeof activity.rollAttack === "function") {
-        result = await activity.rollAttack({ event: cleanEvent }, { configure: false });
+        result = await activity.rollAttack({}, { configure: false });
       } else if (typeof activity.use === "function") {
-        result = await activity.use({ event: cleanEvent }, { configure: false });
+        result = await activity.use({}, { configure: false });
       } else {
         throw new Error("Diese Aktivität kann nicht direkt ausgeführt werden.");
       }

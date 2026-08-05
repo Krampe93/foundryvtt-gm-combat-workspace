@@ -5,6 +5,7 @@ import {
   actorMeleeAttacks,
   actorReactions,
   actorTurnStartEffects,
+  isPlayerFacingTurn,
   mergeReactionStates
 } from "../scripts/services/reaction-operations.js";
 
@@ -60,6 +61,24 @@ test("recognizes start-of-turn area reminders", () => {
   };
 
   assert.deepEqual(actorTurnStartEffects(actor).map(({ name }) => name), ["Fear Aura"]);
+});
+
+test("recognizes a Bodak-style end-of-turn aura", () => {
+  const actor = {
+    items: [
+      item("annihilation", "Aura of Annihilation", [], "Any creature that ends its turn within 30 feet takes necrotic damage.")
+    ]
+  };
+
+  assert.deepEqual(actorTurnStartEffects(actor).map(({ name, timing }) => ({ name, timing })), [
+    { name: "Aura of Annihilation", timing: "end" }
+  ]);
+});
+
+test("treats actorless initiative placeholders as player-facing turns", () => {
+  assert.equal(isPlayerFacingTurn("player"), true);
+  assert.equal(isPlayerFacingTurn("placeholder"), true);
+  assert.equal(isPlayerFacingTurn("npc"), false);
 });
 
 test("current reaction states override legacy reaction-tracker states", () => {

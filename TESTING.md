@@ -1,5 +1,17 @@
 # Manual test checklist
 
+## Stage 6 bugfix – Version 0.8.1
+
+- [ ] Im Workspace-Kopf steht exakt **Version 0.8.1**.
+- [ ] Ein Spieler mit Actor löst die blaue Hervorhebung des Reaktionsbereichs aus.
+- [ ] Ein actorloser Spieler-Platzhalter löst dieselbe blaue Hervorhebung aus.
+- [ ] Bei einem Gegnerzug steht `Gegnerzug: Name`; der Bereich bleibt normal lesbar und wird nicht ausgegraut.
+- [ ] `Angreifen` erzeugt keinen Fehler mit `Cannot read properties of null (reading 'closest')`.
+- [ ] Der gewählte Gelegenheitsangriff wird genau einmal gewürfelt und markiert die Reaktion anschließend als verwendet.
+- [ ] Ein Bodak mit `Aura of Annihilation` erzeugt während des Spielerzugs eine Warnung `Am Ende des Zuges prüfen`.
+- [ ] Eine Aura mit Start-of-Turn-Text erzeugt stattdessen `Zu Beginn des Zuges prüfen`.
+- [ ] Reaktionsstatus, direkte Reaktionen, Statblock, Karte, HP und Rettungswürfe funktionieren weiterhin.
+
 ## Stage 6 – Version 0.8.0
 
 - [ ] Im Workspace-Kopf steht exakt **Version 0.8.0**.
