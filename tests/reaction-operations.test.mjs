@@ -6,7 +6,8 @@ import {
   actorReactions,
   actorTurnStartEffects,
   isPlayerFacingTurn,
-  mergeReactionStates
+  mergeReactionStates,
+  stripFoundryMarkup
 } from "../scripts/services/reaction-operations.js";
 
 function activity(id, type, activation, attackType = null) {
@@ -73,6 +74,39 @@ test("recognizes a Bodak-style end-of-turn aura", () => {
   assert.deepEqual(actorTurnStartEffects(actor).map(({ name, timing }) => ({ name, timing })), [
     { name: "Aura of Annihilation", timing: "end" }
   ]);
+});
+
+test("recognizes Death Gaze but rejects Command and Detect Magic as turn auras", () => {
+  const actor = {
+    items: [
+      item("death-gaze", "Death Gaze", [], "When a creature that can see the bodak's eyes starts its turn within 30 feet of the bodak, it must save."),
+      item("command", "Command", [], "The target moves toward you, ending its turn if it moves within 5 feet of you."),
+      item("detect-magic", "Detect Magic", [], "You sense the presence of magical effects within 30 feet and learn if an effect has a faint aura.")
+    ]
+  };
+
+  assert.deepEqual(actorTurnStartEffects(actor).map(({ name, timing }) => ({ name, timing })), [
+    { name: "Death Gaze", timing: "start" }
+  ]);
+});
+
+test("turn reminder text converts Foundry save, damage, status, and reference markup", () => {
+  const text = stripFoundryMarkup(
+    "Make a [[/save ability=con dc=13]] saving throw unless &amp;Reference[condition=incapacitated]. " +
+    "Take [[/damage 3d10 type=psychic]] damage unless @status[surprised]."
+  );
+
+  assert.equal(
+    text,
+    "Make a CON-Rettungswurf (SG 13) unless kampfunfähig. Take 3d10 psychic damage unless überrascht."
+  );
+});
+
+test("turn reminder text resolves spell and variant-rule references without duplicate labels", () => {
+  assert.equal(
+    stripFoundryMarkup("@spell[Command|XPHB] and @variantrule[Cone|Area of Effect|XPHB]Cone"),
+    "Command and Cone"
+  );
 });
 
 test("treats actorless initiative placeholders as player-facing turns", () => {

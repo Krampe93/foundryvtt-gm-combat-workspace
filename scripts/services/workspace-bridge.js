@@ -10,6 +10,11 @@ import {
   actorTurnStartEffects,
   isPlayerFacingTurn
 } from "./reaction-operations.js";
+import {
+  missingStatblockItems,
+  prepareStatblockDescription,
+  prepareStatblockSource
+} from "./statblock-operations.js";
 
 const CHANNEL_NAME = `${MODULE_ID}.workspace`;
 const WORKSPACE_PARAMETER = "gmCombatWorkspace";
@@ -540,11 +545,117 @@ export class WorkspaceBridge {
       }, { capture: true });
     }
 
+    this.#wireStatblockItemLinks(element);
+    void this.#augmentStatblock(element, this.#displayedActor).catch((error) => {
+      this.#logger.warn("Statblock additions could not be prepared", error);
+    });
+  }
+
+  #wireStatblockItemLinks(element) {
     for (const link of element.querySelectorAll('.roll-link[data-action="use"][data-item-id]')) {
       if (this.#preparedItemLinks.has(link)) continue;
       this.#preparedItemLinks.add(link);
       link.addEventListener("click", (event) => this.#useItemWithoutStaleModifiers(event, link));
     }
+  }
+
+  async #augmentStatblock(element, actor) {
+    const content = element.querySelector(".statblock-content");
+    if (!content || !actor || actor !== this.#displayedActor) return;
+
+    const revision = Number(element.dataset.gmWorkspaceStatblockRevision ?? 0) + 1;
+    element.dataset.gmWorkspaceStatblockRevision = String(revision);
+
+    for (const action of content.querySelectorAll(".statblock-action")) {
+      if (!/[[@](?:\[\/|status\[|spell\[|variantrule\[)|(?:&|&amp;)Reference\[/i.test(action.innerHTML)) continue;
+      const itemId = action.dataset.id ?? action.querySelector("[data-item-id]")?.dataset?.itemId;
+      const item = actor.items?.get?.(itemId) ?? null;
+      const enriched = await TextEditor.enrichHTML(prepareStatblockSource(action.innerHTML), {
+        secrets: false,
+        rollData: item?.getRollData?.() ?? actor.getRollData?.() ?? {},
+        relativeTo: item ?? actor
+      });
+      if (revision !== Number(element.dataset.gmWorkspaceStatblockRevision) || actor !== this.#displayedActor) return;
+      action.innerHTML = prepareStatblockDescription(enriched);
+    }
+
+    for (const supplemental of content.querySelectorAll(".gm-workspace-supplemental-action")) supplemental.remove();
+    for (const section of content.querySelectorAll(".gm-workspace-supplemental-section")) {
+      if (!section.querySelector(".statblock-action")) section.remove();
+    }
+
+    const displayedIds = Array.from(content.querySelectorAll(".statblock-action[data-id]"), ({ dataset }) => dataset.id);
+    const missing = missingStatblockItems(actor, displayedIds);
+
+    for (const { item, category } of missing) {
+      const rawDescription = prepareStatblockSource(item.system?.description?.value ?? "");
+      let description = await TextEditor.enrichHTML(rawDescription, {
+        secrets: false,
+        rollData: item.getRollData?.() ?? {},
+        relativeTo: item
+      });
+      if (revision !== Number(element.dataset.gmWorkspaceStatblockRevision) || actor !== this.#displayedActor) return;
+      description = prepareStatblockDescription(description);
+
+      const section = this.#statblockSection(content, category);
+      const action = document.createElement("div");
+      action.className = "statblock-action gm-workspace-supplemental-action";
+      action.dataset.id = item.id;
+      action.dataset.identifier = item.identifier ?? "";
+      action.innerHTML = description;
+
+      while (action.children.length === 1 && action.firstElementChild?.tagName === "DIV") {
+        action.firstElementChild.replaceWith(...action.firstElementChild.childNodes);
+      }
+
+      let firstParagraph = action.firstElementChild;
+      if (!firstParagraph) {
+        firstParagraph = document.createElement("p");
+        action.append(firstParagraph);
+      }
+
+      const name = document.createElement("span");
+      name.className = "name statblock-roll-link-group";
+      const link = document.createElement("span");
+      link.className = "roll-link";
+      link.dataset.action = "use";
+      link.dataset.itemId = item.id;
+      link.textContent = `${item.name}.`;
+      name.append(link, document.createTextNode(" "));
+      firstParagraph.prepend(name);
+      section.append(action);
+    }
+
+    this.#wireStatblockItemLinks(element);
+  }
+
+  #statblockSection(content, category) {
+    const existing = content.querySelector(`.statblock-actions.${category}`);
+    if (existing) return existing;
+
+    const section = document.createElement("div");
+    section.className = `statblock-actions ${category} gm-workspace-supplemental-section`;
+    if (category !== "trait") {
+      const labels = {
+        action: "DND5E.NPC.SECTIONS.Actions",
+        bonus: "DND5E.NPC.SECTIONS.BonusActions",
+        reaction: "DND5E.NPC.SECTIONS.Reactions",
+        legendary: "DND5E.NPC.SECTIONS.LegendaryActions",
+        mythic: "DND5E.NPC.SECTIONS.MythicActions"
+      };
+      const heading = document.createElement("h5");
+      heading.className = "statblock-actions-title";
+      heading.dataset.noToc = "";
+      heading.textContent = game.i18n.localize(labels[category] ?? category);
+      section.append(heading);
+    }
+
+    const order = ["trait", "action", "bonus", "reaction", "legendary", "mythic"];
+    const later = order.slice(order.indexOf(category) + 1)
+      .map((key) => content.querySelector(`.statblock-actions.${key}`))
+      .find(Boolean);
+    content.insertBefore(section, later ?? null);
+    return section;
   }
 
   #useItemWithoutStaleModifiers(event, link) {

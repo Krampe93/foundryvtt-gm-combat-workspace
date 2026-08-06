@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.2 – 2026-08-06
+
+- Vom nativen D&D5e-Statblock übersehene passive `feat`- und `weapon`-Items ergänzt; eine leere Aktivierungsart der ersten Aktivität wird dabei als Eigenschaft behandelt.
+- Bereits dargestellte Fähigkeiten und die besonderen Beschreibungs-Items für legendäre beziehungsweise mythische Aktionen werden nicht dupliziert.
+- Rohe Foundry-Befehle für Rettungswürfe, Proben, Schaden, Zustände, Referenzen, Zauber und Variantenregeln lesbar aufbereitet; von Foundry unterstützte Links bleiben anklickbar.
+- Zughinweise semantisch eingegrenzt: `Death Gaze` und echte, actorbezogene Start-/End-of-Turn-Effekte bleiben erhalten, während `Command` und `Detect Magic` keine falschen Aura-Warnungen mehr erzeugen.
+
 ## 0.8.1 – 2026-08-05
 
 - Actorlose Spieler-Platzhalter als Spielerzug erkannt, damit der Reaktionsbereich zuverlässig blau hervorgehoben wird.

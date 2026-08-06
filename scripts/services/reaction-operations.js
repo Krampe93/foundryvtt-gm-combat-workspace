@@ -15,15 +15,72 @@ function textValue(value) {
   return "";
 }
 
-export function stripFoundryMarkup(value) {
+export function readableFoundryMarkup(value) {
   return String(value ?? "")
-    .replace(/<[^>]*>/g, " ")
+    .replace(/&amp;Reference\[condition=([^\]]+)\]/gi, (_match, condition) => conditionLabel(condition))
+    .replace(/&Reference\[condition=([^\]]+)\]/gi, (_match, condition) => conditionLabel(condition))
+    .replace(/\[\[\/save\s+([^\]]+)\]\](?:\s+saving throw)?/gi, (_match, data) => formatSaveCommand(data))
+    .replace(/\[\[\/check\s+([^\]]+)\]\]/gi, (_match, data) => formatCheckCommand(data))
+    .replace(/\[\[\/damage\s+([^\]]+)\]\]/gi, (_match, data) => formatDamageCommand(data))
     .replace(/@(?:UUID|Compendium|Actor|Item)\[[^\]]*\](?:\{([^}]*)\})?/gi, "$1")
-    .replace(/@\w+\[([^\]]*)\](?:\{([^}]*)\})?/gi, (_match, data, label) => label || data)
+    .replace(/@status\[([^\]]*)\](?:\{([^}]*)\})?/gi, (_match, status, label) => label || conditionLabel(status))
+    .replace(/@variantrule\[([^|\]]+)(?:\|[^\]]*)?\]\1/gi, "$1")
+    .replace(/@\w+\[([^\]]*)\](?:\{([^}]*)\})?/gi, (_match, data, label) => label || referenceLabel(data));
+}
+
+export function stripFoundryMarkup(value) {
+  return readableFoundryMarkup(value)
+    .replace(/<[^>]*>/g, " ")
     .replace(/\[\[\/(?:r|roll)\s+([^\]]+)\]\]/gi, "$1")
-    .replace(/&(?:nbsp|amp|quot|lt|gt);/gi, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&quot;/gi, '"')
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function commandValue(data, key) {
+  return String(data ?? "").match(new RegExp(`(?:^|\\s)${key}=([^\\s]+)`, "i"))?.[1] ?? null;
+}
+
+function abilityLabel(value) {
+  return ({ str: "STR", dex: "DEX", con: "CON", int: "INT", wis: "WIS", cha: "CHA" })[
+    String(value ?? "").toLowerCase()
+  ] ?? String(value ?? "").toUpperCase();
+}
+
+function conditionLabel(value) {
+  const key = String(value ?? "").split(/[|;]/)[0].trim().toLowerCase();
+  return ({
+    incapacitated: "kampfunfähig",
+    frightened: "verängstigt",
+    surprised: "überrascht"
+  })[key] ?? key.replace(/[-_]+/g, " ");
+}
+
+function referenceLabel(value) {
+  const parts = String(value ?? "").split("|").map((part) => part.trim()).filter(Boolean);
+  return parts[0] ?? "";
+}
+
+function formatSaveCommand(data) {
+  const ability = abilityLabel(commandValue(data, "ability"));
+  const dc = commandValue(data, "dc");
+  return `${ability}-Rettungswurf${dc ? ` (SG ${dc})` : ""}`;
+}
+
+function formatCheckCommand(data) {
+  const ability = abilityLabel(commandValue(data, "ability"));
+  const dc = commandValue(data, "dc");
+  return `${ability}-Probe${dc ? ` (SG ${dc})` : ""}`;
+}
+
+function formatDamageCommand(data) {
+  const formula = String(data ?? "").trim().split(/\s+/)[0] ?? "";
+  const type = commandValue(data, "type");
+  return `${formula}${type ? ` ${type}` : ""}`.trim();
 }
 
 export function shortenReactionText(value, maximumLength = 360) {
@@ -168,13 +225,12 @@ function turnTiming(text) {
   return ends ? "end" : null;
 }
 
-function hasAreaPhrase(item, text) {
-  const name = String(item?.name ?? "").toLowerCase();
+function hasActorCenteredTurnArea(text) {
   const normalized = stripFoundryMarkup(text).toLowerCase();
-  return name.includes("aura") || normalized.includes(" aura") ||
-    /\bwithin\s+\d+\s*(?:feet|foot|ft\.?)/i.test(normalized) ||
-    ["affected area", "within the area", "inside the area", "in the aura", "within the aura",
-      "im betroffenen bereich", "innerhalb der aura", "im umkreis"].some((phrase) => normalized.includes(phrase));
+  const englishSubject = /\b(?:a|any|each|every|the)\s+(?:creature|enemy|target)\b[\s\S]{0,220}?\b(?:starts?|ends?)\s+(?:its|their|the)\s+turn\b[\s\S]{0,100}?\bwithin\s+\d+\s*(?:feet|foot|ft\.?)\b/i;
+  const englishTimingFirst = /\b(?:at\s+the\s+(?:start|end)|when\s+[^.]{0,80}?\b(?:starts?|ends?))\b[\s\S]{0,180}?\bwithin\s+\d+\s*(?:feet|foot|ft\.?)\b/i;
+  const german = /\b(?:kreatur|gegner|ziel)\b[\s\S]{0,220}?\b(?:beginnt|beendet|anfang|beginn|ende)\b[\s\S]{0,100}?\b(?:innerhalb|im\s+umkreis)\b/i;
+  return englishSubject.test(normalized) || englishTimingFirst.test(normalized) || german.test(normalized);
 }
 
 export function actorTurnStartEffects(actor) {
@@ -185,9 +241,9 @@ export function actorTurnStartEffects(actor) {
     const description = itemDescription(item);
     if (!description) continue;
     const timing = turnTiming(description);
-    const auraNamed = String(item?.name ?? "").toLowerCase().includes("aura") ||
-      stripFoundryMarkup(description).toLowerCase().includes(" aura");
-    if (!auraNamed && !(timing && hasAreaPhrase(item, description))) continue;
+    const auraNamed = String(item?.name ?? "").toLowerCase().includes("aura");
+    const actorCenteredTurnArea = timing && hasActorCenteredTurnArea(description);
+    if (!auraNamed && !actorCenteredTurnArea) continue;
     const id = item?.uuid ?? item?.id ?? item?.name;
     if (seen.has(id)) continue;
     seen.add(id);

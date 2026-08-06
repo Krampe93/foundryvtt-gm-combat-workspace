@@ -1,5 +1,19 @@
 # Manual test checklist
 
+## Stage 6 statblock and reminder bugfix – Version 0.8.2
+
+- [ ] Im Workspace-Kopf steht exakt **Version 0.8.2**.
+- [ ] Beim Bodak erscheint `Death Gaze` im Statblock unter den passiven Eigenschaften.
+- [ ] `Death Gaze` erscheint dort genau einmal und bleibt über seinen Namen ausführbar.
+- [ ] Während eines Spielerzugs erscheint für `Death Gaze` die Warnung `Zu Beginn des Zuges prüfen`.
+- [ ] `Aura of Annihilation` erscheint weiterhin als `Am Ende des Zuges prüfen`.
+- [ ] Der Adult Red Dragon erzeugt weder für `Command` noch für `Detect Magic` eine Aura- oder Zugwarnung.
+- [ ] In Death Gaze steht kein rohes `[[/save ...]]`, `&Reference[...]` oder `@status[...]` mehr.
+- [ ] Der Rettungswurf und der Schadenswurf von Death Gaze bleiben anklickbar und erzeugen jeweils genau eine native D&D5e-Auswertung.
+- [ ] Bereits sichtbare Aktionen, Bonusaktionen, Reaktionen sowie legendäre Aktionen werden nicht doppelt dargestellt.
+- [ ] Normale Statblock-Angriffe, Reaktionen, HP, Rettungswürfe und Tokenauswahl funktionieren weiterhin.
+- [ ] In beiden Fenstern erscheinen keine roten Fehler von `gm-combat-workspace`.
+
 ## Stage 6 bugfix – Version 0.8.1
 
 - [ ] Im Workspace-Kopf steht exakt **Version 0.8.1**.

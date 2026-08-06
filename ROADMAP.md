@@ -371,7 +371,7 @@ Alle sechs Rettungswürfe eines Gegners direkt aus dem Dashboard auslösen.
 
 ## Etappe 6 – Reaktionsübersicht
 
-**Status:** `[~]` – Version 0.8.1 im Foundry-Test
+**Status:** `[~]` – Version 0.8.2 im Foundry-Test
 
 ### Ziel
 
