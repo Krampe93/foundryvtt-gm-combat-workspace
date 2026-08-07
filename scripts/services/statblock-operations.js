@@ -41,5 +41,26 @@ export function prepareStatblockSource(value) {
 
 export function prepareStatblockDescription(value) {
   return readableFoundryMarkup(value)
+    .replace(/\b([A-Za-z]+)\s*\[[^\]]+\|(?:XPHB|PHB)\]\s*\1\b/gi, "$1")
+    .replace(/\[([^\]|]+)\|(?:XPHB|PHB)\]/gi, "$1")
     .replace(/\[\[\/(?:r|roll)\s+([^\]]+)\]\]/gi, "$1");
+}
+
+export function statblockActivityAction(activity) {
+  const type = String(activity?.type ?? activity?.system?.type ?? "").toLowerCase();
+  if (type === "damage" && typeof activity?.rollDamage === "function") return "damage";
+  if (type === "attack" && typeof activity?.rollAttack === "function") return "attack";
+  return typeof activity?.use === "function" ? "use" : null;
+}
+
+export function statblockActivityLabel(activity) {
+  const type = String(activity?.type ?? activity?.system?.type ?? "").toLowerCase();
+  return ({
+    attack: "Angriff",
+    damage: "Schaden würfeln",
+    save: "Rettungswurf",
+    check: "Probe",
+    heal: "Heilung würfeln",
+    utility: "Ausführen"
+  })[type] ?? String(activity?.name ?? "Ausführen");
 }

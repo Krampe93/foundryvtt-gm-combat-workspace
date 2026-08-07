@@ -1,5 +1,20 @@
 # Manual test checklist
 
+## Stage 6 statblock activity bugfix – Version 0.8.3
+
+- [ ] Im Workspace-Kopf steht exakt **Version 0.8.3**.
+- [ ] Beim Bodak startet ein Klick auf `Death Gaze` dessen erste ausführbare Save-Aktivität und erzeugt eine Chatkarte.
+- [ ] Unter Death Gaze erscheinen kompakte Links für `Rettungswurf` und `Schaden würfeln`.
+- [ ] `Rettungswurf` erzeugt genau eine native D&D5e-Auswertung beziehungsweise Chatkarte.
+- [ ] `Schaden würfeln` würfelt ohne Abfragedialog genau einmal den hinterlegten Schaden.
+- [ ] Der Statblock bleibt nach beiden Ausführungen sichtbar.
+- [ ] Bei Fire Breath steht lesbar `Cone`; der Rest `[Area of Effect|XPHB]Cone` ist verschwunden.
+- [ ] Im Statblock sind keine weiteren rohen Save-, Check-, Damage-, Status-, Reference-, Spell- oder VariantRule-Befehle sichtbar.
+- [ ] Death Gaze und Aura of Annihilation erzeugen weiterhin die richtigen Zughinweise.
+- [ ] Command und Detect Magic erzeugen weiterhin keine falschen Zughinweise.
+- [ ] Vorhandene Angriffe, Reaktionen und legendäre Aktionen funktionieren weiterhin genau einmal.
+- [ ] In beiden Fenstern erscheinen keine roten Fehler von `gm-combat-workspace`.
+
 ## Stage 6 statblock and reminder bugfix – Version 0.8.2
 
 - [ ] Im Workspace-Kopf steht exakt **Version 0.8.2**.

@@ -18,7 +18,7 @@ https://raw.githubusercontent.com/Krampe93/foundryvtt-gm-combat-workspace/main/m
 
 This manifest URL is permanent. Foundry can use it to discover and install future test versions through the normal update function.
 
-Version `0.8.2` adds missing passive actor features to the embedded statblock, makes residual Foundry commands readable, and distinguishes real actor-centered turn effects from spell-description false positives. No third-party module is required; existing `reaction-tracker` combat flags are read when present.
+Version `0.8.3` adds missing passive actor features to the embedded statblock, provides direct controls for their native D&D5e activities, cleans residual Foundry reference fragments, and distinguishes real actor-centered turn effects from spell-description false positives. No third-party module is required; existing `reaction-tracker` combat flags are read when present.
 
 ## Development
 
@@ -101,4 +101,4 @@ When a player turn begins, the workspace prioritizes enemy reactions and legenda
 
 ## Development status
 
-Version `0.8.2` contains the two-window workspace, supplemented native statblock, color-linked enemy dashboard, HP and armor controls, saving throws, and the first complete reaction overview. Automatic reaction reset is the next planned stage.
+Version `0.8.3` contains the two-window workspace, supplemented native statblock, color-linked enemy dashboard, HP and armor controls, saving throws, and the first complete reaction overview. Automatic reaction reset is the next planned stage.

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.3 – 2026-08-07
+
+- Ergänzte Statblock-Fähigkeiten führen über ihren Namen jetzt ihre erste ausführbare D&D5e-Aktivität statt des bei mehreren Aktivitäten wirkungslosen allgemeinen Item-Aufrufs aus.
+- Für ergänzte Fähigkeiten kompakte Aktivitätslinks hinzugefügt; insbesondere erzeugt `Schaden würfeln` über D&D5es natives `rollDamage()` unmittelbar einen Schadenswurf ohne Dialog.
+- Save-, Attack- und sonstige Aktivitäten werden über ihre jeweils passende native D&D5e-Methode ausgeführt.
+- Teilweise von Foundry zerlegte Quellenreste wie `Cone [Area of Effect|XPHB]Cone` vollständig zu `Cone` bereinigt.
+
 ## 0.8.2 – 2026-08-06
 
 - Vom nativen D&D5e-Statblock übersehene passive `feat`- und `weapon`-Items ergänzt; eine leere Aktivierungsart der ersten Aktivität wird dabei als Eigenschaft behandelt.

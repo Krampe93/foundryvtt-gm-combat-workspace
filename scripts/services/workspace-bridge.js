@@ -13,7 +13,9 @@ import {
 import {
   missingStatblockItems,
   prepareStatblockDescription,
-  prepareStatblockSource
+  prepareStatblockSource,
+  statblockActivityAction,
+  statblockActivityLabel
 } from "./statblock-operations.js";
 
 const CHANNEL_NAME = `${MODULE_ID}.workspace`;
@@ -620,9 +622,34 @@ export class WorkspaceBridge {
       link.className = "roll-link";
       link.dataset.action = "use";
       link.dataset.itemId = item.id;
+      const activities = Array.from(item.system?.activities?.values?.() ?? []);
+      const primaryActivity = activities.find((activity) => statblockActivityAction(activity)) ?? null;
+      if (primaryActivity) {
+        link.dataset.activityId = primaryActivity.id;
+        link.dataset.activityAction = statblockActivityAction(primaryActivity);
+      }
       link.textContent = `${item.name}.`;
       name.append(link, document.createTextNode(" "));
       firstParagraph.prepend(name);
+
+      const executableActivities = activities
+        .map((activity) => ({ activity, action: statblockActivityAction(activity) }))
+        .filter(({ action }) => action);
+      if (executableActivities.length) {
+        const controls = document.createElement("p");
+        controls.className = "gm-workspace-statblock-activity-controls";
+        for (const { activity, action: activityAction } of executableActivities) {
+          const activityLink = document.createElement("span");
+          activityLink.className = "roll-link gm-workspace-statblock-activity";
+          activityLink.dataset.action = "use";
+          activityLink.dataset.itemId = item.id;
+          activityLink.dataset.activityId = activity.id;
+          activityLink.dataset.activityAction = activityAction;
+          activityLink.textContent = statblockActivityLabel(activity);
+          controls.append(activityLink);
+        }
+        action.append(controls);
+      }
       section.append(action);
     }
 
@@ -664,6 +691,11 @@ export class WorkspaceBridge {
     const itemId = link.closest("[data-item-id]")?.dataset?.itemId;
     const item = this.#displayedActor?.items?.get(itemId) ?? null;
     if (!item || link.ariaDisabled === "true") return;
+    const activityId = link.dataset.activityId ?? null;
+    const activity = activityId
+      ? item.system?.activities?.get?.(activityId) ?? Array.from(item.system?.activities?.values?.() ?? [])
+        .find(({ id }) => id === activityId) ?? null
+      : null;
 
     const downKeysBefore = Array.from(game.keyboard?.downKeys ?? []).sort();
     const bindings = this.#rollKeybindings();
@@ -674,7 +706,9 @@ export class WorkspaceBridge {
     this.#releaseStaleModifiers();
 
     this.#rollDebug = {
-      status: "Item-Klick erfasst; warte auf D&D5e-Angriff …",
+      status: activity
+        ? "Statblock-Aktivität wird direkt ausgeführt …"
+        : "Item-Klick erfasst; warte auf D&D5e-Auswertung …",
       click: {
         item: item.name,
         itemId: item.id,
@@ -687,7 +721,10 @@ export class WorkspaceBridge {
         downKeysBefore,
         downKeysAfter: Array.from(game.keyboard?.downKeys ?? []).sort(),
         keybindings: bindings,
-        route: "Workspace → item.use(cleanEvent)"
+        activity: activity?.name ?? null,
+        activityId,
+        activityAction: link.dataset.activityAction ?? null,
+        route: activity ? "Workspace → activity" : "Workspace → item.use(cleanEvent)"
       },
       roll: null
     };
@@ -718,14 +755,25 @@ export class WorkspaceBridge {
     });
 
     try {
-      const result = item.use({ event: cleanEvent });
+      let result;
+      if (activity && link.dataset.activityAction === "damage" && typeof activity.rollDamage === "function") {
+        result = activity.rollDamage({ event: cleanEvent }, { configure: false });
+      } else if (activity && link.dataset.activityAction === "attack" && typeof activity.rollAttack === "function") {
+        result = activity.rollAttack({ event: cleanEvent }, { configure: false });
+      } else if (activity && typeof activity.use === "function") {
+        result = activity.use({ event: cleanEvent }, { configure: false });
+      } else {
+        result = item.use({ event: cleanEvent });
+      }
       result?.catch?.((error) => {
-        this.#logger.error(`Item use failed: ${item.name}`, error);
+        this.#logger.error(`Statblock activity failed: ${item.name}`, error);
+        ui.notifications?.error(`${item.name} konnte nicht ausgeführt werden: ${error.message}`);
       });
     } catch (error) {
-      this.#logger.error(`Item use failed: ${item.name}`, error);
+      this.#logger.error(`Statblock activity failed: ${item.name}`, error);
+      ui.notifications?.error(`${item.name} konnte nicht ausgeführt werden: ${error.message}`);
     }
-    this.#scheduleSheetSnapshots(`after item.use: ${item.name}`);
+    this.#scheduleSheetSnapshots(`after statblock activity: ${item.name}`);
   }
 
   #rollKeybindings() {

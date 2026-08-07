@@ -5,6 +5,8 @@ import {
   missingStatblockItems,
   prepareStatblockDescription,
   prepareStatblockSource,
+  statblockActivityAction,
+  statblockActivityLabel,
   statblockCategoryForItem
 } from "../scripts/services/statblock-operations.js";
 
@@ -51,4 +53,20 @@ test("prepares unsupported references before enrichment and residual commands af
     prepareStatblockDescription("[[/save ability=wis dc=15]] saving throw"),
     "WIS-Rettungswurf (SG 15)"
   );
+  assert.equal(
+    prepareStatblockDescription("Cone [Area of Effect|XPHB]Cone"),
+    "Cone"
+  );
+});
+
+test("routes supplemental statblock activities through their native execution method", () => {
+  const damage = { type: "damage", rollDamage() {} };
+  const attack = { type: "attack", rollAttack() {} };
+  const save = { type: "save", use() {} };
+
+  assert.equal(statblockActivityAction(damage), "damage");
+  assert.equal(statblockActivityAction(attack), "attack");
+  assert.equal(statblockActivityAction(save), "use");
+  assert.equal(statblockActivityLabel(damage), "Schaden würfeln");
+  assert.equal(statblockActivityLabel(save), "Rettungswurf");
 });
