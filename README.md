@@ -18,7 +18,7 @@ https://raw.githubusercontent.com/Krampe93/foundryvtt-gm-combat-workspace/main/m
 
 This manifest URL is permanent. Foundry can use it to discover and install future test versions through the normal update function.
 
-Version `0.8.7` uses the complete right-hand screen height: the product and statblock headers are merged on the left, while encounter title, active turn, connection state, and tools share one compact dashboard header. The right side is divided 47/53; the lower utility column stacks a small future roll history above a reserved 16:9 full-scene minimap. Normal, advantage, and disadvantage save controls are permanently visible. No third-party module is required; existing `reaction-tracker` combat flags are read when present.
+Version `0.8.8` removes redundant combat metadata and turns every reaction into a compact, directly usable button with its explanation available on hover. Opportunity attacks are always shown alongside native reactions, so creatures such as the Stone Giant expose both choices. Hidden enemies use a single eye icon, the current combatant and round are easier to read, and saving-throw labels fill their buttons more clearly. No third-party module is required; existing `reaction-tracker` combat flags are read when present.
 
 ## Development
 
@@ -101,4 +101,4 @@ When a player turn begins, the workspace prioritizes enemy reactions and legenda
 
 ## Development status
 
-Version `0.8.7` contains the two-window workspace, supplemented native statblock, a ten-row compact enemy dashboard with permanently visible saving-throw modes, the first complete reaction overview, and a reserved 16:9 minimap area. Automatic reaction reset is the next planned stage.
+Version `0.8.8` contains the two-window workspace, supplemented native statblock, a ten-row compact enemy dashboard with permanently visible saving-throw modes, direct compact reaction buttons with hover descriptions, and a reserved 16:9 minimap area. Automatic reaction reset is the next planned stage.

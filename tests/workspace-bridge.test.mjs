@@ -57,3 +57,14 @@ test("locks the optimized right column and 16:9 utility layout", () => {
   assert.match(css, /\.gm-workspace-minimap-placeholder\s*\{[\s\S]*?aspect-ratio:\s*16 \/ 9/);
   assert.doesNotMatch(css.slice(css.lastIndexOf("Design correction 0.8.7")), /\.gm-workspace-save-mode[\s\S]*?display:\s*none/);
 });
+
+test("renders compact reaction actions and removes redundant dashboard metadata", () => {
+  const source = readFileSync(new URL("../scripts/services/workspace-bridge.js", import.meta.url), "utf8");
+
+  assert.match(source, /class="gm-workspace-reaction-action"/);
+  assert.match(source, /data-tooltip="\$\{opportunityTooltip\}"[^>]*>Gelegenheitsangriff<\/button>/);
+  assert.match(source, /gm-workspace-hidden-badge/);
+  assert.doesNotMatch(source, /data-field="reaction-turn"/);
+  assert.doesNotMatch(source, /class="gm-workspace-enemy-meta"/);
+  assert.doesNotMatch(source, /const hiddenText/);
+});

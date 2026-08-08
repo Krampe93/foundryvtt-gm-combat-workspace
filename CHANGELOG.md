@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.8.8 – 2026-08-08
+
+- Redundante Angaben `sichtbar`, `versteckt`, `auf Szene` und `nicht auf aktueller Szene` aus Gegner- und Reaktionszeilen entfernt.
+- Versteckte Gegner im Dashboard ausschließlich mit einem kompakten Augensymbol im Statusbereich gekennzeichnet.
+- Reaktionsübersicht auf direkt anklickbare Aktionsbuttons reduziert; Beschreibungen und Bedingungen erscheinen beim Überfahren.
+- Gelegenheitsangriff für jeden geeigneten Gegner als eigener Button neben sämtlichen nativen Reaktionen dargestellt.
+- Gegner mit mehreren Nahkampfangriffen öffnen über denselben Gelegenheitsangriff-Button weiterhin die Angriffsauswahl.
+- Stone-Giant-Fall korrigiert: `Deflect Missile` und `Gelegenheitsangriff` werden gleichzeitig angeboten.
+- Redundante Zugzeile aus dem Reaktionskopf sowie die Zwischenüberschriften `Protokoll` und `Gesamte Szene` entfernt.
+- Dashboard-Kopf auf die größere Anzeige `Runde X` reduziert und den aktiven Teilnehmer deutlicher hervorgehoben.
+- Schriftgrößen für Attributname und Modifikator der normalen Rettungswurfbuttons erhöht.
+
 ## 0.8.7 – 2026-08-08
 
 - Globale Kopfzeile aufgelöst und mit dem linken Statblock-Kopf zusammengeführt; die rechte Spalte nutzt wieder die vollständige Bildschirmhöhe.

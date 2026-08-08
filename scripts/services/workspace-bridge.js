@@ -348,8 +348,7 @@ export class WorkspaceBridge {
           <section class="gm-workspace-enemies">
             <header class="gm-workspace-enemy-header">
               <div>
-                <span class="gm-workspace-eyebrow">Encounter · Runde <span data-field="round">–</span></span>
-                <h2>Gegnerübersicht</h2>
+                <h2>Runde <span data-field="round">–</span></h2>
               </div>
               <div class="gm-workspace-current-turn" data-role="current-turn">
                 <span>Aktueller Zug</span>
@@ -389,7 +388,6 @@ export class WorkspaceBridge {
             <section class="gm-workspace-reactions" data-role="reaction-panel" aria-label="Reaktionsübersicht">
               <header class="gm-workspace-reaction-header">
                 <div>
-                  <span class="gm-workspace-eyebrow" data-field="reaction-turn">Kein Spielerzug</span>
                   <h2><i class="fa-solid fa-bolt" aria-hidden="true"></i> Reaktionen &amp; Hinweise</h2>
                 </div>
                 <span class="gm-workspace-reaction-count" data-field="reaction-count">0 verfügbar</span>
@@ -400,7 +398,6 @@ export class WorkspaceBridge {
             <div class="gm-workspace-utility-column">
               <section class="gm-workspace-reserved gm-workspace-roll-results" aria-label="Würfelergebnisse">
                 <header>
-                  <span class="gm-workspace-eyebrow">Protokoll</span>
                   <h2><i class="fa-solid fa-dice-d20" aria-hidden="true"></i> Würfelergebnisse</h2>
                 </header>
                 <div class="gm-workspace-reserved-empty">
@@ -410,7 +407,6 @@ export class WorkspaceBridge {
               </section>
               <section class="gm-workspace-reserved gm-workspace-minimap" aria-label="Minimap">
                 <header>
-                  <span class="gm-workspace-eyebrow">Gesamte Szene</span>
                   <h2><i class="fa-solid fa-map" aria-hidden="true"></i> Minimap</h2>
                 </header>
                 <div class="gm-workspace-minimap-placeholder" aria-hidden="true">
@@ -977,20 +973,11 @@ export class WorkspaceBridge {
     if (!panel || !list || !warnings) return;
 
     const snapshot = this.#getSnapshot?.();
-    const active = snapshot?.combatants?.find(({ id }) => id === snapshot.activeCombatantId) ?? null;
     const playerTurn = Boolean(snapshot?.started && isPlayerFacingTurn(snapshot.activeType));
     const entries = this.#enemyEntries().map((entry) => this.#reactionEntryData(entry));
     const available = entries.filter(({ used }) => !used).length;
 
     panel.classList.toggle("is-player-turn", playerTurn);
-    const turnLabel = !snapshot?.started
-      ? "Kein laufender Encounter"
-      : playerTurn
-        ? `Spielerzug: ${active?.name ?? "Unbekannt"}`
-        : snapshot.activeType === "npc"
-          ? `Gegnerzug: ${active?.name ?? "Unbekannt"}`
-          : `Aktueller Zug: ${active?.name ?? "Unbekannt"}`;
-    this.#set("reaction-turn", turnLabel);
     this.#set("reaction-count", `${available} verfügbar`);
 
     const reminderGroups = new Map();
@@ -1028,32 +1015,25 @@ export class WorkspaceBridge {
     }
 
     list.innerHTML = entries.map((entry) => {
-      const hiddenText = entry.hidden
-        ? '<span class="gm-workspace-reaction-hidden"><i class="fa-solid fa-eye-slash" aria-hidden="true"></i> versteckt</span>'
-        : "sichtbar";
-      const nativeReactions = entry.reactions.map((reaction) => `
-        <div class="gm-workspace-reaction-ability">
-          <div>
-            <strong>${foundry.utils.escapeHTML(reaction.name)}</strong>
-            <small>${foundry.utils.escapeHTML(reaction.condition || reaction.description)}</small>
-            <details>
-              <summary>Vollständige Beschreibung</summary>
-              <p>${foundry.utils.escapeHTML(reaction.description)}</p>
-            </details>
-          </div>
-          ${reaction.executable
-            ? `<button type="button" data-action="execute-reaction" data-item-id="${reaction.itemId}" data-activity-id="${reaction.activityId}" ${entry.used ? "disabled" : ""}>Ausführen</button>`
-            : '<button type="button" data-action="show-reaction-actor">Statblock</button>'}
-        </div>
-      `).join("");
+      const nativeReactions = entry.reactions.map((reaction) => {
+        const tooltip = foundry.utils.escapeHTML(
+          [reaction.condition, reaction.description].filter(Boolean).join(" — ") || "Keine Beschreibung hinterlegt."
+        ).replaceAll('"', "&quot;");
+        return reaction.executable
+          ? `<button type="button" class="gm-workspace-reaction-action" data-action="execute-reaction" data-item-id="${reaction.itemId}" data-activity-id="${reaction.activityId}" data-tooltip="${tooltip}" title="${tooltip}" ${entry.used ? "disabled" : ""}>${foundry.utils.escapeHTML(reaction.name)}</button>`
+          : `<button type="button" class="gm-workspace-reaction-action" data-action="show-reaction-actor" data-tooltip="${tooltip}" title="${tooltip}">${foundry.utils.escapeHTML(reaction.name)}</button>`;
+      }).join("");
 
       const choiceOpen = this.#openReactionChoices.has(entry.id);
-      let opportunityAction = '<button type="button" data-action="show-reaction-actor">Statblock</button>';
+      let opportunityTooltip = "";
+      let opportunityAction = "";
       if (entry.meleeAttacks.length === 1) {
         const attack = entry.meleeAttacks[0];
-        opportunityAction = `<button type="button" data-action="execute-opportunity" data-item-id="${attack.itemId}" data-activity-id="${attack.activityId}" ${entry.used ? "disabled" : ""}>Angreifen</button>`;
+        opportunityTooltip = foundry.utils.escapeHTML(`${attack.name} als Gelegenheitsangriff ausführen.`).replaceAll('"', "&quot;");
+        opportunityAction = `<button type="button" class="gm-workspace-reaction-action" data-action="execute-opportunity" data-item-id="${attack.itemId}" data-activity-id="${attack.activityId}" data-tooltip="${opportunityTooltip}" title="${opportunityTooltip}" ${entry.used ? "disabled" : ""}>Gelegenheitsangriff</button>`;
       } else if (entry.meleeAttacks.length > 1) {
-        opportunityAction = `<button type="button" data-action="toggle-opportunity-choices" aria-expanded="${choiceOpen}" ${entry.used ? "disabled" : ""}>Angriff wählen</button>`;
+        opportunityTooltip = `${entry.meleeAttacks.length} mögliche Nahkampfangriffe – klicken, um einen auszuwählen.`;
+        opportunityAction = `<button type="button" class="gm-workspace-reaction-action" data-action="toggle-opportunity-choices" aria-expanded="${choiceOpen}" data-tooltip="${opportunityTooltip}" title="${opportunityTooltip}" ${entry.used ? "disabled" : ""}>Gelegenheitsangriff</button>`;
       }
 
       const attackChoices = choiceOpen && entry.meleeAttacks.length > 1 ? `
@@ -1072,7 +1052,6 @@ export class WorkspaceBridge {
           <span class="gm-workspace-reaction-color" aria-hidden="true"></span>
           <header>
             <button type="button" class="gm-workspace-reaction-name" data-action="show-reaction-actor">${foundry.utils.escapeHTML(entry.displayName)}</button>
-            <span>${hiddenText} · ${entry.onCurrentScene ? "auf Szene" : "nicht auf aktueller Szene"}</span>
             <button type="button" class="gm-workspace-reaction-status ${entry.used ? "is-used" : "is-available"}" data-action="toggle-reaction-status">
               <i class="fa-solid ${entry.used ? "fa-bolt-slash" : "fa-bolt"}" aria-hidden="true"></i>
               ${entry.used ? "Verwendet" : "Verfügbar"}
@@ -1080,17 +1059,7 @@ export class WorkspaceBridge {
           </header>
           <div class="gm-workspace-reaction-abilities">
             ${nativeReactions}
-            <div class="gm-workspace-reaction-ability is-opportunity">
-              <div>
-                <strong>Gelegenheitsangriff <em>Basisreaktion</em></strong>
-                <small>${entry.meleeAttacks.length === 0
-                  ? "Kein eindeutiger Nahkampfangriff erkannt – Statblock verwenden."
-                  : entry.meleeAttacks.length === 1
-                    ? `${foundry.utils.escapeHTML(entry.meleeAttacks[0].name)} wird direkt ausgeführt.`
-                    : `${entry.meleeAttacks.length} mögliche Nahkampfangriffe.`}</small>
-              </div>
-              ${opportunityAction}
-            </div>
+            ${opportunityAction}
             ${attackChoices}
           </div>
         </article>
@@ -1132,11 +1101,11 @@ export class WorkspaceBridge {
         <input type="checkbox" class="gm-workspace-enemy-check" data-action="bulk-select" ${this.#bulkSelection.has(entry.id) ? "checked" : ""} aria-label="Für Mehrfachaktion auswählen">
         <button type="button" class="gm-workspace-enemy-open" data-action="select-enemy">
           <span class="gm-workspace-enemy-name">${foundry.utils.escapeHTML(entry.displayName ?? "Unbenannter Gegner")}</span>
-          <span class="gm-workspace-enemy-meta">${entry.hidden ? "versteckt" : "sichtbar"} · ${entry.onCurrentScene ? "auf Szene" : "nicht auf aktueller Szene"}</span>
         </button>
         <span class="gm-workspace-enemy-indicators">
           ${entry.active ? '<span class="gm-workspace-turn-badge"><i class="fa-solid fa-swords" aria-hidden="true"></i> Am Zug</span>' : ""}
           ${entry.tokenId === selectedTokenId ? '<span class="gm-workspace-selected-badge"><i class="fa-solid fa-crosshairs" aria-hidden="true"></i> Ausgewählt</span>' : ""}
+          ${entry.hidden ? '<span class="gm-workspace-hidden-badge" data-tooltip="Versteckter Gegner" title="Versteckter Gegner"><i class="fa-solid fa-eye-slash" aria-label="Versteckter Gegner"></i></span>' : ""}
         </span>
         <span class="gm-workspace-enemy-ac"><small>RK</small><strong>${entry.armorClass}</strong></span>
         <label class="gm-workspace-enemy-hp">

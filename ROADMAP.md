@@ -423,7 +423,7 @@ Bei Spielerzügen und zwischen Spieleraktionen schnell erkennen, welche Gegner r
 
 ## Etappe 6.5 – Festes Workspace-Design
 
-**Status:** `[~]` – korrigierte Aufteilung mit Version 0.8.7 im Foundry-Test
+**Status:** `[~]` – verdichtete Informationsdarstellung mit Version 0.8.8 im Foundry-Test
 
 ### Ziel
 
@@ -438,6 +438,8 @@ Die dauerhaft sichtbare Bildschirmaufteilung vor Reaktions-Reset, legendären Ak
 - Flächen für Würfelergebnisse und Gesamt-Szenen-Minimap reservieren, aber noch nicht funktional belegen
 - Diagnose und seltene Werkzeuge aus der Daueransicht in ein Kopfmenü verschieben
 - Vorteil und Nachteil für alle Rettungswürfe dauerhaft sichtbar halten
+- redundante Szenen- und Sichtbarkeitsangaben entfernen; versteckte Gegner nur per Augensymbol markieren
+- native Reaktionen und Gelegenheitsangriff als gleichwertige Direktbuttons mit Hover-Beschreibung darstellen
 
 ### Abnahme
 

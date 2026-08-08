@@ -1559,3 +1559,140 @@ body.gm-combat-workspace-companion > .notifications {
     height: auto;
   }
 }
+
+/* Compact information hierarchy 0.8.8. */
+#gm-combat-workspace-shell .gm-workspace-enemy-header {
+  grid-template-columns: minmax(115px, auto) minmax(230px, 1fr) auto;
+}
+
+#gm-combat-workspace-shell .gm-workspace-enemy-header h2 {
+  font-size: 1.15rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+#gm-combat-workspace-shell .gm-workspace-current-turn > span {
+  font-size: 0.68rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-current-turn > strong {
+  font-size: 1rem;
+  line-height: 1.15;
+}
+
+#gm-combat-workspace-shell .gm-workspace-enemy {
+  grid-template-columns: 18px minmax(120px, 1.2fr) 104px 34px minmax(118px, 0.9fr) minmax(480px, 3fr);
+}
+
+#gm-combat-workspace-shell .gm-workspace-enemy-open {
+  justify-content: center;
+}
+
+#gm-combat-workspace-shell .gm-workspace-enemy-name {
+  font-size: 0.82rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-enemy-indicators {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.2rem;
+  width: 104px;
+}
+
+#gm-combat-workspace-shell .gm-workspace-hidden-badge {
+  display: inline-grid;
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  color: #dcc391;
+  background: #34312a;
+  border: 1px solid #756a56;
+  border-radius: 999px;
+  place-items: center;
+}
+
+#gm-combat-workspace-shell .gm-workspace-save-main small {
+  font-size: 0.66rem;
+  line-height: 1;
+}
+
+#gm-combat-workspace-shell .gm-workspace-save-main strong {
+  font-size: 0.88rem;
+  line-height: 1;
+}
+
+#gm-combat-workspace-shell .gm-workspace-reaction-header,
+#gm-combat-workspace-shell .gm-workspace-reserved > header {
+  min-height: 34px;
+}
+
+#gm-combat-workspace-shell .gm-workspace-reaction-enemy {
+  grid-template-columns: minmax(140px, 0.72fr) minmax(270px, 2fr);
+  min-height: 42px;
+}
+
+#gm-combat-workspace-shell .gm-workspace-reaction-enemy > header {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  padding: 0.3rem 0.4rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-reaction-name {
+  font-size: 0.78rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-reaction-status {
+  flex: 0 0 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0.2rem 0.35rem;
+  font-size: 0.62rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-reaction-abilities {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.4rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-reaction-action {
+  flex: 1 1 150px;
+  width: auto;
+  min-width: 125px;
+  min-height: 30px;
+  margin: 0;
+  padding: 0.3rem 0.55rem;
+  overflow: hidden;
+  border-color: #a97943;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#gm-combat-workspace-shell .gm-workspace-opportunity-choices {
+  flex: 1 0 100%;
+  padding: 0.3rem 0 0;
+}
+
+#gm-combat-workspace-shell .gm-workspace-reaction-enemy.is-used .gm-workspace-reaction-abilities {
+  text-decoration: none;
+}
+
+#gm-combat-workspace-shell .gm-workspace-reaction-enemy.is-used .gm-workspace-reaction-action {
+  text-decoration: line-through;
+}
+
+@media (max-width: 1450px) {
+  #gm-combat-workspace-shell .gm-workspace-enemy {
+    grid-template-columns: 16px minmax(95px, 1fr) 82px 30px minmax(98px, 0.8fr) minmax(408px, 2.8fr);
+  }
+
+  #gm-combat-workspace-shell .gm-workspace-enemy-indicators {
+    width: 82px;
+  }
+}

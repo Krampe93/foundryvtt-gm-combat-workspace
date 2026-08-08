@@ -1,5 +1,25 @@
 # Manual test checklist
 
+## Compact reaction and dashboard design – Version 0.8.8
+
+- [ ] Im linken Kopf steht exakt **Version 0.8.8**.
+- [ ] Der Dashboard-Kopf zeigt nur **Runde X**, den aktuellen Zug, Gegneranzahl, Verbindung und Menü.
+- [ ] Der Name des aktiven Teilnehmers ist deutlich größer und nutzt den verfügbaren Platz.
+- [ ] In den Gegnerzeilen erscheinen weder `sichtbar` noch `auf Szene`.
+- [ ] Ein versteckter Gegner erhält im Statusbereich hinter seinem Namen ein Augensymbol; sichtbare Gegner erhalten dort kein Symbol.
+- [ ] STR, DEX, CON, INT, WIS und CHA sowie die Modifikatoren füllen ihre normalen Rettungswurfbuttons besser aus.
+- [ ] Normalwurf, Vorteil und Nachteil funktionieren weiterhin bei allen sechs Rettungswürfen.
+- [ ] Im Reaktionskopf erscheint keine zusätzliche Angabe zum aktuellen Gegner- oder Spielerzug.
+- [ ] Reaktionszeilen enthalten weder Sichtbarkeits- noch Szenenangaben und keine dauerhaft sichtbaren Beschreibungen.
+- [ ] Jeder geeignete Gegner besitzt einen Button **Gelegenheitsangriff**.
+- [ ] Beim Stone Giant stehen **Deflect Missile** und **Gelegenheitsangriff** gleichzeitig als getrennte Buttons bereit.
+- [ ] Ein Klick auf **Deflect Missile** führt ausschließlich diese Reaktion aus.
+- [ ] Ein Klick auf **Gelegenheitsangriff** führt bei genau einem Angriff direkt aus und öffnet bei mehreren Angriffen die Auswahl.
+- [ ] Beim Überfahren jedes Reaktionsbuttons erscheint dessen Beschreibung beziehungsweise verwendeter Angriff.
+- [ ] Verwendete Reaktionen bleiben erkennbar und können weiterhin manuell korrigiert werden.
+- [ ] Über Würfelergebnissen steht nicht mehr `Protokoll`; über der Minimap steht nicht mehr `Gesamte Szene`.
+- [ ] In beiden Fenstern erscheinen keine roten Fehler von `gm-combat-workspace`.
+
 ## Optimized design checkpoint – Version 0.8.7
 
 - [ ] Im Workspace-Kopf steht exakt **Version 0.8.7**.
