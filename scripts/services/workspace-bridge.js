@@ -11,6 +11,7 @@ import {
   isPlayerFacingTurn
 } from "./reaction-operations.js";
 import {
+  executeStatblockActivity,
   missingStatblockItems,
   prepareInlineActivityCommands,
   prepareStatblockDescription,
@@ -760,15 +761,8 @@ export class WorkspaceBridge {
 
     try {
       let result;
-      if (activity && link.dataset.activityAction === "damage" && typeof activity.rollDamage === "function") {
-        result = activity.rollDamage({ event: cleanEvent }, { configure: false });
-      } else if (activity && link.dataset.activityAction === "attack" && typeof activity.rollAttack === "function") {
-        result = activity.rollAttack({ event: cleanEvent }, { configure: false });
-      } else if (activity && typeof activity.use === "function") {
-        result = activity.use({ event: cleanEvent }, { configure: false });
-      } else {
-        result = item.use({ event: cleanEvent });
-      }
+      if (activity) result = executeStatblockActivity(activity, link.dataset.activityAction);
+      else result = item.use({ event: cleanEvent });
       result?.catch?.((error) => {
         this.#logger.error(`Statblock activity failed: ${item.name}`, error);
         ui.notifications?.error(`${item.name} konnte nicht ausgeführt werden: ${error.message}`);

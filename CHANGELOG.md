@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.5 – 2026-08-08
+
+- Künstliche, nicht ausgelöste Mausereignisse aus direkten Statblock-Aktivitätsaufrufen entfernt.
+- Inline-Schaden, Angriffe und Save-Aktivitäten werden mit leerer D&D5e-Konfiguration und deaktiviertem Dialog ausgeführt.
+- Den dadurch ausgelösten Fehler `Cannot read properties of null (reading 'closest')` beim Klick auf Death Gazes `3d10 psychic` behoben.
+- Automatischen Regressionstest ergänzt, der sicherstellt, dass direkte Aktivitätsaufrufe kein `event` mehr enthalten.
+
 ## 0.8.4 – 2026-08-08
 
 - Separate Aktivitätsschaltflächen unter ergänzten Statblock-Eigenschaften wieder vollständig entfernt.

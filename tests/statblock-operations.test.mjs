@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  executeStatblockActivity,
   missingStatblockItems,
   prepareInlineActivityCommands,
   prepareStatblockDescription,
@@ -81,4 +82,18 @@ test("turns inline save and damage commands into compact native activity links",
   assert.match(result, /data-activity-id="save"[^>]*>CON-Rettungswurf \(SG 13\)<\/span>/);
   assert.match(result, /data-activity-id="damage"[^>]*>3d10 psychic<\/span>/);
   assert.doesNotMatch(result, /\[\[\/(?:save|damage)/);
+});
+
+test("executes direct statblock activities without a synthetic mouse event", async () => {
+  const calls = [];
+  const damage = {
+    rollDamage(...args) {
+      calls.push(args);
+      return Promise.resolve(["roll"]);
+    }
+  };
+
+  await executeStatblockActivity(damage, "damage");
+  assert.deepEqual(calls, [[{}, { configure: false }]]);
+  assert.equal("event" in calls[0][0], false);
 });

@@ -1,5 +1,17 @@
 # Manual test checklist
 
+## Stage 6 inline roll bugfix – Version 0.8.5
+
+- [ ] Im Workspace-Kopf steht exakt **Version 0.8.5**.
+- [ ] Beim Klick auf Death Gazes `3d10 psychic` erscheint kein Fehler mit `target.closest()`.
+- [ ] Der Klick erzeugt ohne Abfragedialog genau einen nativen D&D5e-Schadenswurf.
+- [ ] Der Schadenswert und Schadensart entsprechen der Death-Gaze-Aktivität.
+- [ ] Der Namensklick auf Death Gaze und der inline Save-Ausdruck funktionieren weiterhin.
+- [ ] Inline-Schaden anderer Fähigkeiten, insbesondere Fire Breath, funktioniert ebenfalls ohne `target.closest()`-Fehler.
+- [ ] Der Statblock bleibt nach allen Ausführungen sichtbar.
+- [ ] Es erscheinen weiterhin keine zusätzlichen Aktivitätsschaltflächen.
+- [ ] In beiden Fenstern erscheinen keine roten Fehler von `gm-combat-workspace`.
+
 ## Stage 6 inline activity design bugfix – Version 0.8.4
 
 - [ ] Im Workspace-Kopf steht exakt **Version 0.8.4**.

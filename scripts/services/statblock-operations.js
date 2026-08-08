@@ -83,3 +83,15 @@ export function statblockActivityAction(activity) {
   if (type === "attack" && typeof activity?.rollAttack === "function") return "attack";
   return typeof activity?.use === "function" ? "use" : null;
 }
+
+export function executeStatblockActivity(activity, action) {
+  const dialog = { configure: false };
+  if (action === "damage" && typeof activity?.rollDamage === "function") {
+    return activity.rollDamage({}, dialog);
+  }
+  if (action === "attack" && typeof activity?.rollAttack === "function") {
+    return activity.rollAttack({}, dialog);
+  }
+  if (typeof activity?.use === "function") return activity.use({}, dialog);
+  throw new Error("Diese Statblock-Aktivität kann nicht direkt ausgeführt werden.");
+}
