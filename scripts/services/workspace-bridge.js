@@ -11,7 +11,8 @@ import {
   collectionValues,
   isPlayerFacingTurn,
   reactionExecutionPlan,
-  reactionResourceState
+  reactionResourceState,
+  shouldRestoreReaction
 } from "./reaction-operations.js";
 import {
   executeStatblockActivity,
@@ -998,7 +999,7 @@ export class WorkspaceBridge {
           [reaction.condition, reaction.description].filter(Boolean).join(" — ") || "Keine Beschreibung hinterlegt."
         ).replaceAll('"', "&quot;");
         return reaction.executable
-          ? `<button type="button" class="gm-workspace-reaction-action" data-action="execute-reaction" data-item-id="${reaction.itemId}" data-activity-id="${reaction.activityId}" data-tooltip="${tooltip}" title="${tooltip}" ${entry.used ? "disabled" : ""}>${foundry.utils.escapeHTML(reaction.name)}</button>`
+          ? `<button type="button" class="gm-workspace-reaction-action" data-action="execute-reaction" data-item-id="${reaction.itemId}" data-activity-id="${reaction.activityId}" data-tooltip="${tooltip}" title="${tooltip}" aria-disabled="${entry.used}">${foundry.utils.escapeHTML(reaction.name)}</button>`
           : `<button type="button" class="gm-workspace-reaction-action" data-action="show-reaction-actor" data-tooltip="${tooltip}" title="${tooltip}">${foundry.utils.escapeHTML(reaction.name)}</button>`;
       }).join("");
 
@@ -1008,10 +1009,10 @@ export class WorkspaceBridge {
       if (entry.opportunityPlan.mode === "sequence") {
         const sequence = entry.opportunityPlan.sequence.map(({ name }) => name).join(", ");
         opportunityTooltip = foundry.utils.escapeHTML(`${sequence} als Gelegenheitsangriff ausführen.`).replaceAll('"', "&quot;");
-        opportunityAction = `<button type="button" class="gm-workspace-reaction-action" data-action="execute-opportunity-plan" data-tooltip="${opportunityTooltip}" title="${opportunityTooltip}" ${entry.used ? "disabled" : ""}>Gelegenheitsangriff</button>`;
+        opportunityAction = `<button type="button" class="gm-workspace-reaction-action" data-action="execute-opportunity-plan" data-tooltip="${opportunityTooltip}" title="${opportunityTooltip}" aria-disabled="${entry.used}">Gelegenheitsangriff</button>`;
       } else if (entry.opportunityPlan.mode === "choose") {
         opportunityTooltip = `${entry.opportunityPlan.slots} Angriff${entry.opportunityPlan.slots === 1 ? "" : "e"} auswählen.`;
-        opportunityAction = `<button type="button" class="gm-workspace-reaction-action" data-action="toggle-opportunity-choices" aria-expanded="${choiceOpen}" data-tooltip="${opportunityTooltip}" title="${opportunityTooltip}" ${entry.used ? "disabled" : ""}>Gelegenheitsangriff</button>`;
+        opportunityAction = `<button type="button" class="gm-workspace-reaction-action" data-action="toggle-opportunity-choices" aria-expanded="${choiceOpen}" data-tooltip="${opportunityTooltip}" title="${opportunityTooltip}" aria-disabled="${entry.used}">Gelegenheitsangriff</button>`;
       }
       if (entry.pendingDamage.length) opportunityAction = "";
 
@@ -1159,11 +1160,21 @@ export class WorkspaceBridge {
     const button = event.target.closest?.("[data-action]");
     const row = button?.closest?.("[data-combatant-id]");
     if (!button || !row) return;
-    const entry = this.#enemyEntries().find(({ id }) => id === row.dataset.combatantId);
-    if (!entry) return;
+    const enemy = this.#enemyEntries().find(({ id }) => id === row.dataset.combatantId);
+    if (!enemy) return;
+    const entry = this.#reactionEntryData(enemy);
 
     if (button.dataset.action === "show-reaction-actor") {
       this.#selectEnemyEntry(entry);
+      return;
+    }
+
+    if (entry.used && [
+      "toggle-opportunity-choices",
+      "execute-reaction",
+      "execute-opportunity-plan"
+    ].includes(button.dataset.action)) {
+      ui.notifications?.warn("Die Reaktion dieses Gegners wurde bereits verwendet.");
       return;
     }
 
@@ -1221,9 +1232,15 @@ export class WorkspaceBridge {
       this.#selectEnemyEntry(entry);
       throw new Error("Für diese Reaktion wurde kein Schaden und keine Verringerungsformel gefunden. Der Statblock wurde geöffnet.");
     }
-    const resource = reactionResourceState(activity);
+    const resource = reactionResourceState(item, activity);
     if (resource.recharge && !resource.available) {
       throw new Error(`${item.name} ist nicht verfügbar. Die Recharge-Ressource muss zuerst wiederhergestellt werden.`);
+    }
+    if (resource.recharge) {
+      if (!resource.spentPath || typeof item.update !== "function") {
+        throw new Error(`Die Recharge-Ressource von ${item.name} konnte nicht aktualisiert werden.`);
+      }
+      await item.update({ [resource.spentPath]: resource.spent + 1 });
     }
 
     this.#reactionBusy.add(entry.id);
@@ -1524,12 +1541,7 @@ export class WorkspaceBridge {
     if (this.#workspaceMode) return;
     const previous = event?.previousSnapshot ?? null;
     const current = event?.snapshot ?? this.#getSnapshot?.();
-    if (!current?.started || current.activeType !== "npc" || !current.activeCombatantId) return;
-
-    const beganTurn = !previous?.started || previous.combatId !== current.combatId ||
-      previous.round !== current.round || previous.turn !== current.turn ||
-      previous.activeCombatantId !== current.activeCombatantId;
-    if (!beganTurn || !current.reactionStates?.[current.activeCombatantId]?.used) return;
+    if (!shouldRestoreReaction(previous, current)) return;
 
     this.#setReactionUsed(current.activeCombatantId, false, "turn-start").catch((error) => {
       this.#logger.error("Reaction reset at turn start failed", error);

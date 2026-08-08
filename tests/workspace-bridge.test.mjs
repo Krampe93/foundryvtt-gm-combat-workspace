@@ -77,9 +77,13 @@ test("keeps reactions in a fixed raster and defers aura reminders", () => {
   assert.doesNotMatch(source, /data-role="turn-warnings"/);
   assert.doesNotMatch(source, /actorTurnStartEffects/);
   assert.match(source, /#restoreReactionAtTurnStart\(event\)/);
-  assert.match(source, /reactionResourceState\(activity\)/);
+  assert.match(source, /reactionResourceState\(item, activity\)/);
+  assert.match(source, /item\.update\(\{ \[resource\.spentPath\]: resource\.spent \+ 1 \}\)/);
+  assert.match(source, /aria-disabled="\$\{entry\.used\}"/);
+  assert.doesNotMatch(source, /title="\$\{tooltip\}" \$\{entry\.used \? "disabled"/);
   assert.match(css, /grid-auto-rows:\s*minmax\(42px, auto\)/);
   assert.match(css, /align-content:\s*start/);
+  assert.match(css, /is-used:not\(\.is-busy\)[\s\S]*?pointer-events:\s*auto/);
 });
 
 test("routes reactions to damage and exposes Multiattack damage controls", () => {

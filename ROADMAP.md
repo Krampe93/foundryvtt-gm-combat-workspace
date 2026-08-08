@@ -423,7 +423,7 @@ Bei Spielerzügen und zwischen Spieleraktionen schnell erkennen, welche Gegner r
 
 ## Etappe 6.5 – Festes Workspace-Design
 
-**Status:** `[~]` – festes Gegner- und Reaktionsraster mit Version 0.8.10 im Foundry-Test
+**Status:** `[~]` – festes Gegner- und Reaktionsraster mit Version 0.8.11 im Foundry-Test
 
 ### Ziel
 
@@ -452,7 +452,7 @@ Die dauerhaft sichtbare Bildschirmaufteilung vor Reaktions-Reset, legendären Ak
 
 ## Etappe 7 – Reaktions-Reset
 
-**Status:** `[~]` – normaler Reset zu Beginn des Gegnerzugs in Version 0.8.10 umgesetzt; Sonderregeln und Recharge-Würfe folgen
+**Status:** `[~]` – normaler Reset und Recharge-Verbrauch in Version 0.8.11 umgesetzt; Sonderregeln und automatische Recharge-Würfe folgen
 
 ### Ziel
 

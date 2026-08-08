@@ -1845,3 +1845,8 @@ body.gm-combat-workspace-companion > .notifications {
 #gm-combat-workspace-shell .gm-workspace-reaction-enemy {
   min-height: 42px;
 }
+
+#gm-combat-workspace-shell .gm-workspace-reaction-enemy.is-used:not(.is-busy) .gm-workspace-reaction-abilities .gm-workspace-reaction-action {
+  cursor: not-allowed;
+  pointer-events: auto;
+}

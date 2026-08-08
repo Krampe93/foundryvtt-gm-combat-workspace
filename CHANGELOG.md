@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.11 – 2026-08-08
+
+- Reaktionsreset zu Beginn eines NPC-Zugs von einem möglicherweise veralteten Status-Snapshot entkoppelt und bei jedem echten Zugbeginn idempotent ausgeführt.
+- Recharge-Ressourcen nicht mehr nur an der angeklickten Aktivität, sondern am gesamten Item und allen zugehörigen Aktivitäten gesucht.
+- Erkannte Recharge-Ressource vor der direkten Reaktionsausführung tatsächlich verbraucht; erneute Verwendung bleibt bis zur Wiederherstellung gesperrt.
+- Verwendete Reaktionsbuttons von nativer Deaktivierung auf eine logische Klicksperre umgestellt, damit ihre vollständigen Tooltips weiterhin erreichbar sind.
+
 ## 0.8.10 – 2026-08-08
 
 - Leere, strukturierte D&D5e-Recharge-Ressourcen vor der direkten Reaktionsausführung gesperrt und mit einer verständlichen Fehlermeldung versehen.

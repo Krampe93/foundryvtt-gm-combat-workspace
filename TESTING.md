@@ -1,5 +1,19 @@
 # Manual test checklist
 
+## Reaktionsreset, Recharge-Verbrauch und Tooltips – Version 0.8.11
+
+- [ ] Im linken Kopf steht exakt **Version 0.8.11**.
+- [ ] Eine normale Reaktion verwenden und den Gegnerzug beginnen: Der Zeilenstatus wechselt sofort wieder von **Verwendet** auf **Verfügbar**.
+- [ ] Mehrere vollständige Runden durchschalten: Der Reset geschieht bei jedem neuen Zug dieses Gegners, ohne doppelten Wurf und ohne Fehlermeldung.
+- [ ] Eine verfügbare `Deflect Missile`-Reaktion einmal ausführen: Verringerung und Schaden werden jeweils genau einmal gewürfelt.
+- [ ] Nach dem nächsten Zugbeginn ist die normale Reaktion wieder verfügbar, `Deflect Missile` bleibt wegen der leeren Recharge-Ressource jedoch gesperrt.
+- [ ] `Deflect Missile` erneut anklicken: Es entsteht kein Wurf; stattdessen erscheint die Meldung, dass die Recharge-Ressource zuerst wiederhergestellt werden muss.
+- [ ] Recharge in Foundry manuell wiederherstellen und erneut klicken: Verringerung und Schaden funktionieren wieder genau einmal.
+- [ ] Maus über verfügbare und verwendete Reaktionsbuttons halten: Der vollständige Tooltip erscheint in beiden Zuständen.
+- [ ] Ein Klick auf eine verwendete Reaktion führt keinen Wurf aus und meldet, dass sie bereits verwendet wurde.
+- [ ] Manuelle Statusumschaltung und ausstehende Schadensbuttons bleiben weiterhin nutzbar.
+- [ ] In beiden Fenstern erscheinen keine roten Fehler von `gm-combat-workspace`.
+
 ## Reaktionsressourcen und festes Raster – Version 0.8.10
 
 - [ ] Im linken Kopf steht exakt **Version 0.8.10**.

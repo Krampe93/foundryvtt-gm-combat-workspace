@@ -174,21 +174,51 @@ function recoveryType(recovery) {
   ).toLowerCase();
 }
 
-export function reactionResourceState(activity) {
-  const uses = activity?.uses ?? activity?.system?.uses ?? {};
-  const recovery = collectionValues(uses?.recovery);
-  const recharge = recovery.some((entry) => recoveryType(entry).includes("recharge"));
-  if (!recharge) return { recharge: false, available: true, remaining: null };
+function numericValue(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
 
-  const value = Number(uses?.value);
-  const max = Number(uses?.max);
-  const spent = Number(uses?.spent ?? 0);
-  const remaining = Number.isFinite(value)
-    ? value
-    : Number.isFinite(max)
-      ? Math.max(0, max - spent)
-      : 0;
-  return { recharge: true, available: remaining > 0, remaining };
+function resourceCandidate(uses, spentPath) {
+  if (!uses) return null;
+  const recovery = collectionValues(uses.recovery);
+  if (!recovery.some((entry) => recoveryType(entry).includes("recharge"))) return null;
+
+  const spent = numericValue(uses.spent) ?? 0;
+  const value = numericValue(uses.value);
+  const maximum = numericValue(uses.max) ?? 1;
+  const remaining = value ?? Math.max(0, maximum - spent);
+  return { recharge: true, available: remaining > 0, remaining, spent, spentPath };
+}
+
+export function reactionResourceState(item, reactionActivity = null) {
+  const activities = collectionValues(item?.system?.activities);
+  const orderedActivities = [reactionActivity, ...activities]
+    .filter((activity, index, all) => activity && all.indexOf(activity) === index);
+
+  for (const activity of orderedActivities) {
+    const state = resourceCandidate(
+      activity?.uses ?? activity?.system?.uses,
+      activity?.id ? `system.activities.${activity.id}.uses.spent` : null
+    );
+    if (state) return state;
+  }
+
+  return resourceCandidate(item?.system?.uses, "system.uses.spent") ?? {
+    recharge: false,
+    available: true,
+    remaining: null,
+    spent: null,
+    spentPath: null
+  };
+}
+
+export function shouldRestoreReaction(previous, current) {
+  if (!current?.started || current.activeType !== "npc" || !current.activeCombatantId) return false;
+  return !previous?.started || previous.combatId !== current.combatId ||
+    previous.round !== current.round || previous.turn !== current.turn ||
+    previous.activeCombatantId !== current.activeCombatantId;
 }
 
 export function actorReactions(actor) {

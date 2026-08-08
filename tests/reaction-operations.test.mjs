@@ -10,6 +10,7 @@ import {
   mergeReactionStates,
   reactionExecutionPlan,
   reactionResourceState,
+  shouldRestoreReaction,
   stripFoundryMarkup
 } from "../scripts/services/reaction-operations.js";
 
@@ -135,17 +136,35 @@ test("reaction execution ignores saves and selects reduction plus damage", () =>
 });
 
 test("blocks depleted recharge reactions without treating ordinary reactions as resources", () => {
-  assert.deepEqual(reactionResourceState({ uses: { value: 0, spent: 1, recovery: [{ period: "recharge", formula: "5-6" }] } }), {
+  const depletedActivity = {
+    id: "save",
+    uses: { value: 0, spent: 1, recovery: [{ period: "recharge", formula: "5-6" }] }
+  };
+  assert.deepEqual(reactionResourceState(item("deflect", "Deflect Missile", [depletedActivity]), depletedActivity), {
     recharge: true,
     available: false,
-    remaining: 0
+    remaining: 0,
+    spent: 1,
+    spentPath: "system.activities.save.uses.spent"
   });
-  assert.equal(reactionResourceState({ uses: { value: 1, recovery: [{ type: "recharge" }] } }).available, true);
-  assert.deepEqual(reactionResourceState({ uses: { value: 0, recovery: [] } }), {
+  const damageResource = { id: "damage", uses: { spent: 0, recovery: [{ type: "recharge" }] } };
+  assert.equal(reactionResourceState(item("deflect", "Deflect Missile", [activity("save", "save", "reaction"), damageResource])).available, true);
+  assert.deepEqual(reactionResourceState(item("ordinary", "Parry", [activity("parry", "utility", "reaction")])), {
     recharge: false,
     available: true,
-    remaining: null
+    remaining: null,
+    spent: null,
+    spentPath: null
   });
+});
+
+test("restores a reaction at every real NPC turn start", () => {
+  const previous = { started: true, combatId: "combat", round: 2, turn: 3, activeCombatantId: "player" };
+  const current = { started: true, combatId: "combat", round: 2, turn: 4, activeCombatantId: "giant", activeType: "npc" };
+
+  assert.equal(shouldRestoreReaction(previous, current), true);
+  assert.equal(shouldRestoreReaction(current, current), false);
+  assert.equal(shouldRestoreReaction(current, { ...current, turn: 5, activeType: "player" }), false);
 });
 
 test("recognizes start-of-turn area reminders", () => {
