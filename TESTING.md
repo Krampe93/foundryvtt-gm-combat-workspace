@@ -1,5 +1,20 @@
 # Manual test checklist
 
+## Design checkpoint – Version 0.8.6
+
+- [ ] Im Workspace-Kopf steht exakt **Version 0.8.6**.
+- [ ] Die linke Spalte gehört über die gesamte verfügbare Höhe dem Statblock.
+- [ ] Die rechte Spalte ist sichtbar in eine obere und eine untere Hälfte gegliedert.
+- [ ] Zehn lebende Gegner passen gleichzeitig in die obere Hälfte; ab dem elften Gegner scrollt nur die Liste.
+- [ ] Name, Zug-/Auswahlstatus, RK, TP und sechs normale Rettungswürfe bleiben in jeder Zeile bündig.
+- [ ] Ein normaler Rettungswurf würfelt weiterhin sofort; beim Überfahren oder Tastaturfokus erscheinen die kleinen Schaltflächen für Vorteil und Nachteil.
+- [ ] Die Mehrfach-TP-Werkzeuge sind ohne Auswahl verborgen und erscheinen nach Auswahl mindestens eines Gegners.
+- [ ] Reaktionen, Gelegenheitsangriffe, Auren und Zughinweise funktionieren in der unteren linken Hälfte weiter.
+- [ ] Die Felder **Würfelergebnisse** und **Minimap** sind als reserviert erkennbar und besitzen noch keine anklickbare Scheinfunktion.
+- [ ] Die Diagnose ist nicht dauerhaft sichtbar und lässt sich über das Drei-Punkte-Menü im Kopf öffnen.
+- [ ] Statblock, Gegnerdashboard und Reaktionen besitzen jeweils einen eigenen Scrollbereich; die gesamte Workspace-Seite scrollt nicht.
+- [ ] In beiden Fenstern erscheinen keine roten Fehler von `gm-combat-workspace`.
+
 ## Stage 6 inline roll bugfix – Version 0.8.5
 
 - [ ] Im Workspace-Kopf steht exakt **Version 0.8.5**.

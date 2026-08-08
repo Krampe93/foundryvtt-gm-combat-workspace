@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.8.6 – 2026-08-08
+
+- Dauerlayout nach der freigegebenen Skizze aufgebaut: vollständige linke Statblock-Spalte und exakt halbierte rechte Spalte.
+- Gegnerdashboard auf bis zu zehn kompakte, scrollbar angeordnete Zeilen in der oberen Hälfte verdichtet.
+- Normale Rettungswürfe bleiben direkt sichtbar; Vorteil und Nachteil erscheinen platzsparend beim Überfahren oder Tastaturfokus.
+- Untere Hälfte im Verhältnis 50/25/25 für Reaktionen und Hinweise, zukünftige Würfelergebnisse sowie zukünftige Minimap gegliedert.
+- Noch nicht implementierte Würfelergebnisse und Minimap ausdrücklich nur als inaktive Reserveflächen dargestellt.
+- Diagnose aus der Daueransicht entfernt und in ein kompaktes Drei-Punkte-Menü im Kopf verschoben.
+- Mehrfach-TP-Werkzeuge werden nur eingeblendet, sobald mindestens ein Gegner ausgewählt wurde.
+
 ## 0.8.5 – 2026-08-08
 
 - Künstliche, nicht ausgelöste Mausereignisse aus direkten Statblock-Aktivitätsaufrufen entfernt.

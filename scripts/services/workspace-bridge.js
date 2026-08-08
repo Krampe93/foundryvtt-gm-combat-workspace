@@ -321,7 +321,24 @@ export class WorkspaceBridge {
           <h1>GM Combat Workspace</h1>
           <p>Statblock und Gegnerübersicht · Version ${game.modules.get(MODULE_ID)?.version ?? "–"}</p>
         </div>
-        <span class="gm-workspace-status">Verbunden</span>
+        <div class="gm-workspace-header-actions">
+          <span class="gm-workspace-status">Verbunden</span>
+          <details class="gm-workspace-tools-menu">
+            <summary title="Weitere Werkzeuge" aria-label="Weitere Werkzeuge"><i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i></summary>
+            <div class="gm-workspace-tools-popover">
+              <section>
+                <h2>Roll-Diagnose</h2>
+                <p>Letzter Workspace-Klick und daraus entstandener D&amp;D5e-Angriff.</p>
+                <pre data-role="roll-debug">Noch kein Item im Workspace benutzt.</pre>
+              </section>
+              <section>
+                <h2>Statblock-Diagnose</h2>
+                <p>Render-, Actor-Update-, Close- und Container-Ereignisse.</p>
+                <pre data-role="sheet-debug">Noch kein Statblock-Ereignis aufgezeichnet.</pre>
+              </section>
+            </div>
+          </details>
+        </div>
       </header>
       <section class="gm-workspace-columns">
         <section class="gm-workspace-statblock-panel" aria-label="Statblock">
@@ -345,7 +362,7 @@ export class WorkspaceBridge {
             </div>
           </div>
         </section>
-        <aside class="gm-workspace-context-panel" aria-label="Gegnerübersicht">
+        <aside class="gm-workspace-context-panel" aria-label="Kampfübersicht">
           <section class="gm-workspace-enemies">
             <header class="gm-workspace-enemy-header">
               <div>
@@ -368,30 +385,39 @@ export class WorkspaceBridge {
             </div>
             <div class="gm-workspace-enemy-list" data-role="enemy-list"></div>
           </section>
-          <section class="gm-workspace-reactions" data-role="reaction-panel" aria-label="Reaktionsübersicht">
-            <header class="gm-workspace-reaction-header">
-              <div>
-                <span class="gm-workspace-eyebrow" data-field="reaction-turn">Kein Spielerzug</span>
-                <h2><i class="fa-solid fa-bolt" aria-hidden="true"></i> Reaktionen</h2>
+          <section class="gm-workspace-lower-deck" aria-label="Reaktionen, Würfelergebnisse und Minimap">
+            <section class="gm-workspace-reactions" data-role="reaction-panel" aria-label="Reaktionsübersicht">
+              <header class="gm-workspace-reaction-header">
+                <div>
+                  <span class="gm-workspace-eyebrow" data-field="reaction-turn">Kein Spielerzug</span>
+                  <h2><i class="fa-solid fa-bolt" aria-hidden="true"></i> Reaktionen &amp; Hinweise</h2>
+                </div>
+                <span class="gm-workspace-reaction-count" data-field="reaction-count">0 verfügbar</span>
+              </header>
+              <div class="gm-workspace-turn-warnings" data-role="turn-warnings"></div>
+              <div class="gm-workspace-reaction-list" data-role="reaction-list"></div>
+            </section>
+            <section class="gm-workspace-reserved gm-workspace-roll-results" aria-label="Würfelergebnisse">
+              <header>
+                <span class="gm-workspace-eyebrow">Protokoll</span>
+                <h2><i class="fa-solid fa-dice-d20" aria-hidden="true"></i> Würfelergebnisse</h2>
+              </header>
+              <div class="gm-workspace-reserved-empty">
+                <i class="fa-solid fa-dice" aria-hidden="true"></i>
+                <span>Für eine spätere Etappe reserviert</span>
               </div>
-              <span class="gm-workspace-reaction-count" data-field="reaction-count">0 verfügbar</span>
-            </header>
-            <div class="gm-workspace-turn-warnings" data-role="turn-warnings"></div>
-            <div class="gm-workspace-reaction-list" data-role="reaction-list"></div>
+            </section>
+            <section class="gm-workspace-reserved gm-workspace-minimap" aria-label="Minimap">
+              <header>
+                <span class="gm-workspace-eyebrow">Gesamte Szene</span>
+                <h2><i class="fa-solid fa-map" aria-hidden="true"></i> Minimap</h2>
+              </header>
+              <div class="gm-workspace-minimap-placeholder" aria-hidden="true">
+                <span></span><span></span><span></span><span></span>
+              </div>
+              <p>Interaktive Gegnerpunkte folgen in einer späteren Etappe.</p>
+            </section>
           </section>
-          <details class="gm-workspace-diagnostics">
-            <summary>Diagnose</summary>
-            <section>
-            <h2>Roll-Diagnose</h2>
-            <p>Zeigt den letzten Workspace-Klick und den daraus entstandenen D&D5e-Angriff.</p>
-            <pre data-role="roll-debug">Noch kein Item im Workspace benutzt.</pre>
-            </section>
-            <section>
-            <h2>Statblock-Diagnose</h2>
-            <p>Protokolliert Render-, Actor-Update-, Close- und Container-Ereignisse.</p>
-            <pre data-role="sheet-debug">Noch kein Statblock-Ereignis aufgezeichnet.</pre>
-            </section>
-          </details>
         </aside>
       </section>
     `;
@@ -1077,6 +1103,8 @@ export class WorkspaceBridge {
     const validIds = new Set(entries.map(({ id }) => id));
     this.#bulkSelection = new Set([...this.#bulkSelection].filter((id) => validIds.has(id)));
     this.#set("bulk-count", this.#bulkSelection.size, "0");
+    this.#root?.querySelector(".gm-workspace-enemies")
+      ?.classList.toggle("has-bulk-selection", this.#bulkSelection.size > 0);
     this.#channel?.postMessage({
       type: "enemyColors",
       entries: entries.map(({ tokenId, sceneId, color, active }) => ({ tokenId, sceneId, color, active }))
@@ -1294,6 +1322,8 @@ export class WorkspaceBridge {
     if (checkbox.checked) this.#bulkSelection.add(row.dataset.combatantId);
     else this.#bulkSelection.delete(row.dataset.combatantId);
     this.#set("bulk-count", this.#bulkSelection.size, "0");
+    this.#root?.querySelector(".gm-workspace-enemies")
+      ?.classList.toggle("has-bulk-selection", this.#bulkSelection.size > 0);
   }
 
   #selectHpInput(event) {

@@ -18,7 +18,7 @@ https://raw.githubusercontent.com/Krampe93/foundryvtt-gm-combat-workspace/main/m
 
 This manifest URL is permanent. Foundry can use it to discover and install future test versions through the normal update function.
 
-Version `0.8.5` adds missing passive actor features to the embedded statblock, connects inline save and damage expressions directly to their native D&D5e activities without synthetic pointer events, cleans residual Foundry reference fragments, and distinguishes real actor-centered turn effects from spell-description false positives. No third-party module is required; existing `reaction-tracker` combat flags are read when present.
+Version `0.8.6` introduces the approved permanent workspace layout: the statblock owns the complete left column, while the right column is split evenly between a compact ten-enemy dashboard and the lower combat workspace. Reactions occupy half of that lower deck; reserved areas for the future roll history and full-scene minimap preserve the final proportions without pretending those features already exist. No third-party module is required; existing `reaction-tracker` combat flags are read when present.
 
 ## Development
 
@@ -101,4 +101,4 @@ When a player turn begins, the workspace prioritizes enemy reactions and legenda
 
 ## Development status
 
-Version `0.8.5` contains the two-window workspace, supplemented native statblock, color-linked enemy dashboard, HP and armor controls, saving throws, and the first complete reaction overview. Automatic reaction reset is the next planned stage.
+Version `0.8.6` contains the two-window workspace, supplemented native statblock, color-linked compact enemy dashboard, HP and armor controls, saving throws, the first complete reaction overview, and the approved permanent screen structure. Automatic reaction reset is the next planned stage.
