@@ -1,5 +1,19 @@
 # Manual test checklist
 
+## Stage 6 inline activity design bugfix – Version 0.8.4
+
+- [ ] Im Workspace-Kopf steht exakt **Version 0.8.4**.
+- [ ] Unter Death Gaze, Sunlight Hypersensitivity und anderen Eigenschaften erscheinen keine separaten Aktivitätsschaltflächen mehr.
+- [ ] Ein Klick auf den Namen `Death Gaze` erzeugt weiterhin genau eine native Save-Chatkarte.
+- [ ] Der Schadensausdruck `3d10 psychic` im Death-Gaze-Text ist anklickbar.
+- [ ] Ein Klick darauf würfelt ohne Abfragedialog genau einmal den hinterlegten Schaden.
+- [ ] Der Save-Ausdruck im Death-Gaze-Text ist anklickbar und erzeugt genau eine Save-Chatkarte.
+- [ ] Bei Fire Breath ist der inline dargestellte Feuerschaden anklickbar und verwendet die richtige Damage-Auswertung.
+- [ ] Der Statblock bleibt nach jedem Klick sichtbar und nimmt keinen zusätzlichen vertikalen Platz für Steuerflächen ein.
+- [ ] Die bereits bereinigten Foundry- und Quellenreste bleiben verschwunden.
+- [ ] Bestehende Angriffe, Reaktionen, legendäre Aktionen und Zughinweise funktionieren weiterhin.
+- [ ] In beiden Fenstern erscheinen keine roten Fehler von `gm-combat-workspace`.
+
 ## Stage 6 statblock activity bugfix – Version 0.8.3
 
 - [ ] Im Workspace-Kopf steht exakt **Version 0.8.3**.

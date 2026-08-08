@@ -12,10 +12,10 @@ import {
 } from "./reaction-operations.js";
 import {
   missingStatblockItems,
+  prepareInlineActivityCommands,
   prepareStatblockDescription,
   prepareStatblockSource,
-  statblockActivityAction,
-  statblockActivityLabel
+  statblockActivityAction
 } from "./statblock-operations.js";
 
 const CHANNEL_NAME = `${MODULE_ID}.workspace`;
@@ -572,7 +572,8 @@ export class WorkspaceBridge {
       if (!/[[@](?:\[\/|status\[|spell\[|variantrule\[)|(?:&|&amp;)Reference\[/i.test(action.innerHTML)) continue;
       const itemId = action.dataset.id ?? action.querySelector("[data-item-id]")?.dataset?.itemId;
       const item = actor.items?.get?.(itemId) ?? null;
-      const enriched = await TextEditor.enrichHTML(prepareStatblockSource(action.innerHTML), {
+      const source = prepareInlineActivityCommands(action.innerHTML, this.#statblockActivityRoutes(item));
+      const enriched = await TextEditor.enrichHTML(prepareStatblockSource(source), {
         secrets: false,
         rollData: item?.getRollData?.() ?? actor.getRollData?.() ?? {},
         relativeTo: item ?? actor
@@ -590,7 +591,10 @@ export class WorkspaceBridge {
     const missing = missingStatblockItems(actor, displayedIds);
 
     for (const { item, category } of missing) {
-      const rawDescription = prepareStatblockSource(item.system?.description?.value ?? "");
+      const rawDescription = prepareStatblockSource(prepareInlineActivityCommands(
+        item.system?.description?.value ?? "",
+        this.#statblockActivityRoutes(item)
+      ));
       let description = await TextEditor.enrichHTML(rawDescription, {
         secrets: false,
         rollData: item.getRollData?.() ?? {},
@@ -632,28 +636,28 @@ export class WorkspaceBridge {
       name.append(link, document.createTextNode(" "));
       firstParagraph.prepend(name);
 
-      const executableActivities = activities
-        .map((activity) => ({ activity, action: statblockActivityAction(activity) }))
-        .filter(({ action }) => action);
-      if (executableActivities.length) {
-        const controls = document.createElement("p");
-        controls.className = "gm-workspace-statblock-activity-controls";
-        for (const { activity, action: activityAction } of executableActivities) {
-          const activityLink = document.createElement("span");
-          activityLink.className = "roll-link gm-workspace-statblock-activity";
-          activityLink.dataset.action = "use";
-          activityLink.dataset.itemId = item.id;
-          activityLink.dataset.activityId = activity.id;
-          activityLink.dataset.activityAction = activityAction;
-          activityLink.textContent = statblockActivityLabel(activity);
-          controls.append(activityLink);
-        }
-        action.append(controls);
-      }
       section.append(action);
     }
 
     this.#wireStatblockItemLinks(element);
+  }
+
+  #statblockActivityRoutes(item) {
+    const activities = Array.from(item?.system?.activities?.values?.() ?? []);
+    const save = activities.find((activity) =>
+      String(activity?.type ?? activity?.system?.type ?? "").toLowerCase() === "save" &&
+      typeof activity.use === "function"
+    ) ?? null;
+    const damage = activities.find((activity) =>
+      String(activity?.type ?? activity?.system?.type ?? "").toLowerCase() === "damage" &&
+      typeof activity.rollDamage === "function"
+    ) ?? activities.find((activity) =>
+      typeof activity.rollDamage === "function" && Number(activity?.damage?.parts?.length ?? 0) > 0
+    ) ?? null;
+    return {
+      save: save ? { itemId: item.id, activityId: save.id, action: "use" } : null,
+      damage: damage ? { itemId: item.id, activityId: damage.id, action: "damage" } : null
+    };
   }
 
   #statblockSection(content, category) {

@@ -160,20 +160,6 @@ body.gm-combat-workspace-companion > .notifications {
   gap: 0.45rem;
 }
 
-#gm-combat-workspace-shell .gm-workspace-statblock-activity-controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  margin: 0.25rem 0 0.45rem;
-}
-
-#gm-combat-workspace-shell .gm-workspace-statblock-activity {
-  border: 1px solid rgba(201, 164, 92, 0.65);
-  border-radius: 3px;
-  padding: 0.15rem 0.45rem;
-  cursor: pointer;
-}
-
 #gm-combat-workspace-shell .gm-workspace-sheet-host {
   flex: 1 1 auto;
   position: relative;

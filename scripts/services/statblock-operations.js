@@ -46,21 +46,40 @@ export function prepareStatblockDescription(value) {
     .replace(/\[\[\/(?:r|roll)\s+([^\]]+)\]\]/gi, "$1");
 }
 
+function commandValue(data, key) {
+  return String(data ?? "").match(new RegExp(`(?:^|\\s)${key}=([^\\s]+)`, "i"))?.[1] ?? null;
+}
+
+function abilityLabel(value) {
+  return ({ str: "STR", dex: "DEX", con: "CON", int: "INT", wis: "WIS", cha: "CHA" })[
+    String(value ?? "").toLowerCase()
+  ] ?? String(value ?? "").toUpperCase();
+}
+
+function inlineActivityLink(label, route) {
+  if (!route?.itemId || !route?.activityId || !route?.action) return null;
+  return `<span class="roll-link gm-workspace-inline-activity" data-action="use" ` +
+    `data-item-id="${route.itemId}" data-activity-id="${route.activityId}" ` +
+    `data-activity-action="${route.action}">${label}</span>`;
+}
+
+export function prepareInlineActivityCommands(value, routes = {}) {
+  return String(value ?? "")
+    .replace(/\[\[\/save\s+([^\]]+)\]\](?:\s+saving throw)?/gi, (match, data) => {
+      const ability = abilityLabel(commandValue(data, "ability"));
+      const dc = commandValue(data, "dc");
+      return inlineActivityLink(`${ability}-Rettungswurf${dc ? ` (SG ${dc})` : ""}`, routes.save) ?? match;
+    })
+    .replace(/\[\[\/damage\s+([^\]]+)\]\]/gi, (match, data) => {
+      const formula = String(data ?? "").trim().split(/\s+/)[0] ?? "";
+      const type = commandValue(data, "type");
+      return inlineActivityLink(`${formula}${type ? ` ${type}` : ""}`, routes.damage) ?? match;
+    });
+}
+
 export function statblockActivityAction(activity) {
   const type = String(activity?.type ?? activity?.system?.type ?? "").toLowerCase();
   if (type === "damage" && typeof activity?.rollDamage === "function") return "damage";
   if (type === "attack" && typeof activity?.rollAttack === "function") return "attack";
   return typeof activity?.use === "function" ? "use" : null;
-}
-
-export function statblockActivityLabel(activity) {
-  const type = String(activity?.type ?? activity?.system?.type ?? "").toLowerCase();
-  return ({
-    attack: "Angriff",
-    damage: "Schaden würfeln",
-    save: "Rettungswurf",
-    check: "Probe",
-    heal: "Heilung würfeln",
-    utility: "Ausführen"
-  })[type] ?? String(activity?.name ?? "Ausführen");
 }

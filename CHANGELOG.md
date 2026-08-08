@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.4 – 2026-08-08
+
+- Separate Aktivitätsschaltflächen unter ergänzten Statblock-Eigenschaften wieder vollständig entfernt.
+- Save- und Schadensangaben innerhalb des normalen Beschreibungstexts als kompakte anklickbare D&D5e-Aktivitätslinks aufgebaut.
+- Inline-Schaden bevorzugt eine ausdrücklich als `damage` typisierte Aktivität; dadurch verwendet Death Gaze zuverlässig seine separate Schadensaktivität.
+- Bei Fähigkeiten wie Fire Breath ohne separate Damage-Aktivität wird die schadensführende Save-Aktivität verwendet.
+- Der funktionierende Namensklick ergänzter Fähigkeiten bleibt unverändert erhalten.
+
 ## 0.8.3 – 2026-08-07
 
 - Ergänzte Statblock-Fähigkeiten führen über ihren Namen jetzt ihre erste ausführbare D&D5e-Aktivität statt des bei mehreren Aktivitäten wirkungslosen allgemeinen Item-Aufrufs aus.

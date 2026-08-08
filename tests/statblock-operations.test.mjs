@@ -3,10 +3,10 @@ import test from "node:test";
 
 import {
   missingStatblockItems,
+  prepareInlineActivityCommands,
   prepareStatblockDescription,
   prepareStatblockSource,
   statblockActivityAction,
-  statblockActivityLabel,
   statblockCategoryForItem
 } from "../scripts/services/statblock-operations.js";
 
@@ -67,6 +67,18 @@ test("routes supplemental statblock activities through their native execution me
   assert.equal(statblockActivityAction(damage), "damage");
   assert.equal(statblockActivityAction(attack), "attack");
   assert.equal(statblockActivityAction(save), "use");
-  assert.equal(statblockActivityLabel(damage), "Schaden würfeln");
-  assert.equal(statblockActivityLabel(save), "Rettungswurf");
+});
+
+test("turns inline save and damage commands into compact native activity links", () => {
+  const result = prepareInlineActivityCommands(
+    "make a [[/save ability=con dc=13]] saving throw and take [[/damage 3d10 type=psychic]] damage",
+    {
+      save: { itemId: "death-gaze", activityId: "save", action: "use" },
+      damage: { itemId: "death-gaze", activityId: "damage", action: "damage" }
+    }
+  );
+
+  assert.match(result, /data-activity-id="save"[^>]*>CON-Rettungswurf \(SG 13\)<\/span>/);
+  assert.match(result, /data-activity-id="damage"[^>]*>3d10 psychic<\/span>/);
+  assert.doesNotMatch(result, /\[\[\/(?:save|damage)/);
 });
