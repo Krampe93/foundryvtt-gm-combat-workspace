@@ -1835,3 +1835,13 @@ body.gm-combat-workspace-companion > .notifications {
   opacity: 1;
   text-decoration: none;
 }
+
+/* Fixed ten-enemy reaction raster and restored native tooltips 0.8.10. */
+#gm-combat-workspace-shell .gm-workspace-reaction-list {
+  grid-auto-rows: minmax(42px, auto);
+  align-content: start;
+}
+
+#gm-combat-workspace-shell .gm-workspace-reaction-enemy {
+  min-height: 42px;
+}

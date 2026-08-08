@@ -8,10 +8,10 @@ import {
   actorMeleeAttacks,
   actorOpportunityPlan,
   actorReactions,
-  actorTurnStartEffects,
   collectionValues,
   isPlayerFacingTurn,
-  reactionExecutionPlan
+  reactionExecutionPlan,
+  reactionResourceState
 } from "./reaction-operations.js";
 import {
   executeStatblockActivity,
@@ -167,6 +167,7 @@ export class WorkspaceBridge {
     this.#channel.addEventListener("message", (event) => this.#receive(event.data));
     this.#unsubscribe = this.#eventBus.on("combatStateChanged", (event) => {
       this.#handleEncounterTransition(event);
+      this.#restoreReactionAtTurnStart(event);
       this.#render();
       this.#broadcastState();
       this.#syncTokenColors();
@@ -392,11 +393,10 @@ export class WorkspaceBridge {
             <section class="gm-workspace-reactions" data-role="reaction-panel" aria-label="Reaktionsübersicht">
               <header class="gm-workspace-reaction-header">
                 <div>
-                  <h2><i class="fa-solid fa-bolt" aria-hidden="true"></i> Reaktionen &amp; Hinweise</h2>
+                  <h2><i class="fa-solid fa-bolt" aria-hidden="true"></i> Reaktionen</h2>
                 </div>
                 <span class="gm-workspace-reaction-count" data-field="reaction-count">0 verfügbar</span>
               </header>
-              <div class="gm-workspace-turn-warnings" data-role="turn-warnings"></div>
               <div class="gm-workspace-reaction-list" data-role="reaction-list"></div>
             </section>
             <div class="gm-workspace-utility-column">
@@ -975,8 +975,7 @@ export class WorkspaceBridge {
   #renderReactionOverview() {
     const panel = this.#root?.querySelector('[data-role="reaction-panel"]');
     const list = this.#root?.querySelector('[data-role="reaction-list"]');
-    const warnings = this.#root?.querySelector('[data-role="turn-warnings"]');
-    if (!panel || !list || !warnings) return;
+    if (!panel || !list) return;
 
     const snapshot = this.#getSnapshot?.();
     const playerTurn = Boolean(snapshot?.started && isPlayerFacingTurn(snapshot.activeType));
@@ -985,33 +984,6 @@ export class WorkspaceBridge {
 
     panel.classList.toggle("is-player-turn", playerTurn);
     this.#set("reaction-count", `${available} verfügbar`);
-
-    const reminderGroups = new Map();
-    if (playerTurn) {
-      for (const entry of entries) {
-        for (const effect of actorTurnStartEffects(entry.actor)) {
-          const key = `${effect.name}:${effect.timing}:${effect.description}`;
-          const group = reminderGroups.get(key) ?? { effect, enemies: [] };
-          group.enemies.push(entry.displayName);
-          reminderGroups.set(key, group);
-        }
-      }
-    }
-
-    warnings.innerHTML = [...reminderGroups.values()].map(({ effect, enemies }) => {
-      const timingLabel = effect.timing === "start"
-        ? "Zu Beginn des Zuges prüfen"
-        : effect.timing === "end"
-          ? "Am Ende des Zuges prüfen"
-          : "Aura während des Zuges prüfen";
-      return `
-      <div class="gm-workspace-turn-warning">
-        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
-        <span><strong>${timingLabel}: ${foundry.utils.escapeHTML(effect.name)}</strong>
-        <small>${foundry.utils.escapeHTML(enemies.join(", "))} · ${foundry.utils.escapeHTML(effect.description)}</small></span>
-      </div>
-    `;
-    }).join("");
 
     if (!entries.length) {
       list.innerHTML = `<div class="gm-workspace-reaction-empty">${snapshot?.started
@@ -1026,8 +998,8 @@ export class WorkspaceBridge {
           [reaction.condition, reaction.description].filter(Boolean).join(" — ") || "Keine Beschreibung hinterlegt."
         ).replaceAll('"', "&quot;");
         return reaction.executable
-          ? `<button type="button" class="gm-workspace-reaction-action" data-action="execute-reaction" data-item-id="${reaction.itemId}" data-activity-id="${reaction.activityId}" data-tooltip="${tooltip}" data-tooltip-class="gm-workspace-reaction-tooltip" ${entry.used ? "disabled" : ""}>${foundry.utils.escapeHTML(reaction.name)}</button>`
-          : `<button type="button" class="gm-workspace-reaction-action" data-action="show-reaction-actor" data-tooltip="${tooltip}" data-tooltip-class="gm-workspace-reaction-tooltip">${foundry.utils.escapeHTML(reaction.name)}</button>`;
+          ? `<button type="button" class="gm-workspace-reaction-action" data-action="execute-reaction" data-item-id="${reaction.itemId}" data-activity-id="${reaction.activityId}" data-tooltip="${tooltip}" title="${tooltip}" ${entry.used ? "disabled" : ""}>${foundry.utils.escapeHTML(reaction.name)}</button>`
+          : `<button type="button" class="gm-workspace-reaction-action" data-action="show-reaction-actor" data-tooltip="${tooltip}" title="${tooltip}">${foundry.utils.escapeHTML(reaction.name)}</button>`;
       }).join("");
 
       const choiceOpen = this.#openReactionChoices.has(entry.id);
@@ -1036,10 +1008,10 @@ export class WorkspaceBridge {
       if (entry.opportunityPlan.mode === "sequence") {
         const sequence = entry.opportunityPlan.sequence.map(({ name }) => name).join(", ");
         opportunityTooltip = foundry.utils.escapeHTML(`${sequence} als Gelegenheitsangriff ausführen.`).replaceAll('"', "&quot;");
-        opportunityAction = `<button type="button" class="gm-workspace-reaction-action" data-action="execute-opportunity-plan" data-tooltip="${opportunityTooltip}" data-tooltip-class="gm-workspace-reaction-tooltip" ${entry.used ? "disabled" : ""}>Gelegenheitsangriff</button>`;
+        opportunityAction = `<button type="button" class="gm-workspace-reaction-action" data-action="execute-opportunity-plan" data-tooltip="${opportunityTooltip}" title="${opportunityTooltip}" ${entry.used ? "disabled" : ""}>Gelegenheitsangriff</button>`;
       } else if (entry.opportunityPlan.mode === "choose") {
         opportunityTooltip = `${entry.opportunityPlan.slots} Angriff${entry.opportunityPlan.slots === 1 ? "" : "e"} auswählen.`;
-        opportunityAction = `<button type="button" class="gm-workspace-reaction-action" data-action="toggle-opportunity-choices" aria-expanded="${choiceOpen}" data-tooltip="${opportunityTooltip}" data-tooltip-class="gm-workspace-reaction-tooltip" ${entry.used ? "disabled" : ""}>Gelegenheitsangriff</button>`;
+        opportunityAction = `<button type="button" class="gm-workspace-reaction-action" data-action="toggle-opportunity-choices" aria-expanded="${choiceOpen}" data-tooltip="${opportunityTooltip}" title="${opportunityTooltip}" ${entry.used ? "disabled" : ""}>Gelegenheitsangriff</button>`;
       }
       if (entry.pendingDamage.length) opportunityAction = "";
 
@@ -1248,6 +1220,10 @@ export class WorkspaceBridge {
     if (!plan.executable) {
       this.#selectEnemyEntry(entry);
       throw new Error("Für diese Reaktion wurde kein Schaden und keine Verringerungsformel gefunden. Der Statblock wurde geöffnet.");
+    }
+    const resource = reactionResourceState(activity);
+    if (resource.recharge && !resource.available) {
+      throw new Error(`${item.name} ist nicht verfügbar. Die Recharge-Ressource muss zuerst wiederhergestellt werden.`);
     }
 
     this.#reactionBusy.add(entry.id);
@@ -1542,6 +1518,23 @@ export class WorkspaceBridge {
     } else {
       this.#clearLaptopSelection();
     }
+  }
+
+  #restoreReactionAtTurnStart(event) {
+    if (this.#workspaceMode) return;
+    const previous = event?.previousSnapshot ?? null;
+    const current = event?.snapshot ?? this.#getSnapshot?.();
+    if (!current?.started || current.activeType !== "npc" || !current.activeCombatantId) return;
+
+    const beganTurn = !previous?.started || previous.combatId !== current.combatId ||
+      previous.round !== current.round || previous.turn !== current.turn ||
+      previous.activeCombatantId !== current.activeCombatantId;
+    if (!beganTurn || !current.reactionStates?.[current.activeCombatantId]?.used) return;
+
+    this.#setReactionUsed(current.activeCombatantId, false, "turn-start").catch((error) => {
+      this.#logger.error("Reaction reset at turn start failed", error);
+      ui.notifications?.error(`Reaktion konnte zu Zugbeginn nicht zurückgesetzt werden: ${error.message}`);
+    });
   }
 
   #clearLaptopSelection() {

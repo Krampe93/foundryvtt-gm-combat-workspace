@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.10 – 2026-08-08
+
+- Leere, strukturierte D&D5e-Recharge-Ressourcen vor der direkten Reaktionsausführung gesperrt und mit einer verständlichen Fehlermeldung versehen.
+- Hover-Texte der Reaktionsbuttons über Foundry-Tooltip und nativen Browser-Tooltip wiederhergestellt.
+- Reaktionsliste auf ein festes Zehn-Gegner-Raster umgestellt; entfernte Gegner vergrößern die verbleibenden Zeilen nicht mehr.
+- Verbrauchte normale Reaktionen werden beim Beginn des jeweiligen Gegnerzugs automatisch wieder verfügbar.
+- Auren und Zughinweise vorläufig vollständig aus dem Reaktionsbereich entfernt; ihre spätere Zielposition bleibt Teil einer eigenen Etappe.
+
 ## 0.8.9 – 2026-08-08
 
 - Reaktionszeilen neu verteilt: vollständige Kreaturennamen erhalten Vorrang, Statusfelder und Aktionsbuttons benötigen weniger Breite.

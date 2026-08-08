@@ -1,5 +1,19 @@
 # Manual test checklist
 
+## Reaktionsressourcen und festes Raster – Version 0.8.10
+
+- [ ] Im linken Kopf steht exakt **Version 0.8.10**.
+- [ ] Eine verfügbare `Deflect Missile`-Reaktion würfelt weiterhin Verringerung und Schaden ohne Save-Abfrage.
+- [ ] Ist ihre Recharge-Ressource leer, erzeugt der Klick keinen Wurf und zeigt stattdessen eine verständliche Fehlermeldung.
+- [ ] Maus über `Deflect Missile` halten: Auslöser, Rettungswurf und vollständige Beschreibung sind wieder lesbar.
+- [ ] Eine normale Reaktion verwenden und anschließend den Zug dieses Gegners beginnen: Der Status wechselt automatisch zurück auf **Verfügbar**.
+- [ ] Die Recharge-Ressource wird durch diesen normalen Reaktions-Reset nicht künstlich aufgefüllt.
+- [ ] Gegner nacheinander auf 0 TP setzen: Verbleibende Reaktionszeilen behalten unverändert dieselbe Höhe und rücken nur nach oben.
+- [ ] Zehn Gegner passen weiterhin in das vorgesehene Reaktionsraster.
+- [ ] Im unteren linken Bereich steht nur noch **Reaktionen**; Auren und Hinweise werden dort nicht mehr dargestellt.
+- [ ] Manuelle Statusumschaltung, Gelegenheitsangriffe und ausstehende Schadensbuttons funktionieren weiterhin.
+- [ ] In beiden Fenstern erscheinen keine roten Fehler von `gm-combat-workspace`.
+
 ## Reaktionen, Schaden und Multiattack – Version 0.8.9
 
 - [ ] Workspace mit mindestens einem Stone Giant und einem Adult Red Dragon öffnen.

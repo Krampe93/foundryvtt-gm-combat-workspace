@@ -164,6 +164,33 @@ export function reactionExecutionPlan(item, reactionActivity = null) {
   };
 }
 
+function recoveryType(recovery) {
+  return String(
+    recovery?.period ??
+    recovery?.type ??
+    recovery?.recovery?.period ??
+    recovery?.recovery?.type ??
+    ""
+  ).toLowerCase();
+}
+
+export function reactionResourceState(activity) {
+  const uses = activity?.uses ?? activity?.system?.uses ?? {};
+  const recovery = collectionValues(uses?.recovery);
+  const recharge = recovery.some((entry) => recoveryType(entry).includes("recharge"));
+  if (!recharge) return { recharge: false, available: true, remaining: null };
+
+  const value = Number(uses?.value);
+  const max = Number(uses?.max);
+  const spent = Number(uses?.spent ?? 0);
+  const remaining = Number.isFinite(value)
+    ? value
+    : Number.isFinite(max)
+      ? Math.max(0, max - spent)
+      : 0;
+  return { recharge: true, available: remaining > 0, remaining };
+}
+
 export function actorReactions(actor) {
   const reactions = [];
 

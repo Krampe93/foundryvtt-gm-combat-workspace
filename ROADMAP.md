@@ -423,7 +423,7 @@ Bei Spielerzügen und zwischen Spieleraktionen schnell erkennen, welche Gegner r
 
 ## Etappe 6.5 – Festes Workspace-Design
 
-**Status:** `[~]` – verdichtete Informationsdarstellung und Multiattack-Reaktionsablauf mit Version 0.8.9 im Foundry-Test
+**Status:** `[~]` – festes Gegner- und Reaktionsraster mit Version 0.8.10 im Foundry-Test
 
 ### Ziel
 
@@ -434,7 +434,7 @@ Die dauerhaft sichtbare Bildschirmaufteilung vor Reaktions-Reset, legendären Ak
 - vollständige linke Spalte ausschließlich für Statblock und dessen kompakte Kopfsteuerung
 - obere 47 Prozent der rechten Spalte für bis zu zehn kompakte Gegnerzeilen
 - untere 53 Prozent in Reaktionen links sowie Würfelergebnisse über einer 16:9-Minimap rechts aufteilen
-- Reaktionen, Auren und Zughinweise im größten unteren Bereich funktionsfähig halten
+- Reaktionen im größten unteren Bereich funktionsfähig halten; Auren und Zughinweise bis zur Festlegung eines eigenen Zielbereichs ausblenden
 - Flächen für Würfelergebnisse und Gesamt-Szenen-Minimap reservieren, aber noch nicht funktional belegen
 - Diagnose und seltene Werkzeuge aus der Daueransicht in ein Kopfmenü verschieben
 - Vorteil und Nachteil für alle Rettungswürfe dauerhaft sichtbar halten
@@ -452,7 +452,7 @@ Die dauerhaft sichtbare Bildschirmaufteilung vor Reaktions-Reset, legendären Ak
 
 ## Etappe 7 – Reaktions-Reset
 
-**Status:** `[ ]`
+**Status:** `[~]` – normaler Reset zu Beginn des Gegnerzugs in Version 0.8.10 umgesetzt; Sonderregeln und Recharge-Würfe folgen
 
 ### Ziel
 
@@ -466,6 +466,7 @@ Verwendete Reaktionen entsprechend ihrer tatsächlichen Regel automatisch zurüc
 - manuell überschriebene Zustände nachvollziehbar behandeln
 - Reset im Dashboard sichtbar machen
 - doppelten Reset verhindern
+- Recharge-Ressourcen zu Zugbeginn regelgerecht würfeln und nur bei Erfolg wiederherstellen; bis dahin leere Recharge-Fähigkeiten mit Fehlermeldung sperren
 
 ### Foundry-Test
 

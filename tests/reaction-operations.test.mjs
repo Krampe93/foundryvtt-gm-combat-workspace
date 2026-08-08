@@ -9,6 +9,7 @@ import {
   isPlayerFacingTurn,
   mergeReactionStates,
   reactionExecutionPlan,
+  reactionResourceState,
   stripFoundryMarkup
 } from "../scripts/services/reaction-operations.js";
 
@@ -131,6 +132,20 @@ test("reaction execution ignores saves and selects reduction plus damage", () =>
   const plan = reactionExecutionPlan(deflect, save);
   assert.equal(plan.reductionFormula, "1d10+6");
   assert.deepEqual(plan.damageActivities.map(({ id }) => id), ["damage"]);
+});
+
+test("blocks depleted recharge reactions without treating ordinary reactions as resources", () => {
+  assert.deepEqual(reactionResourceState({ uses: { value: 0, spent: 1, recovery: [{ period: "recharge", formula: "5-6" }] } }), {
+    recharge: true,
+    available: false,
+    remaining: 0
+  });
+  assert.equal(reactionResourceState({ uses: { value: 1, recovery: [{ type: "recharge" }] } }).available, true);
+  assert.deepEqual(reactionResourceState({ uses: { value: 0, recovery: [] } }), {
+    recharge: false,
+    available: true,
+    remaining: null
+  });
 });
 
 test("recognizes start-of-turn area reminders", () => {

@@ -62,11 +62,24 @@ test("renders compact reaction actions and removes redundant dashboard metadata"
   const source = readFileSync(new URL("../scripts/services/workspace-bridge.js", import.meta.url), "utf8");
 
   assert.match(source, /class="gm-workspace-reaction-action"/);
-  assert.match(source, /data-tooltip="\$\{opportunityTooltip\}"[^>]*>Gelegenheitsangriff<\/button>/);
+  assert.match(source, /data-tooltip="\$\{opportunityTooltip\}" title="\$\{opportunityTooltip\}"[^>]*>Gelegenheitsangriff<\/button>/);
   assert.match(source, /gm-workspace-hidden-badge/);
   assert.doesNotMatch(source, /data-field="reaction-turn"/);
   assert.doesNotMatch(source, /class="gm-workspace-enemy-meta"/);
   assert.doesNotMatch(source, /const hiddenText/);
+});
+
+test("keeps reactions in a fixed raster and defers aura reminders", () => {
+  const source = readFileSync(new URL("../scripts/services/workspace-bridge.js", import.meta.url), "utf8");
+  const css = readFileSync(new URL("../styles/gm-combat-workspace.css", import.meta.url), "utf8");
+
+  assert.match(source, /> Reaktionen<\/h2>/);
+  assert.doesNotMatch(source, /data-role="turn-warnings"/);
+  assert.doesNotMatch(source, /actorTurnStartEffects/);
+  assert.match(source, /#restoreReactionAtTurnStart\(event\)/);
+  assert.match(source, /reactionResourceState\(activity\)/);
+  assert.match(css, /grid-auto-rows:\s*minmax\(42px, auto\)/);
+  assert.match(css, /align-content:\s*start/);
 });
 
 test("routes reactions to damage and exposes Multiattack damage controls", () => {
