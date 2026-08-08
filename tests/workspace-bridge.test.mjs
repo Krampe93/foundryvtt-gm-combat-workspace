@@ -68,3 +68,15 @@ test("renders compact reaction actions and removes redundant dashboard metadata"
   assert.doesNotMatch(source, /class="gm-workspace-enemy-meta"/);
   assert.doesNotMatch(source, /const hiddenText/);
 });
+
+test("routes reactions to damage and exposes Multiattack damage controls", () => {
+  const source = readFileSync(new URL("../scripts/services/workspace-bridge.js", import.meta.url), "utf8");
+
+  assert.match(source, /#executeReactionDamage/);
+  assert.match(source, /reactionExecutionPlan\(item, activity\)/);
+  assert.match(source, /data-action="execute-opportunity-plan"/);
+  assert.match(source, /data-opportunity-slot/);
+  assert.match(source, /data-action="roll-pending-damage"/);
+  assert.match(source, /damageActivity\.rollDamage\(\{\}, \{ configure: false \}\)/);
+  assert.doesNotMatch(source, /activity\.use\(\{\}, \{ configure: false \}\)/);
+});

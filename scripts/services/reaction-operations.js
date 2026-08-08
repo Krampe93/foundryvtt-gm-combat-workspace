@@ -120,13 +120,48 @@ function activityActivationType(activity) {
 }
 
 function activityCondition(activity, item) {
-  return shortenReactionText(
+  return stripFoundryMarkup(
     activity?.activation?.condition ??
     activity?.system?.activation?.condition ??
     item?.system?.activation?.condition ??
-    "",
-    180
+    ""
   );
+}
+
+function activityType(activity) {
+  return String(activity?.type ?? activity?.system?.type ?? "").toLowerCase();
+}
+
+function activityDamageParts(activity) {
+  return collectionValues(activity?.damage?.parts ?? activity?.system?.damage?.parts);
+}
+
+function hasRollableDamage(activity) {
+  return typeof activity?.rollDamage === "function" && (
+    activityType(activity) === "damage" || activityDamageParts(activity).length > 0
+  );
+}
+
+function reductionFormula(description) {
+  const text = stripFoundryMarkup(description);
+  const patterns = [
+    /reduces?\s+(?:the\s+)?damage[\s\S]{0,180}?\bby\s+\d+\s*\((\d+d\d+(?:\s*[+\-]\s*\d+)?)\)/i,
+    /verringert[\s\S]{0,180}?schaden[\s\S]{0,80}?\bum\s+\d+\s*\((\d+d\d+(?:\s*[+\-]\s*\d+)?)\)/i,
+    /reduces?\s+(?:the\s+)?damage[\s\S]{0,180}?\bby\s+(\d+d\d+(?:\s*[+\-]\s*\d+)?)/i,
+    /verringert[\s\S]{0,180}?schaden[\s\S]{0,80}?\bum\s+(\d+d\d+(?:\s*[+\-]\s*\d+)?)/i
+  ];
+  return patterns.map((pattern) => text.match(pattern)?.[1]?.replace(/\s+/g, "") ?? null).find(Boolean) ?? null;
+}
+
+export function reactionExecutionPlan(item, reactionActivity = null) {
+  const activities = collectionValues(item?.system?.activities);
+  const damageActivities = activities.filter(hasRollableDamage);
+  return {
+    reactionActivity,
+    damageActivities,
+    reductionFormula: reductionFormula(itemDescription(item)),
+    executable: damageActivities.length > 0 || Boolean(reductionFormula(itemDescription(item)))
+  };
 }
 
 export function actorReactions(actor) {
@@ -138,17 +173,15 @@ export function actorReactions(actor) {
 
     for (const activity of reactionActivities) {
       const activityName = String(activity?.name ?? "").trim();
-      const normalized = activityName.toLowerCase();
-      const genericName = ["", "use", "verwenden", "activate", "aktivieren"].includes(normalized);
-      const duplicateName = normalized === String(item?.name ?? "").trim().toLowerCase();
+      const execution = reactionExecutionPlan(item, activity);
       reactions.push({
         id: `${item?.id ?? "item"}:${activity?.id ?? "activity"}`,
         itemId: item?.id ?? null,
         activityId: activity?.id ?? null,
-        name: genericName || duplicateName ? item?.name : `${item?.name}: ${activityName}`,
+        name: item?.name ?? activityName ?? "Unbenannte Reaktion",
         condition: activityCondition(activity, item),
-        description: shortenReactionText(itemDescription(item)) || "Keine Beschreibung hinterlegt.",
-        executable: typeof activity?.use === "function",
+        description: stripFoundryMarkup(itemDescription(item)) || "Keine Beschreibung hinterlegt.",
+        executable: execution.executable,
         activityType: activity?.type ?? activity?.system?.type ?? null
       });
     }
@@ -159,8 +192,8 @@ export function actorReactions(actor) {
         itemId: item?.id ?? null,
         activityId: null,
         name: item?.name ?? "Unbenannte Reaktion",
-        condition: shortenReactionText(item?.system?.activation?.condition ?? "", 180),
-        description: shortenReactionText(itemDescription(item)) || "Keine Beschreibung hinterlegt.",
+        condition: stripFoundryMarkup(item?.system?.activation?.condition ?? ""),
+        description: stripFoundryMarkup(itemDescription(item)) || "Keine Beschreibung hinterlegt.",
         executable: false,
         activityType: null
       });
@@ -190,18 +223,114 @@ export function actorMeleeAttacks(actor) {
       const rangeType = attackRangeType(activity, item);
       if (!(rangeType === "melee" || rangeType === "mwak" || rangeType === "msak" || rangeType.startsWith("melee"))) continue;
 
+      const rawActivityName = String(activity?.name ?? "").trim();
+      const genericActivityName = ["", "attack", "angriff", String(item?.name ?? "").toLowerCase()]
+        .includes(rawActivityName.toLowerCase());
       attacks.push({
         id: `${item?.id ?? "item"}:${activity?.id ?? "activity"}`,
         itemId: item?.id ?? null,
         activityId: activity?.id ?? null,
-        name: activity?.name && activity.name !== item?.name
-          ? `${item?.name}: ${activity.name}`
-          : item?.name ?? activity?.name ?? "Nahkampfangriff"
+        name: genericActivityName
+          ? item?.name ?? activity?.name ?? "Nahkampfangriff"
+          : `${item?.name}: ${activity.name}`,
+        itemName: item?.name ?? activity?.name ?? "Nahkampfangriff"
       });
     }
   }
 
   return attacks.sort((a, b) => String(a.name).localeCompare(String(b.name), "de"));
+}
+
+const NUMBER_WORDS = Object.freeze({
+  one: 1, two: 2, three: 3, four: 4, five: 5, six: 6,
+  eins: 1, zwei: 2, drei: 3, vier: 4, fuenf: 5, fünf: 5, sechs: 6
+});
+
+function parsedCount(value) {
+  const normalized = String(value ?? "").toLowerCase();
+  if (NUMBER_WORDS[normalized]) return NUMBER_WORDS[normalized];
+  const numeric = Number.parseInt(normalized, 10);
+  return Number.isFinite(numeric) ? numeric : 0;
+}
+
+function escapedPattern(value) {
+  return String(value ?? "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function namedAttackCount(description, attackName) {
+  const name = escapedPattern(attackName).replace(/\s+/g, "\\s+");
+  const count = "(one|two|three|four|five|six|eins|zwei|drei|vier|fuenf|fünf|sechs|\\d+)";
+  const patterns = [
+    new RegExp(`\\b${count}\\s+(?:attacks?\\s+)?(?:with\\s+(?:its|the)\\s+)?${name}s?(?:\\s+attacks?)?`, "i"),
+    new RegExp(`\\b${count}\\s+${name}s?\\s+angriffe?`, "i")
+  ];
+  for (const pattern of patterns) {
+    const match = description.match(pattern);
+    if (match) return { count: parsedCount(match[1]), index: match.index ?? 0 };
+  }
+  return null;
+}
+
+function totalMultiattackCount(description) {
+  const count = "(one|two|three|four|five|six|eins|zwei|drei|vier|fuenf|fünf|sechs|\\d+)";
+  return parsedCount(
+    description.match(new RegExp(`\\bmakes?\\s+${count}\\s+(?:[^.]{0,35}\\s+)?attacks?\\b`, "i"))?.[1] ??
+    description.match(new RegExp(`\\bführt\\s+${count}\\s+angriffe?\\b`, "i"))?.[1]
+  );
+}
+
+function attackMentioned(description, attack) {
+  return new RegExp(`\\b${escapedPattern(attack.itemName)}s?\\b`, "i").test(description);
+}
+
+export function actorOpportunityPlan(actor) {
+  const attacks = actorMeleeAttacks(actor);
+  if (!attacks.length) return { mode: "none", sequence: [], slots: 0, options: [], multiattack: false };
+
+  const multiattack = collectionValues(actor?.items).find((item) => {
+    const identifier = String(item?.identifier ?? item?.system?.identifier ?? "").toLowerCase();
+    const name = String(item?.name ?? "").toLowerCase();
+    return identifier === "multiattack" || name === "multiattack" || name === "mehrfachangriff";
+  }) ?? null;
+
+  if (!multiattack) {
+    return attacks.length === 1
+      ? { mode: "sequence", sequence: [attacks[0]], slots: 1, options: attacks, multiattack: false }
+      : { mode: "choose", sequence: [], slots: 1, options: attacks, multiattack: false };
+  }
+
+  const description = stripFoundryMarkup(itemDescription(multiattack));
+  const explicit = attacks.map((attack) => ({ attack, match: namedAttackCount(description, attack.itemName) }))
+    .filter(({ match }) => match?.count > 0)
+    .sort((left, right) => left.match.index - right.match.index);
+  if (explicit.length) {
+    return {
+      mode: "sequence",
+      sequence: explicit.flatMap(({ attack, match }) => Array.from({ length: match.count }, () => attack)),
+      slots: explicit.reduce((total, { match }) => total + match.count, 0),
+      options: attacks,
+      multiattack: true
+    };
+  }
+
+  const total = totalMultiattackCount(description);
+  const mentioned = attacks.filter((attack) => attackMentioned(description, attack));
+  if (total > 0 && mentioned.length === 1) {
+    return {
+      mode: "sequence",
+      sequence: Array.from({ length: total }, () => mentioned[0]),
+      slots: total,
+      options: mentioned,
+      multiattack: true
+    };
+  }
+  if (total > 0 && mentioned.length > 1) {
+    return { mode: "choose", sequence: [], slots: total, options: mentioned, multiattack: true };
+  }
+
+  return attacks.length === 1
+    ? { mode: "sequence", sequence: [attacks[0]], slots: 1, options: attacks, multiattack: true }
+    : { mode: "choose", sequence: [], slots: 1, options: attacks, multiattack: true };
 }
 
 function turnTiming(text) {

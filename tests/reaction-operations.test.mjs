@@ -3,10 +3,12 @@ import test from "node:test";
 
 import {
   actorMeleeAttacks,
+  actorOpportunityPlan,
   actorReactions,
   actorTurnStartEffects,
   isPlayerFacingTurn,
   mergeReactionStates,
+  reactionExecutionPlan,
   stripFoundryMarkup
 } from "../scripts/services/reaction-operations.js";
 
@@ -51,6 +53,84 @@ test("finds melee attacks but excludes ranged attacks", () => {
   };
 
   assert.deepEqual(actorMeleeAttacks(actor).map(({ itemId }) => itemId), ["club"]);
+});
+
+test("builds three Rend attacks from an explicit Multiattack description", () => {
+  const rend = activity("rend-attack", "attack", "action", "melee");
+  const actor = {
+    items: [
+      item("multiattack", "Multiattack", [], "The dragon makes three Rend attacks."),
+      item("rend", "Rend", [rend])
+    ]
+  };
+
+  const plan = actorOpportunityPlan(actor);
+  assert.equal(plan.mode, "sequence");
+  assert.equal(plan.sequence.length, 3);
+  assert.deepEqual(plan.sequence.map(({ itemName }) => itemName), ["Rend", "Rend", "Rend"]);
+});
+
+test("excludes ranged Multiattack options and repeats the remaining melee attack", () => {
+  const actor = {
+    items: [
+      item("multiattack", "Multiattack", [], "The giant makes two attacks, using Stone Club or Boulder in any combination."),
+      item("club", "Stone Club", [activity("club-attack", "attack", "action", "melee")]),
+      item("boulder", "Boulder", [activity("boulder-attack", "attack", "action", "ranged")])
+    ]
+  };
+
+  const plan = actorOpportunityPlan(actor);
+  assert.equal(plan.mode, "sequence");
+  assert.deepEqual(plan.sequence.map(({ itemName }) => itemName), ["Stone Club", "Stone Club"]);
+});
+
+test("requires a slot choice for an ambiguous melee Multiattack", () => {
+  const actor = {
+    items: [
+      item("multiattack", "Multiattack", [], "The monster makes two attacks using Bite or Claw in any combination."),
+      item("bite", "Bite", [activity("bite-attack", "attack", "action", "melee")]),
+      item("claw", "Claw", [activity("claw-attack", "attack", "action", "melee")])
+    ]
+  };
+
+  const plan = actorOpportunityPlan(actor);
+  assert.equal(plan.mode, "choose");
+  assert.equal(plan.slots, 2);
+  assert.deepEqual(plan.options.map(({ itemName }) => itemName), ["Bite", "Claw"]);
+});
+
+test("keeps the written order and counts of distinct melee attacks", () => {
+  const actor = {
+    items: [
+      item("multiattack", "Multiattack", [], "The monster makes one Bite and two Claw attacks."),
+      item("bite", "Bite", [activity("bite-attack", "attack", "action", "melee")]),
+      item("claw", "Claw", [activity("claw-attack", "attack", "action", "melee")])
+    ]
+  };
+
+  assert.deepEqual(
+    actorOpportunityPlan(actor).sequence.map(({ itemName }) => itemName),
+    ["Bite", "Claw", "Claw"]
+  );
+});
+
+test("reaction execution ignores saves and selects reduction plus damage", () => {
+  const save = activity("save", "save", "reaction");
+  const damage = {
+    ...activity("damage", "damage", "", null),
+    damage: { parts: [{ formula: "1d10 + 6" }] },
+    rollDamage() {}
+  };
+  const deflect = item(
+    "deflect",
+    "Deflect Missile",
+    [save, damage],
+    "The giant reduces the damage it takes from the attack by 11 (1d10 + 6). Failure: 11 (1d10 + 6 Force) damage."
+  );
+
+  const plan = reactionExecutionPlan(deflect, save);
+  assert.equal(plan.reductionFormula, "1d10+6");
+  assert.deepEqual(plan.damageActivities.map(({ id }) => id), ["damage"]);
 });
 
 test("recognizes start-of-turn area reminders", () => {

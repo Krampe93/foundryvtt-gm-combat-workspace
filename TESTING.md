@@ -1,5 +1,18 @@
 # Manual test checklist
 
+## Reaktionen, Schaden und Multiattack – Version 0.8.9
+
+- [ ] Workspace mit mindestens einem Stone Giant und einem Adult Red Dragon öffnen.
+- [ ] Prüfen, dass die vollständigen Kreaturennamen sichtbar sind und `Deflect Missile` nicht mehr `: Save` enthält.
+- [ ] Den Mauszeiger über `Deflect Missile` halten: Der vollständige Text einschließlich Rettungswurf muss ohne Auslassungspunkte lesbar sein.
+- [ ] `Deflect Missile` anklicken: Es darf kein Save ausgelöst werden. Stattdessen müssen Schadensverringerung und Schaden jeweils genau einmal gewürfelt werden.
+- [ ] Beim Adult Red Dragon `Gelegenheitsangriff` anklicken: Es müssen genau drei Rend-Angriffswürfe nacheinander entstehen.
+- [ ] Im Workspace müssen anschließend `Rend 1 – Schaden`, `Rend 2 – Schaden` und `Rend 3 – Schaden` erscheinen.
+- [ ] Jeden Schadensbutton einzeln anklicken: Jeder Button muss genau einen Schadenswurf erzeugen und danach verschwinden.
+- [ ] Eine Multiattack mit Nah- und Fernkampfangriff prüfen: Der Fernkampfangriff darf nicht in der ausgeführten Sequenz erscheinen.
+- [ ] Eine Multiattack mit mehreren frei kombinierbaren Nahkampfangriffen prüfen: Für jeden Angriffsplatz muss eine eigene Auswahl erscheinen.
+- [ ] Zug wechseln und Encounter beenden: Noch ausstehende Schadensbuttons müssen entfernt werden; die Konsole darf keine Modulfehler enthalten.
+
 ## Compact reaction and dashboard design – Version 0.8.8
 
 - [ ] Im linken Kopf steht exakt **Version 0.8.8**.

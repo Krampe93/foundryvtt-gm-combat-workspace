@@ -18,7 +18,7 @@ https://raw.githubusercontent.com/Krampe93/foundryvtt-gm-combat-workspace/main/m
 
 This manifest URL is permanent. Foundry can use it to discover and install future test versions through the normal update function.
 
-Version `0.8.8` removes redundant combat metadata and turns every reaction into a compact, directly usable button with its explanation available on hover. Opportunity attacks are always shown alongside native reactions, so creatures such as the Stone Giant expose both choices. Hidden enemies use a single eye icon, the current combatant and round are easier to read, and saving-throw labels fill their buttons more clearly. No third-party module is required; existing `reaction-tracker` combat flags are read when present.
+Version `0.8.9` keeps full creature names visible and executes reaction damage without triggering save activities. Opportunity attacks understand explicit Multiattack sequences, exclude ranged attacks, offer slot-by-slot choices for ambiguous combinations, and expose one pending damage button for every completed attack roll. No third-party module is required; existing `reaction-tracker` combat flags are read when present.
 
 ## Development
 
@@ -101,4 +101,4 @@ When a player turn begins, the workspace prioritizes enemy reactions and legenda
 
 ## Development status
 
-Version `0.8.8` contains the two-window workspace, supplemented native statblock, a ten-row compact enemy dashboard with permanently visible saving-throw modes, direct compact reaction buttons with hover descriptions, and a reserved 16:9 minimap area. Automatic reaction reset is the next planned stage.
+Version `0.8.9` contains the two-window workspace, supplemented native statblock, a ten-row compact enemy dashboard with permanently visible saving-throw modes, damage-focused reaction controls, Multiattack-aware opportunity attacks, and a reserved 16:9 minimap area. Automatic reaction reset is the next planned stage.

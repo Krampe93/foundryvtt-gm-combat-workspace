@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.8.9 – 2026-08-08
+
+- Reaktionszeilen neu verteilt: vollständige Kreaturennamen erhalten Vorrang, Statusfelder und Aktionsbuttons benötigen weniger Breite.
+- Reaktionsnamen auf den eigentlichen Itemnamen reduziert; Aktivitätszusätze wie `: Save` werden nicht mehr als Buttonbeschriftung angezeigt.
+- Ungekürzte, umbrochene Tooltips ergänzt, damit Auslöser, Rettungswurf und vollständige Beschreibung lesbar bleiben.
+- Direkte Reaktionsausführung von Save- und Check-Aktivitäten getrennt und stattdessen auf Schadensverringerung sowie vorhandene Schadensaktivitäten geroutet.
+- `Deflect Missile` würfelt seine erkannte Verringerungsformel und anschließend den zugehörigen Schaden, ohne einen Rettungswurf des Gegners zu starten.
+- Multiattack-Beschreibungen für Gelegenheitsangriffe ausgewertet; ausdrücklich genannte Nahkampfangriffe werden in Anzahl und Reihenfolge übernommen, Fernkampfangriffe werden ausgeschlossen.
+- Bei mehrdeutigen Multiattacks eine Auswahl für jeden einzelnen Angriffsplatz ergänzt.
+- Nach Gelegenheitsangriffen separate Schadensbuttons pro erfolgreichem Angriff bereitgestellt; sie bleiben trotz verbrauchter Reaktion anklickbar und verschwinden nach der Verwendung.
+- Ausstehende Schadensbuttons werden bei Zugwechsel, Encounterende oder manueller Reaktionsrücksetzung entfernt.
+
 ## 0.8.8 – 2026-08-08
 
 - Redundante Angaben `sichtbar`, `versteckt`, `auf Szene` und `nicht auf aktueller Szene` aus Gegner- und Reaktionszeilen entfernt.

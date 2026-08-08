@@ -6,9 +6,12 @@ import {
   LEGACY_REACTION_MODULE_ID,
   REACTION_FLAG_KEY,
   actorMeleeAttacks,
+  actorOpportunityPlan,
   actorReactions,
   actorTurnStartEffects,
-  isPlayerFacingTurn
+  collectionValues,
+  isPlayerFacingTurn,
+  reactionExecutionPlan
 } from "./reaction-operations.js";
 import {
   executeStatblockActivity,
@@ -147,6 +150,7 @@ export class WorkspaceBridge {
   #bulkSelection = new Set();
   #openReactionChoices = new Set();
   #reactionBusy = new Set();
+  #pendingReactionDamage = new Map();
 
   constructor({ eventBus, getSnapshot, logger = createLogger("WorkspaceBridge") }) {
     this.#eventBus = eventBus;
@@ -962,6 +966,8 @@ export class WorkspaceBridge {
       actor,
       reactions: actorReactions(actor),
       meleeAttacks: actorMeleeAttacks(actor),
+      opportunityPlan: actorOpportunityPlan(actor),
+      pendingDamage: this.#pendingReactionDamage.get(entry.id) ?? [],
       used: Boolean(state.used)
     };
   }
@@ -1020,31 +1026,41 @@ export class WorkspaceBridge {
           [reaction.condition, reaction.description].filter(Boolean).join(" — ") || "Keine Beschreibung hinterlegt."
         ).replaceAll('"', "&quot;");
         return reaction.executable
-          ? `<button type="button" class="gm-workspace-reaction-action" data-action="execute-reaction" data-item-id="${reaction.itemId}" data-activity-id="${reaction.activityId}" data-tooltip="${tooltip}" title="${tooltip}" ${entry.used ? "disabled" : ""}>${foundry.utils.escapeHTML(reaction.name)}</button>`
-          : `<button type="button" class="gm-workspace-reaction-action" data-action="show-reaction-actor" data-tooltip="${tooltip}" title="${tooltip}">${foundry.utils.escapeHTML(reaction.name)}</button>`;
+          ? `<button type="button" class="gm-workspace-reaction-action" data-action="execute-reaction" data-item-id="${reaction.itemId}" data-activity-id="${reaction.activityId}" data-tooltip="${tooltip}" data-tooltip-class="gm-workspace-reaction-tooltip" ${entry.used ? "disabled" : ""}>${foundry.utils.escapeHTML(reaction.name)}</button>`
+          : `<button type="button" class="gm-workspace-reaction-action" data-action="show-reaction-actor" data-tooltip="${tooltip}" data-tooltip-class="gm-workspace-reaction-tooltip">${foundry.utils.escapeHTML(reaction.name)}</button>`;
       }).join("");
 
       const choiceOpen = this.#openReactionChoices.has(entry.id);
       let opportunityTooltip = "";
       let opportunityAction = "";
-      if (entry.meleeAttacks.length === 1) {
-        const attack = entry.meleeAttacks[0];
-        opportunityTooltip = foundry.utils.escapeHTML(`${attack.name} als Gelegenheitsangriff ausführen.`).replaceAll('"', "&quot;");
-        opportunityAction = `<button type="button" class="gm-workspace-reaction-action" data-action="execute-opportunity" data-item-id="${attack.itemId}" data-activity-id="${attack.activityId}" data-tooltip="${opportunityTooltip}" title="${opportunityTooltip}" ${entry.used ? "disabled" : ""}>Gelegenheitsangriff</button>`;
-      } else if (entry.meleeAttacks.length > 1) {
-        opportunityTooltip = `${entry.meleeAttacks.length} mögliche Nahkampfangriffe – klicken, um einen auszuwählen.`;
-        opportunityAction = `<button type="button" class="gm-workspace-reaction-action" data-action="toggle-opportunity-choices" aria-expanded="${choiceOpen}" data-tooltip="${opportunityTooltip}" title="${opportunityTooltip}" ${entry.used ? "disabled" : ""}>Gelegenheitsangriff</button>`;
+      if (entry.opportunityPlan.mode === "sequence") {
+        const sequence = entry.opportunityPlan.sequence.map(({ name }) => name).join(", ");
+        opportunityTooltip = foundry.utils.escapeHTML(`${sequence} als Gelegenheitsangriff ausführen.`).replaceAll('"', "&quot;");
+        opportunityAction = `<button type="button" class="gm-workspace-reaction-action" data-action="execute-opportunity-plan" data-tooltip="${opportunityTooltip}" data-tooltip-class="gm-workspace-reaction-tooltip" ${entry.used ? "disabled" : ""}>Gelegenheitsangriff</button>`;
+      } else if (entry.opportunityPlan.mode === "choose") {
+        opportunityTooltip = `${entry.opportunityPlan.slots} Angriff${entry.opportunityPlan.slots === 1 ? "" : "e"} auswählen.`;
+        opportunityAction = `<button type="button" class="gm-workspace-reaction-action" data-action="toggle-opportunity-choices" aria-expanded="${choiceOpen}" data-tooltip="${opportunityTooltip}" data-tooltip-class="gm-workspace-reaction-tooltip" ${entry.used ? "disabled" : ""}>Gelegenheitsangriff</button>`;
       }
+      if (entry.pendingDamage.length) opportunityAction = "";
 
-      const attackChoices = choiceOpen && entry.meleeAttacks.length > 1 ? `
+      const attackChoices = choiceOpen && entry.opportunityPlan.mode === "choose" ? `
         <div class="gm-workspace-opportunity-choices">
-          ${entry.meleeAttacks.map((attack) => `
-            <button type="button" data-action="execute-opportunity" data-item-id="${attack.itemId}" data-activity-id="${attack.activityId}">
-              ${foundry.utils.escapeHTML(attack.name)}
-            </button>
+          ${Array.from({ length: entry.opportunityPlan.slots }, (_, index) => `
+            <label>Angriff ${index + 1}
+              <select data-opportunity-slot="${index}">
+                ${entry.opportunityPlan.options.map((attack) => `<option value="${attack.itemId}:${attack.activityId}">${foundry.utils.escapeHTML(attack.name)}</option>`).join("")}
+              </select>
+            </label>
           `).join("")}
+          <button type="button" data-action="execute-opportunity-plan">Auswahl ausführen</button>
         </div>
       ` : "";
+
+      const pendingDamage = entry.pendingDamage.map((pending) => `
+        <button type="button" class="gm-workspace-reaction-action gm-workspace-pending-damage" data-action="roll-pending-damage" data-pending-id="${pending.id}">
+          ${foundry.utils.escapeHTML(pending.label)} – Schaden
+        </button>
+      `).join("");
 
       return `
         <article class="gm-workspace-reaction-enemy${entry.used ? " is-used" : ""}${this.#reactionBusy.has(entry.id) ? " is-busy" : ""}"
@@ -1060,6 +1076,7 @@ export class WorkspaceBridge {
           <div class="gm-workspace-reaction-abilities">
             ${nativeReactions}
             ${opportunityAction}
+            ${pendingDamage}
             ${attackChoices}
           </div>
         </article>
@@ -1187,6 +1204,7 @@ export class WorkspaceBridge {
 
     if (button.dataset.action === "toggle-reaction-status") {
       const used = Boolean(this.#getSnapshot?.()?.reactionStates?.[entry.id]?.used);
+      if (used) this.#pendingReactionDamage.delete(entry.id);
       this.#setReactionUsed(entry.id, !used, "manual").catch((error) => {
         this.#logger.error("Reaction status update failed", error);
         ui.notifications?.error(`Reaktionsstatus konnte nicht geändert werden: ${error.message}`);
@@ -1194,15 +1212,31 @@ export class WorkspaceBridge {
       return;
     }
 
-    if (["execute-reaction", "execute-opportunity"].includes(button.dataset.action)) {
-      this.#executeReactionActivity(entry, button, button.dataset.action === "execute-opportunity").catch((error) => {
+    if (button.dataset.action === "execute-reaction") {
+      this.#executeReactionDamage(entry, button).catch((error) => {
         this.#logger.error("Reaction execution failed", error);
         ui.notifications?.error(`Reaktion konnte nicht ausgeführt werden: ${error.message}`);
+      });
+      return;
+    }
+
+    if (button.dataset.action === "execute-opportunity-plan") {
+      this.#executeOpportunityPlan(entry, row).catch((error) => {
+        this.#logger.error("Opportunity attack failed", error);
+        ui.notifications?.error(`Gelegenheitsangriff konnte nicht ausgeführt werden: ${error.message}`);
+      });
+      return;
+    }
+
+    if (button.dataset.action === "roll-pending-damage") {
+      this.#rollPendingReactionDamage(entry, button.dataset.pendingId).catch((error) => {
+        this.#logger.error("Opportunity damage failed", error);
+        ui.notifications?.error(`Schaden konnte nicht ausgewürfelt werden: ${error.message}`);
       });
     }
   }
 
-  async #executeReactionActivity(entry, button, forceAttack = false) {
+  async #executeReactionDamage(entry, button) {
     if (this.#reactionBusy.has(entry.id)) return;
     const actor = this.#actorForEntry(entry);
     const item = actor?.items?.get?.(button.dataset.itemId) ?? null;
@@ -1210,25 +1244,114 @@ export class WorkspaceBridge {
       Array.from(item?.system?.activities?.values?.() ?? []).find(({ id }) => id === button.dataset.activityId) ?? null;
     if (!actor || !item || !activity) throw new Error("Die zugehörige D&D5e-Aktivität wurde nicht gefunden.");
 
+    const plan = reactionExecutionPlan(item, activity);
+    if (!plan.executable) {
+      this.#selectEnemyEntry(entry);
+      throw new Error("Für diese Reaktion wurde kein Schaden und keine Verringerungsformel gefunden. Der Statblock wurde geöffnet.");
+    }
+
     this.#reactionBusy.add(entry.id);
     this.#renderReactionOverview();
     this.#releaseStaleModifiers();
 
     try {
-      const activityType = String(activity.type ?? activity.system?.type ?? "").toLowerCase();
-      let result;
-      if ((forceAttack || activityType === "attack") && typeof activity.rollAttack === "function") {
-        result = await activity.rollAttack({}, { configure: false });
-      } else if (typeof activity.use === "function") {
-        result = await activity.use({}, { configure: false });
-      } else {
-        throw new Error("Diese Aktivität kann nicht direkt ausgeführt werden.");
+      let succeeded = false;
+      if (plan.reductionFormula) {
+        const roll = await new Roll(plan.reductionFormula, actor.getRollData?.() ?? {}).evaluate();
+        await roll.toMessage({
+          speaker: ChatMessage.getSpeaker({ actor }),
+          flavor: `${item.name}: Schadensverringerung`
+        });
+        succeeded = true;
       }
 
+      for (const damageActivity of plan.damageActivities) {
+        const result = await damageActivity.rollDamage({}, { configure: false });
+        succeeded ||= Array.isArray(result) ? result.length > 0 : Boolean(result);
+      }
+
+      if (succeeded) {
+        await this.#setReactionUsed(entry.id, true, "reaction-damage");
+        this.#openReactionChoices.delete(entry.id);
+      }
+    } finally {
+      this.#reactionBusy.delete(entry.id);
+      this.#renderReactionOverview();
+    }
+  }
+
+  async #executeOpportunityPlan(entry, row) {
+    if (this.#reactionBusy.has(entry.id)) return;
+    const actor = this.#actorForEntry(entry);
+    if (!actor) throw new Error("Der zugehörige Gegner wurde nicht gefunden.");
+
+    const plan = actorOpportunityPlan(actor);
+    let sequence = plan.sequence;
+    if (plan.mode === "choose") {
+      const selected = Array.from(row.querySelectorAll("[data-opportunity-slot]"), ({ value }) => value);
+      if (selected.length !== plan.slots) throw new Error("Bitte für jeden Angriffsplatz einen Nahkampfangriff auswählen.");
+      sequence = selected.map((value) => {
+        const [itemId, activityId] = value.split(":");
+        return plan.options.find((attack) => attack.itemId === itemId && attack.activityId === activityId) ?? null;
+      }).filter(Boolean);
+    }
+    if (!sequence.length) throw new Error("Es wurde kein geeigneter Nahkampfangriff gefunden.");
+
+    this.#reactionBusy.add(entry.id);
+    this.#renderReactionOverview();
+    this.#releaseStaleModifiers();
+    const pending = [];
+
+    try {
+      for (let index = 0; index < sequence.length; index += 1) {
+        const attack = sequence[index];
+        const item = actor.items?.get?.(attack.itemId) ?? null;
+        const activity = item?.system?.activities?.get?.(attack.activityId) ??
+          collectionValues(item?.system?.activities).find(({ id }) => id === attack.activityId) ?? null;
+        if (!activity || typeof activity.rollAttack !== "function") {
+          throw new Error(`${attack.name} besitzt keinen ausführbaren Angriffswurf.`);
+        }
+        const result = await activity.rollAttack({}, { configure: false });
+        const succeeded = Array.isArray(result) ? result.length > 0 : Boolean(result);
+        if (!succeeded) continue;
+        if (typeof activity.rollDamage === "function") {
+          pending.push({
+            id: `${Date.now()}-${index}-${attack.activityId}`,
+            itemId: attack.itemId,
+            activityId: attack.activityId,
+            label: sequence.length > 1 ? `${attack.itemName ?? attack.name} ${index + 1}` : attack.itemName ?? attack.name
+          });
+        }
+      }
+
+      if (pending.length) this.#pendingReactionDamage.set(entry.id, pending);
+      await this.#setReactionUsed(entry.id, true, "opportunity-attack");
+      this.#openReactionChoices.delete(entry.id);
+    } finally {
+      this.#reactionBusy.delete(entry.id);
+      this.#renderReactionOverview();
+    }
+  }
+
+  async #rollPendingReactionDamage(entry, pendingId) {
+    if (this.#reactionBusy.has(entry.id)) return;
+    const actor = this.#actorForEntry(entry);
+    const pending = this.#pendingReactionDamage.get(entry.id) ?? [];
+    const target = pending.find(({ id }) => id === pendingId) ?? null;
+    const item = actor?.items?.get?.(target?.itemId) ?? null;
+    const activity = item?.system?.activities?.get?.(target?.activityId) ??
+      collectionValues(item?.system?.activities).find(({ id }) => id === target?.activityId) ?? null;
+    if (!activity || typeof activity.rollDamage !== "function") throw new Error("Der zugehörige Schadenswurf wurde nicht gefunden.");
+
+    this.#reactionBusy.add(entry.id);
+    this.#releaseStaleModifiers();
+    try {
+      const result = await activity.rollDamage({}, { configure: false });
       const succeeded = Array.isArray(result) ? result.length > 0 : Boolean(result);
       if (succeeded) {
-        await this.#setReactionUsed(entry.id, true, forceAttack ? "opportunity-attack" : "activity-use");
-        this.#openReactionChoices.delete(entry.id);
+        const remaining = pending.filter(({ id }) => id !== pendingId);
+        if (remaining.length) this.#pendingReactionDamage.set(entry.id, remaining);
+        else this.#pendingReactionDamage.delete(entry.id);
       }
     } finally {
       this.#reactionBusy.delete(entry.id);
@@ -1396,6 +1519,10 @@ export class WorkspaceBridge {
   #handleEncounterTransition(event) {
     const previous = event?.previousSnapshot ?? null;
     const current = event?.snapshot ?? this.#getSnapshot?.();
+    const turnChanged = Boolean(previous?.started && current?.started) && (
+      previous.combatId !== current.combatId || previous.round !== current.round || previous.turn !== current.turn
+    );
+    if (turnChanged) this.#pendingReactionDamage.clear();
     const ended = Boolean(previous?.started) && (!current?.started || previous.combatId !== current?.combatId);
     if (!ended) return;
 
@@ -1405,6 +1532,7 @@ export class WorkspaceBridge {
     this.#remoteEnemyColors = [];
     this.#openReactionChoices.clear();
     this.#reactionBusy.clear();
+    this.#pendingReactionDamage.clear();
 
     if (this.#workspaceMode) {
       this.#pinnedSelection = null;

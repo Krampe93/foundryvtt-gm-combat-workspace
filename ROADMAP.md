@@ -423,7 +423,7 @@ Bei Spielerzügen und zwischen Spieleraktionen schnell erkennen, welche Gegner r
 
 ## Etappe 6.5 – Festes Workspace-Design
 
-**Status:** `[~]` – verdichtete Informationsdarstellung mit Version 0.8.8 im Foundry-Test
+**Status:** `[~]` – verdichtete Informationsdarstellung und Multiattack-Reaktionsablauf mit Version 0.8.9 im Foundry-Test
 
 ### Ziel
 
