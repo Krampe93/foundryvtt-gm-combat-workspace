@@ -18,7 +18,7 @@ https://raw.githubusercontent.com/Krampe93/foundryvtt-gm-combat-workspace/main/m
 
 This manifest URL is permanent. Foundry can use it to discover and install future test versions through the normal update function.
 
-Version `0.8.6` introduces the approved permanent workspace layout: the statblock owns the complete left column, while the right column is split evenly between a compact ten-enemy dashboard and the lower combat workspace. Reactions occupy half of that lower deck; reserved areas for the future roll history and full-scene minimap preserve the final proportions without pretending those features already exist. No third-party module is required; existing `reaction-tracker` combat flags are read when present.
+Version `0.8.7` uses the complete right-hand screen height: the product and statblock headers are merged on the left, while encounter title, active turn, connection state, and tools share one compact dashboard header. The right side is divided 47/53; the lower utility column stacks a small future roll history above a reserved 16:9 full-scene minimap. Normal, advantage, and disadvantage save controls are permanently visible. No third-party module is required; existing `reaction-tracker` combat flags are read when present.
 
 ## Development
 
@@ -101,4 +101,4 @@ When a player turn begins, the workspace prioritizes enemy reactions and legenda
 
 ## Development status
 
-Version `0.8.6` contains the two-window workspace, supplemented native statblock, color-linked compact enemy dashboard, HP and armor controls, saving throws, the first complete reaction overview, and the approved permanent screen structure. Automatic reaction reset is the next planned stage.
+Version `0.8.7` contains the two-window workspace, supplemented native statblock, a ten-row compact enemy dashboard with permanently visible saving-throw modes, the first complete reaction overview, and a reserved 16:9 minimap area. Automatic reaction reset is the next planned stage.

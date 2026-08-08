@@ -316,43 +316,25 @@ export class WorkspaceBridge {
     root.id = "gm-combat-workspace-shell";
     root.className = "gm-combat-workspace";
     root.innerHTML = `
-      <header class="gm-workspace-header">
-        <div>
-          <h1>GM Combat Workspace</h1>
-          <p>Statblock und Gegnerübersicht · Version ${game.modules.get(MODULE_ID)?.version ?? "–"}</p>
-        </div>
-        <div class="gm-workspace-header-actions">
-          <span class="gm-workspace-status">Verbunden</span>
-          <details class="gm-workspace-tools-menu">
-            <summary title="Weitere Werkzeuge" aria-label="Weitere Werkzeuge"><i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i></summary>
-            <div class="gm-workspace-tools-popover">
-              <section>
-                <h2>Roll-Diagnose</h2>
-                <p>Letzter Workspace-Klick und daraus entstandener D&amp;D5e-Angriff.</p>
-                <pre data-role="roll-debug">Noch kein Item im Workspace benutzt.</pre>
-              </section>
-              <section>
-                <h2>Statblock-Diagnose</h2>
-                <p>Render-, Actor-Update-, Close- und Container-Ereignisse.</p>
-                <pre data-role="sheet-debug">Noch kein Statblock-Ereignis aufgezeichnet.</pre>
-              </section>
-            </div>
-          </details>
-        </div>
-      </header>
       <section class="gm-workspace-columns">
         <section class="gm-workspace-statblock-panel" aria-label="Statblock">
-          <header class="gm-workspace-panel-header">
-            <div>
-              <span class="gm-workspace-eyebrow">Statblock</span>
-              <h2 data-field="displayed-name">Kein Gegner ausgewählt</h2>
+          <header class="gm-workspace-left-header">
+            <div class="gm-workspace-brand-row">
+              <h1>GM Combat Workspace</h1>
+              <p>Statblock und Gegnerübersicht · Version ${game.modules.get(MODULE_ID)?.version ?? "–"}</p>
             </div>
-            <div class="gm-workspace-statblock-actions">
-              <span class="gm-workspace-source" data-field="selection-source">Keine Auswahl</span>
-              <button type="button" class="gm-workspace-pin" data-action="toggle-pin" disabled>
-                <i class="fa-solid fa-thumbtack" aria-hidden="true"></i>
-                <span>Anpinnen</span>
-              </button>
+            <div class="gm-workspace-statblock-row">
+              <div>
+                <span class="gm-workspace-eyebrow">Statblock</span>
+                <h2 data-field="displayed-name">Kein Gegner ausgewählt</h2>
+              </div>
+              <div class="gm-workspace-statblock-actions">
+                <span class="gm-workspace-source" data-field="selection-source">Keine Auswahl</span>
+                <button type="button" class="gm-workspace-pin" data-action="toggle-pin" disabled>
+                  <i class="fa-solid fa-thumbtack" aria-hidden="true"></i>
+                  <span>Anpinnen</span>
+                </button>
+              </div>
             </div>
           </header>
           <div class="gm-workspace-sheet-host" data-role="sheet-host">
@@ -369,12 +351,30 @@ export class WorkspaceBridge {
                 <span class="gm-workspace-eyebrow">Encounter · Runde <span data-field="round">–</span></span>
                 <h2>Gegnerübersicht</h2>
               </div>
-              <span class="gm-workspace-enemy-count" data-field="enemy-count">0 Gegner</span>
+              <div class="gm-workspace-current-turn" data-role="current-turn">
+                <span>Aktueller Zug</span>
+                <strong data-field="current-turn-name">Kein laufender Kampf</strong>
+              </div>
+              <div class="gm-workspace-dashboard-actions">
+                <span class="gm-workspace-enemy-count" data-field="enemy-count">0 Gegner</span>
+                <span class="gm-workspace-status">Verbunden</span>
+                <details class="gm-workspace-tools-menu">
+                  <summary title="Weitere Werkzeuge" aria-label="Weitere Werkzeuge"><i class="fa-solid fa-ellipsis-vertical" aria-hidden="true"></i></summary>
+                  <div class="gm-workspace-tools-popover">
+                    <section>
+                      <h2>Roll-Diagnose</h2>
+                      <p>Letzter Workspace-Klick und daraus entstandener D&amp;D5e-Angriff.</p>
+                      <pre data-role="roll-debug">Noch kein Item im Workspace benutzt.</pre>
+                    </section>
+                    <section>
+                      <h2>Statblock-Diagnose</h2>
+                      <p>Render-, Actor-Update-, Close- und Container-Ereignisse.</p>
+                      <pre data-role="sheet-debug">Noch kein Statblock-Ereignis aufgezeichnet.</pre>
+                    </section>
+                  </div>
+                </details>
+              </div>
             </header>
-            <div class="gm-workspace-current-turn" data-role="current-turn">
-              <span>Aktueller Zug</span>
-              <strong data-field="current-turn-name">Kein laufender Kampf</strong>
-            </div>
             <div class="gm-workspace-bulk-tools">
               <strong><span data-field="bulk-count">0</span> ausgewählt</strong>
               <input type="number" min="0" step="1" placeholder="Wert" data-role="bulk-value">
@@ -397,26 +397,28 @@ export class WorkspaceBridge {
               <div class="gm-workspace-turn-warnings" data-role="turn-warnings"></div>
               <div class="gm-workspace-reaction-list" data-role="reaction-list"></div>
             </section>
-            <section class="gm-workspace-reserved gm-workspace-roll-results" aria-label="Würfelergebnisse">
-              <header>
-                <span class="gm-workspace-eyebrow">Protokoll</span>
-                <h2><i class="fa-solid fa-dice-d20" aria-hidden="true"></i> Würfelergebnisse</h2>
-              </header>
-              <div class="gm-workspace-reserved-empty">
-                <i class="fa-solid fa-dice" aria-hidden="true"></i>
-                <span>Für eine spätere Etappe reserviert</span>
-              </div>
-            </section>
-            <section class="gm-workspace-reserved gm-workspace-minimap" aria-label="Minimap">
-              <header>
-                <span class="gm-workspace-eyebrow">Gesamte Szene</span>
-                <h2><i class="fa-solid fa-map" aria-hidden="true"></i> Minimap</h2>
-              </header>
-              <div class="gm-workspace-minimap-placeholder" aria-hidden="true">
-                <span></span><span></span><span></span><span></span>
-              </div>
-              <p>Interaktive Gegnerpunkte folgen in einer späteren Etappe.</p>
-            </section>
+            <div class="gm-workspace-utility-column">
+              <section class="gm-workspace-reserved gm-workspace-roll-results" aria-label="Würfelergebnisse">
+                <header>
+                  <span class="gm-workspace-eyebrow">Protokoll</span>
+                  <h2><i class="fa-solid fa-dice-d20" aria-hidden="true"></i> Würfelergebnisse</h2>
+                </header>
+                <div class="gm-workspace-reserved-empty">
+                  <i class="fa-solid fa-dice" aria-hidden="true"></i>
+                  <span>Für eine spätere Etappe reserviert</span>
+                </div>
+              </section>
+              <section class="gm-workspace-reserved gm-workspace-minimap" aria-label="Minimap">
+                <header>
+                  <span class="gm-workspace-eyebrow">Gesamte Szene</span>
+                  <h2><i class="fa-solid fa-map" aria-hidden="true"></i> Minimap</h2>
+                </header>
+                <div class="gm-workspace-minimap-placeholder" aria-hidden="true">
+                  <span></span><span></span><span></span><span></span>
+                </div>
+                <p>Interaktive Gegnerpunkte folgen in einer späteren Etappe.</p>
+              </section>
+            </div>
           </section>
         </aside>
       </section>

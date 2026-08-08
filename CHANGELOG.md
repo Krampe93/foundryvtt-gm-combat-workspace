@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.8.7 – 2026-08-08
+
+- Globale Kopfzeile aufgelöst und mit dem linken Statblock-Kopf zusammengeführt; die rechte Spalte nutzt wieder die vollständige Bildschirmhöhe.
+- Encounter, aktueller Zug, Gegneranzahl, Verbindungsstatus und Werkzeugmenü in einem einzigen kompakten Dashboard-Kopf angeordnet.
+- Rechte Spalte auf 47 Prozent Gegnerdashboard und 53 Prozent unteren Arbeitsbereich abgestimmt.
+- Zehn Gegnerzeilen mit festem 38-Pixel-Raster und ohne erzwungenen Scrollbalken ausgelegt.
+- Vorteil- und Nachteil-Schaltflächen bei allen sechs Rettungswürfen dauerhaft sichtbar gemacht; der Normalwurf ist so hoch wie V und N zusammen.
+- Unteren Arbeitsbereich in Reaktionen links und eine rechte Utility-Spalte gegliedert.
+- Würfelergebnisse und Minimap in der Utility-Spalte vertikal im Verhältnis 30/70 angeordnet.
+- Minimap-Reserve mit einem stabilen 16:9-Seitenverhältnis versehen.
+- Reaktionszeilen weiter verdichtet, damit zehn normale Gelegenheitsangriffe gleichzeitig sichtbar bleiben.
+
 ## 0.8.6 – 2026-08-08
 
 - Dauerlayout nach der freigegebenen Skizze aufgebaut: vollständige linke Statblock-Spalte und exakt halbierte rechte Spalte.

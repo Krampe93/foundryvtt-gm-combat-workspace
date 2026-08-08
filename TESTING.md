@@ -1,5 +1,23 @@
 # Manual test checklist
 
+## Optimized design checkpoint – Version 0.8.7
+
+- [ ] Im Workspace-Kopf steht exakt **Version 0.8.7**.
+- [ ] Es gibt keine ungenutzte globale Kopfzeile mehr; Modultitel und Version stehen nur über dem linken Statblock.
+- [ ] Die rechte Spalte beginnt am oberen Bildschirmrand und endet am unteren Bildschirmrand.
+- [ ] Encounter, aktueller Zug, Gegneranzahl, **Verbunden** und das Drei-Punkte-Menü stehen in einem gemeinsamen Dashboard-Kopf.
+- [ ] Zehn lebende Gegner passen ohne Scrollbalken gleichzeitig in die obere Liste; erst weitere Gegner lassen die Liste scrollen.
+- [ ] Bei jedem Gegner sind Normalwurf, **V** und **N** für STR, DEX, CON, INT, WIS und CHA dauerhaft sichtbar.
+- [ ] Der normale Rettungswurf ist exakt so hoch wie die beiden übereinanderliegenden V/N-Schaltflächen zusammen.
+- [ ] Normale Rettungswürfe sowie Würfe mit Vorteil und Nachteil funktionieren weiterhin ohne Dialog.
+- [ ] Der untere Bereich zeigt links Reaktionen über die gesamte Höhe.
+- [ ] Rechts stehen Würfelergebnisse oben und die deutlich größere Minimap unten.
+- [ ] Der reservierte Minimap-Ausschnitt besitzt ein sichtbares 16:9-Seitenverhältnis.
+- [ ] Zehn normale Gelegenheitsangriffe passen ohne abgeschnittene letzte Zeile in die Reaktionsliste.
+- [ ] Gegner mit mehreren oder ausführlichen Reaktionen können innerhalb der Reaktionsliste scrollen.
+- [ ] TP-Eingabe, Mehrfachaktionen, Statblock, Anpinnen und Diagnose funktionieren unverändert.
+- [ ] In beiden Fenstern erscheinen keine roten Fehler von `gm-combat-workspace`.
+
 ## Design checkpoint – Version 0.8.6
 
 - [ ] Im Workspace-Kopf steht exakt **Version 0.8.6**.

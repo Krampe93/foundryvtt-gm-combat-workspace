@@ -423,7 +423,7 @@ Bei Spielerzügen und zwischen Spieleraktionen schnell erkennen, welche Gegner r
 
 ## Etappe 6.5 – Festes Workspace-Design
 
-**Status:** `[~]` – Version 0.8.6 im Foundry-Test
+**Status:** `[~]` – korrigierte Aufteilung mit Version 0.8.7 im Foundry-Test
 
 ### Ziel
 
@@ -432,11 +432,12 @@ Die dauerhaft sichtbare Bildschirmaufteilung vor Reaktions-Reset, legendären Ak
 ### Umfang
 
 - vollständige linke Spalte ausschließlich für Statblock und dessen kompakte Kopfsteuerung
-- obere Hälfte der rechten Spalte für bis zu zehn kompakte Gegnerzeilen
-- untere Hälfte der rechten Spalte im Verhältnis 50/25/25 aufteilen
+- obere 47 Prozent der rechten Spalte für bis zu zehn kompakte Gegnerzeilen
+- untere 53 Prozent in Reaktionen links sowie Würfelergebnisse über einer 16:9-Minimap rechts aufteilen
 - Reaktionen, Auren und Zughinweise im größten unteren Bereich funktionsfähig halten
 - Flächen für Würfelergebnisse und Gesamt-Szenen-Minimap reservieren, aber noch nicht funktional belegen
 - Diagnose und seltene Werkzeuge aus der Daueransicht in ein Kopfmenü verschieben
+- Vorteil und Nachteil für alle Rettungswürfe dauerhaft sichtbar halten
 
 ### Abnahme
 
