@@ -6,8 +6,10 @@ import {
   LEGACY_REACTION_MODULE_ID,
   REACTION_FLAG_KEY,
   actorMeleeAttacks,
+  actorLegendaryActions,
   actorOpportunityPlan,
   actorReactions,
+  actorTurnStartEffects,
   collectionValues,
   isPlayerFacingTurn,
   reactionExecutionPlan,
@@ -45,6 +47,21 @@ export function savingThrowConfig(ability, mode = "normal") {
     },
     dialog: { configure: false }
   };
+}
+
+export function turnGuidancePhases(previous, current) {
+  if (!current?.started) return [];
+  if (!previous?.started || previous.combatId !== current.combatId) {
+    return isPlayerFacingTurn(current.activeType) ? [{ timing: "start", snapshot: current }] : [];
+  }
+  const changed = previous.round !== current.round || previous.turn !== current.turn ||
+    previous.activeCombatantId !== current.activeCombatantId;
+  if (!changed) return [];
+
+  const phases = [];
+  if (isPlayerFacingTurn(previous.activeType)) phases.push({ timing: "end", snapshot: previous });
+  if (isPlayerFacingTurn(current.activeType)) phases.push({ timing: "start", snapshot: current });
+  return phases;
 }
 
 function isWorkspaceWindow() {
@@ -152,6 +169,8 @@ export class WorkspaceBridge {
   #openReactionChoices = new Set();
   #reactionBusy = new Set();
   #pendingReactionDamage = new Map();
+  #turnGuidance = null;
+  #combatControlBusy = false;
 
   constructor({ eventBus, getSnapshot, logger = createLogger("WorkspaceBridge") }) {
     this.#eventBus = eventBus;
@@ -336,6 +355,10 @@ export class WorkspaceBridge {
               </div>
               <div class="gm-workspace-statblock-actions">
                 <span class="gm-workspace-source" data-field="selection-source">Keine Auswahl</span>
+                <button type="button" class="gm-workspace-guidance-return" data-action="show-turn-guidance" hidden>
+                  <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                  <span>Hinweise</span>
+                </button>
                 <button type="button" class="gm-workspace-pin" data-action="toggle-pin" disabled>
                   <i class="fa-solid fa-thumbtack" aria-hidden="true"></i>
                   <span>Anpinnen</span>
@@ -349,6 +372,24 @@ export class WorkspaceBridge {
               <strong>Wähle auf dem Laptop einen Gegner aus oder starte dessen Zug.</strong>
             </div>
           </div>
+          <nav class="gm-workspace-combat-controls" data-role="combat-controls" aria-label="Kampfsteuerung">
+            <button type="button" data-combat-action="previous-round" title="Vorherige Runde" aria-label="Vorherige Runde">
+              <i class="fa-solid fa-backward-step" aria-hidden="true"></i>
+            </button>
+            <button type="button" data-combat-action="previous-turn" title="Vorheriger Zug" aria-label="Vorheriger Zug">
+              <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="gm-workspace-end-turn" data-combat-action="end-turn">
+              <i class="fa-solid fa-check" aria-hidden="true"></i>
+              <span>End Turn</span>
+            </button>
+            <button type="button" data-combat-action="next-turn" title="Nächster Zug" aria-label="Nächster Zug">
+              <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+            </button>
+            <button type="button" data-combat-action="next-round" title="Nächste Runde" aria-label="Nächste Runde">
+              <i class="fa-solid fa-forward-step" aria-hidden="true"></i>
+            </button>
+          </nav>
         </section>
         <aside class="gm-workspace-context-panel" aria-label="Kampfübersicht">
           <section class="gm-workspace-enemies">
@@ -427,6 +468,12 @@ export class WorkspaceBridge {
 
     root.querySelector('[data-action="toggle-pin"]')
       .addEventListener("click", () => this.#togglePin());
+    root.querySelector('[data-action="show-turn-guidance"]')
+      .addEventListener("click", () => this.#showStoredTurnGuidance());
+    root.querySelector('[data-role="sheet-host"]')
+      .addEventListener("click", (event) => this.#onTurnGuidanceClick(event));
+    root.querySelector('[data-role="combat-controls"]')
+      .addEventListener("click", (event) => this.#onCombatControl(event));
 
     root.querySelector('[data-role="enemy-list"]')
       .addEventListener("click", (event) => this.#onEnemyClick(event));
@@ -887,6 +934,7 @@ export class WorkspaceBridge {
 
     if (message.type === "tokenSelected" && this.#workspaceMode) {
       this.#selectedToken = message.token ?? null;
+      if (this.#selectedToken?.actorType === "npc" && this.#turnGuidance) this.#turnGuidance.visible = false;
       this.#render();
       return;
     }
@@ -1143,6 +1191,7 @@ export class WorkspaceBridge {
     const actor = this.#actorForEntry(entry);
     if (!actor || actor.type !== "npc") return;
 
+    if (this.#turnGuidance) this.#turnGuidance.visible = false;
     this.#pinnedSelection = null;
     this.#selectedToken = {
       tokenId: entry.tokenId,
@@ -1516,6 +1565,10 @@ export class WorkspaceBridge {
       previous.combatId !== current.combatId || previous.round !== current.round || previous.turn !== current.turn
     );
     if (turnChanged) this.#pendingReactionDamage.clear();
+    const phases = turnGuidancePhases(previous, current);
+    const nextGuidance = phases.length ? this.#buildTurnGuidance(phases) : null;
+    if (phases.length) this.#turnGuidance = nextGuidance;
+    else if (turnChanged) this.#turnGuidance = null;
     const ended = Boolean(previous?.started) && (!current?.started || previous.combatId !== current?.combatId);
     if (!ended) return;
 
@@ -1526,6 +1579,7 @@ export class WorkspaceBridge {
     this.#openReactionChoices.clear();
     this.#reactionBusy.clear();
     this.#pendingReactionDamage.clear();
+    this.#turnGuidance = null;
 
     if (this.#workspaceMode) {
       this.#pinnedSelection = null;
@@ -1535,6 +1589,7 @@ export class WorkspaceBridge {
     } else {
       this.#clearLaptopSelection();
     }
+    this.#turnGuidance = nextGuidance;
   }
 
   #restoreReactionAtTurnStart(event) {
@@ -1699,6 +1754,131 @@ export class WorkspaceBridge {
     this.#render();
   }
 
+  #buildTurnGuidance(phases) {
+    const enemies = this.#enemyEntries();
+    const sections = phases.map(({ timing, snapshot }) => {
+      const active = snapshot?.combatants?.find(({ id }) => id === snapshot.activeCombatantId) ?? null;
+      const reminders = [];
+      const legendary = [];
+
+      for (const enemy of enemies) {
+        const actor = this.#actorForEntry(enemy);
+        if (!actor) continue;
+        for (const effect of actorTurnStartEffects(actor).filter((entry) => entry.timing === timing)) {
+          reminders.push({
+            ...effect,
+            actorId: actor.id,
+            actorName: actor.name,
+            combatantId: enemy.id,
+            color: enemy.color
+          });
+        }
+        if (timing !== "end") continue;
+        for (const action of actorLegendaryActions(actor)) {
+          legendary.push({
+            ...action,
+            actorId: actor.id,
+            actorName: actor.name,
+            combatantId: enemy.id,
+            color: enemy.color
+          });
+        }
+      }
+
+      return {
+        timing,
+        playerName: active?.name ?? "Spieler",
+        reminders,
+        legendary
+      };
+    }).filter(({ reminders, legendary }) => reminders.length || legendary.length);
+
+    if (!sections.length) return null;
+    return {
+      id: `${phases.map(({ timing, snapshot }) => `${timing}:${snapshot.combatId}:${snapshot.round}:${snapshot.turn}`).join("|")}`,
+      sections,
+      count: sections.reduce((total, section) => total + section.reminders.length + section.legendary.length, 0),
+      visible: true
+    };
+  }
+
+  #showStoredTurnGuidance() {
+    if (!this.#turnGuidance) return;
+    this.#turnGuidance.visible = true;
+    this.#render();
+  }
+
+  #hideTurnGuidance() {
+    if (!this.#turnGuidance) return;
+    this.#turnGuidance.visible = false;
+    this.#render();
+  }
+
+  #onTurnGuidanceClick(event) {
+    const button = event.target.closest?.("[data-guidance-action]");
+    if (!button) return;
+    const action = button.dataset.guidanceAction;
+    if (action === "dismiss") {
+      this.#hideTurnGuidance();
+      return;
+    }
+
+    const entry = this.#enemyEntries().find(({ id }) => id === button.dataset.combatantId);
+    if (action === "show-actor" && entry) {
+      this.#selectEnemyEntry(entry);
+      return;
+    }
+    if (action !== "execute-legendary" || !entry) return;
+
+    const actor = this.#actorForEntry(entry);
+    const item = actor?.items?.get?.(button.dataset.itemId) ?? collectionValues(actor?.items)
+      .find(({ id }) => id === button.dataset.itemId) ?? null;
+    const activity = item?.system?.activities?.get?.(button.dataset.activityId) ?? collectionValues(item?.system?.activities)
+      .find(({ id }) => id === button.dataset.activityId) ?? null;
+    const activityAction = statblockActivityAction(activity);
+    if (!activity || !activityAction) {
+      ui.notifications?.warn("Diese legendäre Aktion kann nur über den Statblock ausgeführt werden.");
+      return;
+    }
+    Promise.resolve(executeStatblockActivity(activity, activityAction)).catch((error) => {
+      this.#logger.error("Legendary action failed", error);
+      ui.notifications?.error(`Legendäre Aktion konnte nicht ausgeführt werden: ${error.message}`);
+    });
+  }
+
+  async #onCombatControl(event) {
+    const button = event.target.closest?.("[data-combat-action]");
+    if (!button || this.#combatControlBusy) return;
+    const combat = game.combat;
+    const method = ({
+      "previous-round": "previousRound",
+      "previous-turn": "previousTurn",
+      "end-turn": "nextTurn",
+      "next-turn": "nextTurn",
+      "next-round": "nextRound"
+    })[button.dataset.combatAction];
+    if (!combat?.started || !method || typeof combat[method] !== "function") return;
+
+    this.#combatControlBusy = true;
+    this.#renderCombatControls();
+    try {
+      await combat[method]();
+    } catch (error) {
+      this.#logger.error("Combat navigation failed", error);
+      ui.notifications?.error(`Kampfsteuerung fehlgeschlagen: ${error.message}`);
+    } finally {
+      this.#combatControlBusy = false;
+      this.#renderCombatControls();
+    }
+  }
+
+  #renderCombatControls() {
+    const started = Boolean(this.#getSnapshot?.()?.started);
+    for (const button of this.#root?.querySelectorAll?.("[data-combat-action]") ?? []) {
+      button.disabled = !started || this.#combatControlBusy;
+    }
+  }
+
   #set(field, value, fallback) {
     const element = this.#root?.querySelector?.(`[data-field="${field}"]`);
     if (element) element.textContent = displayValue(value, fallback);
@@ -1721,8 +1901,17 @@ export class WorkspaceBridge {
     currentTurn.classList.toggle("is-npc-turn", snapshot?.started && snapshot?.activeType === "npc");
     this.#renderEnemyList();
     this.#renderReactionOverview();
+    this.#renderCombatControls();
+
+    const guidanceReturn = this.#root.querySelector('[data-action="show-turn-guidance"]');
+    guidanceReturn.hidden = !this.#turnGuidance || this.#turnGuidance.visible;
+    if (this.#turnGuidance) guidanceReturn.querySelector("span").textContent = `Hinweise (${this.#turnGuidance.count})`;
 
     const revision = ++this.#selectionRevision;
+    if (this.#turnGuidance?.visible) {
+      this.#renderTurnGuidance(revision).catch((error) => this.#showSheetError(error));
+      return;
+    }
     this.#desiredSelection()
       .then((selection) => {
         if (revision !== this.#selectionRevision) return;
@@ -1737,6 +1926,8 @@ export class WorkspaceBridge {
     this.#set("displayed-name", actor?.name, "Kein Gegner ausgewählt");
     this.#set("selection-source", source);
     this.#set("selection-source-detail", source);
+    const eyebrow = this.#root.querySelector(".gm-workspace-statblock-row .gm-workspace-eyebrow");
+    if (eyebrow) eyebrow.textContent = "Statblock";
 
     const pinButton = this.#root.querySelector('[data-action="toggle-pin"]');
     pinButton.disabled = !actor;
@@ -1757,6 +1948,82 @@ export class WorkspaceBridge {
     }
 
     await this.#showActorSheet(actor);
+  }
+
+  async #renderTurnGuidance(revision) {
+    const guidance = this.#turnGuidance;
+    if (!guidance?.visible) return;
+    await this.#closeDisplayedSheet();
+    if (revision !== this.#selectionRevision || guidance !== this.#turnGuidance || !guidance.visible) return;
+
+    const escape = (value) => foundry.utils.escapeHTML(String(value ?? ""));
+    const phaseLabel = (timing) => timing === "start" ? "Zugbeginn" : "Zugende";
+    const title = guidance.sections.map(({ timing, playerName }) => `${phaseLabel(timing)}: ${playerName}`).join(" · ");
+    const active = this.#getSnapshot?.()?.combatants?.find(({ id }) => id === this.#getSnapshot?.()?.activeCombatantId) ?? null;
+    const dismissLabel = this.#pinnedSelection?.actor
+      ? `Zurück zu ${this.#pinnedSelection.actor.name}`
+      : this.#getSnapshot?.()?.activeType === "npc" && active
+        ? `Weiter zu ${active.name}`
+        : "Statblock anzeigen";
+
+    const eyebrow = this.#root.querySelector(".gm-workspace-statblock-row .gm-workspace-eyebrow");
+    if (eyebrow) eyebrow.textContent = "Zughinweise";
+    this.#set("displayed-name", title);
+    this.#set("selection-source", `${guidance.count} Hinweise`);
+
+    const pinButton = this.#root.querySelector('[data-action="toggle-pin"]');
+    pinButton.disabled = true;
+    pinButton.classList.toggle("is-pinned", Boolean(this.#pinnedSelection));
+
+    const host = this.#root.querySelector('[data-role="sheet-host"]');
+    host.innerHTML = `
+      <div class="gm-workspace-turn-guidance">
+        ${guidance.sections.map((section) => `
+          <section class="gm-workspace-guidance-phase is-${section.timing}">
+            <header>
+              <span>${phaseLabel(section.timing)}</span>
+              <h3>${escape(section.playerName)}</h3>
+            </header>
+            ${section.reminders.length ? `
+              <div class="gm-workspace-guidance-group">
+                <h4><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Auren &amp; Hinweise</h4>
+                ${section.reminders.map((entry) => `
+                  <article class="gm-workspace-guidance-card" style="--gm-enemy-color:${entry.color}">
+                    <div>
+                      <span>${escape(entry.actorName)}</span>
+                      <h5>${escape(entry.name)}</h5>
+                      <p>${escape(entry.description)}</p>
+                    </div>
+                    <button type="button" data-guidance-action="show-actor" data-combatant-id="${entry.combatantId}">Statblock</button>
+                  </article>
+                `).join("")}
+              </div>
+            ` : ""}
+            ${section.legendary.length ? `
+              <div class="gm-workspace-guidance-group">
+                <h4><i class="fa-solid fa-crown" aria-hidden="true"></i> Legendäre Aktionen</h4>
+                ${section.legendary.map((entry) => `
+                  <article class="gm-workspace-guidance-card" style="--gm-enemy-color:${entry.color}">
+                    <div>
+                      <span>${escape(entry.actorName)} · Kosten ${entry.cost}</span>
+                      <h5>${escape(entry.name)}</h5>
+                      <p>${escape(entry.description)}</p>
+                    </div>
+                    <div class="gm-workspace-guidance-card-actions">
+                      <button type="button" data-guidance-action="show-actor" data-combatant-id="${entry.combatantId}">Statblock</button>
+                      ${entry.activityId ? `<button type="button" class="is-primary" data-guidance-action="execute-legendary" data-combatant-id="${entry.combatantId}" data-item-id="${entry.itemId}" data-activity-id="${entry.activityId}">Ausführen</button>` : ""}
+                    </div>
+                  </article>
+                `).join("")}
+              </div>
+            ` : ""}
+          </section>
+        `).join("")}
+        <button type="button" class="gm-workspace-guidance-dismiss" data-guidance-action="dismiss">
+          ${escape(dismissLabel)} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+        </button>
+      </div>
+    `;
   }
 
   async #showActorSheet(actor) {

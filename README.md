@@ -18,7 +18,7 @@ https://raw.githubusercontent.com/Krampe93/foundryvtt-gm-combat-workspace/main/m
 
 This manifest URL is permanent. Foundry can use it to discover and install future test versions through the normal update function.
 
-Version `0.8.11` reliably restores normal reactions at the start of each enemy turn, locates and consumes structured D&D5e recharge resources across the complete item, and keeps full reaction tooltips available even after a reaction has been used. Aura and turn reminders are intentionally deferred to a later dedicated workspace area. No third-party module is required; existing `reaction-tracker` combat flags are read when present.
+Version `0.9.0` adds a permanent five-button combat navigation bar below the left content area. At player turn transitions, the statblock area temporarily presents relevant start/end effects and legendary actions; enemy selection returns immediately to the native statblock, while the guidance remains recoverable. No third-party module is required; existing `reaction-tracker` combat flags are read when present.
 
 ## Development
 
@@ -101,4 +101,4 @@ When a player turn begins, the workspace prioritizes enemy reactions and legenda
 
 ## Development status
 
-Version `0.8.11` contains the two-window workspace, supplemented native statblock, fixed ten-row enemy and reaction dashboards, permanently visible saving-throw modes, damage-focused reaction controls, Multiattack-aware opportunity attacks, reliable normal reaction reset at enemy turn start, recharge consumption and blocking, and a reserved 16:9 minimap area. Automatic recharge rolls remain planned work.
+Version `0.9.0` contains the two-window workspace, supplemented native statblock, fixed ten-row enemy and reaction dashboards, permanently visible saving-throw modes, damage-focused reaction controls, Multiattack-aware opportunity attacks, reliable reaction resource handling, player-turn guidance in the left content area, a permanent combat navigation bar, and a reserved 16:9 minimap area. Automatic recharge rolls remain planned work.

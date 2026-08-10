@@ -5,7 +5,8 @@ import test from "node:test";
 import {
   combatantColor,
   isAutomaticActorDeltaStatus,
-  savingThrowConfig
+  savingThrowConfig,
+  turnGuidancePhases
 } from "../scripts/services/workspace-bridge.js";
 
 test("assigns 30 distinct encounter palette colors", () => {
@@ -55,7 +56,7 @@ test("locks the optimized right column and 16:9 utility layout", () => {
   assert.match(css, /\.gm-workspace-lower-deck\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\) minmax\(0, 1fr\)/);
   assert.match(css, /\.gm-workspace-utility-column\s*\{[\s\S]*?grid-template-rows:\s*minmax\(0, 30fr\) minmax\(0, 70fr\)/);
   assert.match(css, /\.gm-workspace-minimap-placeholder\s*\{[\s\S]*?aspect-ratio:\s*16 \/ 9/);
-  assert.doesNotMatch(css.slice(css.lastIndexOf("Design correction 0.8.7")), /\.gm-workspace-save-mode[\s\S]*?display:\s*none/);
+  assert.match(css.slice(css.lastIndexOf("Design correction 0.8.7")), /\.gm-workspace-save-mode,[\s\S]*?\{[^}]*display:\s*block/);
 });
 
 test("renders compact reaction actions and removes redundant dashboard metadata", () => {
@@ -75,7 +76,7 @@ test("keeps reactions in a fixed raster and defers aura reminders", () => {
 
   assert.match(source, /> Reaktionen<\/h2>/);
   assert.doesNotMatch(source, /data-role="turn-warnings"/);
-  assert.doesNotMatch(source, /actorTurnStartEffects/);
+  assert.match(source, /actorTurnStartEffects/);
   assert.match(source, /#restoreReactionAtTurnStart\(event\)/);
   assert.match(source, /reactionResourceState\(item, activity\)/);
   assert.match(source, /item\.update\(\{ \[resource\.spentPath\]: resource\.spent \+ 1 \}\)/);
@@ -84,6 +85,30 @@ test("keeps reactions in a fixed raster and defers aura reminders", () => {
   assert.match(css, /grid-auto-rows:\s*minmax\(42px, auto\)/);
   assert.match(css, /align-content:\s*start/);
   assert.match(css, /is-used:not\(\.is-busy\)[\s\S]*?pointer-events:\s*auto/);
+});
+
+test("creates chronological player-turn guidance without duplicate same-turn views", () => {
+  const npc = { started: true, combatId: "combat", round: 1, turn: 0, activeCombatantId: "npc", activeType: "npc" };
+  const playerA = { ...npc, turn: 1, activeCombatantId: "player-a", activeType: "player" };
+  const playerB = { ...playerA, turn: 2, activeCombatantId: "player-b", activeType: "placeholder" };
+
+  assert.deepEqual(turnGuidancePhases(npc, playerA).map(({ timing }) => timing), ["start"]);
+  assert.deepEqual(turnGuidancePhases(playerA, playerB).map(({ timing }) => timing), ["end", "start"]);
+  assert.deepEqual(turnGuidancePhases(playerB, { ...npc, turn: 3 }).map(({ timing }) => timing), ["end"]);
+  assert.deepEqual(turnGuidancePhases(playerA, playerA), []);
+});
+
+test("keeps five combat controls below the dynamic statblock host", () => {
+  const source = readFileSync(new URL("../scripts/services/workspace-bridge.js", import.meta.url), "utf8");
+  const host = source.indexOf('data-role="sheet-host"');
+  const controls = source.indexOf('data-role="combat-controls"');
+
+  assert.ok(host >= 0 && controls > host);
+  for (const action of ["previous-round", "previous-turn", "end-turn", "next-turn", "next-round"]) {
+    assert.match(source, new RegExp(`data-combat-action="${action}"`));
+  }
+  assert.match(source, /#turnGuidance\?\.visible/);
+  assert.match(source, /Hinweise \(\$\{this\.#turnGuidance\.count\}\)/);
 });
 
 test("routes reactions to damage and exposes Multiattack damage controls", () => {

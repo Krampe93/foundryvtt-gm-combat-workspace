@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   actorMeleeAttacks,
+  actorLegendaryActions,
   actorOpportunityPlan,
   actorReactions,
   actorTurnStartEffects,
@@ -202,6 +203,31 @@ test("recognizes Death Gaze but rejects Command and Detect Magic as turn auras",
   assert.deepEqual(actorTurnStartEffects(actor).map(({ name, timing }) => ({ name, timing })), [
     { name: "Death Gaze", timing: "start" }
   ]);
+});
+
+test("finds structured legendary actions with their costs", () => {
+  const command = activity("command", "utility", "legendary");
+  command.activation.value = 2;
+  const actor = { items: [item("presence", "Commanding Presence", [command], "The dragon issues a command.")] };
+
+  assert.deepEqual(actorLegendaryActions(actor).map(({ name, itemId, activityId, cost }) => ({
+    name, itemId, activityId, cost
+  })), [{
+    name: "Commanding Presence",
+    itemId: "presence",
+    activityId: "command",
+    cost: 2
+  }]);
+});
+
+test("turn reminders retain the originating item id and full text", () => {
+  const description = `Any creature that ends its turn within 30 feet takes damage. ${"More details. ".repeat(40)}`;
+  const actor = { items: [item("aura", "Long Aura", [], description)] };
+  const [effect] = actorTurnStartEffects(actor);
+
+  assert.equal(effect.itemId, "aura");
+  assert.equal(effect.description.endsWith("More details."), true);
+  assert.equal(effect.description.includes("…"), false);
 });
 
 test("turn reminder text converts Foundry save, damage, status, and reference markup", () => {

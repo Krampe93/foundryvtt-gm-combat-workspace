@@ -1,5 +1,21 @@
 # Manual test checklist
 
+## Zughinweise und feste Kampfsteuerung – Version 0.9.0
+
+- [ ] Im linken Kopf steht exakt **Version 0.9.0**.
+- [ ] Unter dem linken Statblockbereich sind dauerhaft genau fünf Bedienelemente sichtbar: vorherige Runde, vorheriger Zug, `End Turn`, nächster Zug, nächste Runde.
+- [ ] Die Leiste bleibt beim Scrollen des Statblocks und beim Anzeigen von Hinweisen fest an ihrer Position.
+- [ ] Ohne laufenden Encounter sind alle fünf Bedienelemente deaktiviert.
+- [ ] Alle fünf Bedienelemente steuern den Encounter Tracker in die erwartete Richtung; `End Turn` und nächster Zug wechseln jeweils genau einen Zug weiter.
+- [ ] Beginnt ein Spielerzug mit relevantem Zugbeginn-Effekt (zum Beispiel `Death Gaze`), verdrängt die Hinweisseite den Statblock und zeigt Effekt, Gegner und vollständigen Text.
+- [ ] Endet ein Spielerzug mit relevantem Zugende-Effekt (zum Beispiel `Aura of Annihilation`), erscheint dieser im linken Inhaltsbereich.
+- [ ] Beim Ende eines Spielerzugs werden vorhandene legendäre Aktionen aller lebenden Gegner angezeigt und lassen sich direkt ausführen.
+- [ ] Beim Spieler-zu-Spieler-Wechsel steht das Zugende des vorherigen Spielers vor dem Zugbeginn des neuen Spielers.
+- [ ] Ein Gegnerklick ersetzt die Hinweise sofort durch dessen Statblock; `Hinweise (X)` stellt die Hinweisseite wieder her.
+- [ ] Ein zuvor angepinnter Statblock wird von Hinweisen verdrängt und nach `Zurück zu …` automatisch wieder angezeigt.
+- [ ] Gibt es bei einem Zugwechsel keine relevanten Hinweise oder legendären Aktionen, bleibt der normale Statblock sichtbar und es entsteht keine leere Hinweisseite.
+- [ ] Encounter beenden setzt weiterhin Auswahl, Pin, Hinweise und Statblock auf den bekannten Nullzustand zurück.
+
 ## Reaktionsreset, Recharge-Verbrauch und Tooltips – Version 0.8.11
 
 - [ ] Im linken Kopf steht exakt **Version 0.8.11**.

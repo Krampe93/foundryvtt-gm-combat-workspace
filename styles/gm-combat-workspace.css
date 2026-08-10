@@ -1850,3 +1850,160 @@ body.gm-combat-workspace-companion > .notifications {
   cursor: not-allowed;
   pointer-events: auto;
 }
+
+/* Permanent left combat navigation and turn-guidance workspace 0.9.0. */
+#gm-combat-workspace-shell .gm-workspace-combat-controls {
+  flex: 0 0 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 48px;
+  padding: 0.35rem 0.6rem;
+  background: #16191d;
+  border-top: 1px solid var(--gm-combat-border);
+  box-shadow: 0 -4px 12px rgb(0 0 0 / 22%);
+  z-index: 5;
+}
+
+#gm-combat-workspace-shell .gm-workspace-combat-controls button {
+  flex: 0 0 38px;
+  width: 38px;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  color: #f4dfbd;
+  background: #211d1d;
+  border: 1px solid #94724f;
+  border-radius: 4px;
+}
+
+#gm-combat-workspace-shell .gm-workspace-combat-controls .gm-workspace-end-turn {
+  flex-basis: 126px;
+  width: 126px;
+  color: #fff8ec;
+  background: #b84f39;
+  border-color: #e2aa87;
+  font-weight: 700;
+}
+
+#gm-combat-workspace-shell .gm-workspace-combat-controls button:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+#gm-combat-workspace-shell .gm-workspace-guidance-return {
+  min-height: 30px;
+  padding: 0.25rem 0.55rem;
+  color: #ffe5b3;
+  background: #3a2b20;
+  border: 1px solid #bd813c;
+}
+
+#gm-combat-workspace-shell .gm-workspace-guidance-return[hidden] {
+  display: none;
+}
+
+#gm-combat-workspace-shell .gm-workspace-turn-guidance {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  min-height: 100%;
+  padding: 0.35rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-guidance-phase {
+  padding: 0.7rem;
+  background: #20242a;
+  border: 1px solid var(--gm-combat-border);
+  border-radius: 5px;
+}
+
+#gm-combat-workspace-shell .gm-workspace-guidance-phase > header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin-bottom: 0.65rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid #52575e;
+}
+
+#gm-combat-workspace-shell .gm-workspace-guidance-phase > header span {
+  color: #e3af67;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+#gm-combat-workspace-shell .gm-workspace-guidance-phase > header h3 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-guidance-group + .gm-workspace-guidance-group {
+  margin-top: 0.8rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-guidance-group > h4 {
+  margin: 0 0 0.4rem;
+  color: #f3d3a3;
+  font-size: 0.9rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-guidance-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.7rem;
+  margin-top: 0.4rem;
+  padding: 0.6rem 0.65rem;
+  background: #292e34;
+  border: 1px solid #545b63;
+  border-left: 5px solid var(--gm-enemy-color, #d39b51);
+  border-radius: 4px;
+}
+
+#gm-combat-workspace-shell .gm-workspace-guidance-card span {
+  color: var(--gm-combat-muted);
+  font-size: 0.72rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-guidance-card h5 {
+  margin: 0.08rem 0 0.25rem;
+  font-size: 0.95rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-guidance-card p {
+  margin: 0;
+  color: #d8dde4;
+  line-height: 1.4;
+  white-space: normal;
+}
+
+#gm-combat-workspace-shell .gm-workspace-guidance-card > button,
+#gm-combat-workspace-shell .gm-workspace-guidance-card-actions button,
+#gm-combat-workspace-shell .gm-workspace-guidance-dismiss {
+  align-self: center;
+  min-height: 31px;
+  padding: 0.3rem 0.65rem;
+  color: #f5dfbd;
+  background: #211d1d;
+  border: 1px solid #9a7044;
+}
+
+#gm-combat-workspace-shell .gm-workspace-guidance-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-guidance-card-actions .is-primary {
+  background: #49321f;
+  border-color: #d39145;
+}
+
+#gm-combat-workspace-shell .gm-workspace-guidance-dismiss {
+  align-self: flex-end;
+  margin-top: auto;
+  min-width: 190px;
+}

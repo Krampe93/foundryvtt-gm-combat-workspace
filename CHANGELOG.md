@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.9.0 – 2026-08-10
+
+- Dauerhafte Kampfsteuerung unter dem linken Inhaltsbereich ergänzt: vorherige Runde, vorheriger Zug, `End Turn`, nächster Zug und nächste Runde.
+- Steuerleiste vom scrollenden Statblock- und Hinweisbereich getrennt; sie bleibt bei allen Inhaltswechseln fest sichtbar.
+- Zugbeginn-Hinweise eines Spielers im bisherigen Statblockbereich zusammengeführt und nach Gegnern farblich zugeordnet.
+- Am Zugende eines Spielers relevante Endeffekte und strukturierte legendäre Aktionen chronologisch im Statblockbereich eingeblendet.
+- Spieler-zu-Spieler-Wechsel zeigt zuerst das Zugende des vorherigen und danach den Zugbeginn des neuen Spielers.
+- Gegnerklick ersetzt Hinweise sofort durch dessen Statblock; die aktuelle Hinweisseite bleibt über `Hinweise (X)` wieder erreichbar.
+- Angepinnte Statblocks werden von Hinweisen vorübergehend verdrängt und danach automatisch wiederhergestellt.
+- Leere Hinweisansichten werden unterdrückt, sodass der normale Statblock sichtbar bleibt, wenn nichts zu beachten ist.
+
 ## 0.8.11 – 2026-08-08
 
 - Reaktionsreset zu Beginn eines NPC-Zugs von einem möglicherweise veralteten Status-Snapshot entkoppelt und bei jedem echten Zugbeginn idempotent ausgeführt.

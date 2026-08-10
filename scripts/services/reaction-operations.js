@@ -435,13 +435,52 @@ export function actorTurnStartEffects(actor) {
     seen.add(id);
     effects.push({
       id,
+      itemId: item?.id ?? null,
       name: item?.name ?? "Unbenannter Effekt",
       timing: timing ?? "aura",
-      description: shortenReactionText(description)
+      description: stripFoundryMarkup(description)
     });
   }
 
   return effects.sort((a, b) => String(a.name).localeCompare(String(b.name), "de"));
+}
+
+export function actorLegendaryActions(actor) {
+  const actions = [];
+
+  for (const item of collectionValues(actor?.items)) {
+    const activities = collectionValues(item?.system?.activities);
+    const legendary = activities.filter((activity) => {
+      const type = String(activityActivationType(activity) ?? "").toLowerCase();
+      return type === "legendary" || type === "mythic";
+    });
+
+    for (const activity of legendary) {
+      actions.push({
+        id: `${item?.id ?? "item"}:${activity?.id ?? "activity"}`,
+        itemId: item?.id ?? null,
+        activityId: activity?.id ?? null,
+        name: item?.name ?? activity?.name ?? "Unbenannte legendäre Aktion",
+        description: stripFoundryMarkup(itemDescription(item)) || "Keine Beschreibung hinterlegt.",
+        cost: Number(activity?.activation?.value ?? activity?.system?.activation?.value ?? 1) || 1
+      });
+    }
+
+    if (!legendary.length) {
+      const type = String(item?.system?.activation?.type ?? "").toLowerCase();
+      if (type !== "legendary" && type !== "mythic") continue;
+      actions.push({
+        id: `${item?.id ?? "item"}:legacy`,
+        itemId: item?.id ?? null,
+        activityId: null,
+        name: item?.name ?? "Unbenannte legendäre Aktion",
+        description: stripFoundryMarkup(itemDescription(item)) || "Keine Beschreibung hinterlegt.",
+        cost: Number(item?.system?.activation?.cost ?? item?.system?.activation?.value ?? 1) || 1
+      });
+    }
+  }
+
+  return actions.sort((a, b) => String(a.name).localeCompare(String(b.name), "de"));
 }
 
 export function mergeReactionStates(currentStates = {}, legacyStates = {}) {

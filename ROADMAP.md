@@ -423,7 +423,7 @@ Bei Spielerzügen und zwischen Spieleraktionen schnell erkennen, welche Gegner r
 
 ## Etappe 6.5 – Festes Workspace-Design
 
-**Status:** `[~]` – festes Gegner- und Reaktionsraster mit Version 0.8.11 im Foundry-Test
+**Status:** `[~]` – festes Gegner- und Reaktionsraster sowie Zughinweise mit permanenter Kampfsteuerung in Version 0.9.0 umgesetzt
 
 ### Ziel
 
