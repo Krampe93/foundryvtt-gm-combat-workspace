@@ -18,7 +18,7 @@ https://raw.githubusercontent.com/Krampe93/foundryvtt-gm-combat-workspace/main/m
 
 This manifest URL is permanent. Foundry can use it to discover and install future test versions through the normal update function.
 
-Version `0.9.0` adds a permanent five-button combat navigation bar below the left content area. At player turn transitions, the statblock area temporarily presents relevant start/end effects and legendary actions; enemy selection returns immediately to the native statblock, while the guidance remains recoverable. No third-party module is required; existing `reaction-tracker` combat flags are read when present.
+Version `0.9.1` adds tracked legendary-action budgets and per-action lockouts to the player-turn guidance introduced in 0.9.0. Linked attacks such as Scorching Ray and Rend use the established attack-then-damage workflow, while player-facing saves are displayed without being rolled automatically. No third-party module is required; existing `reaction-tracker` combat flags are read when present.
 
 ## Development
 
@@ -101,4 +101,4 @@ When a player turn begins, the workspace prioritizes enemy reactions and legenda
 
 ## Development status
 
-Version `0.9.0` contains the two-window workspace, supplemented native statblock, fixed ten-row enemy and reaction dashboards, permanently visible saving-throw modes, damage-focused reaction controls, Multiattack-aware opportunity attacks, reliable reaction resource handling, player-turn guidance in the left content area, a permanent combat navigation bar, and a reserved 16:9 minimap area. Automatic recharge rolls remain planned work.
+Version `0.9.1` contains the two-window workspace, supplemented native statblock, fixed ten-row enemy and reaction dashboards, permanently visible saving-throw modes, damage-focused reaction controls, Multiattack-aware opportunity attacks, reliable reaction resource handling, player-turn guidance, tracked legendary-action resources and lockouts, a permanent combat navigation bar, and a reserved 16:9 minimap area. Automatic recharge rolls remain planned work.

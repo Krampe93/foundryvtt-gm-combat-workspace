@@ -1,6 +1,7 @@
 const MONKS_COMBAT_DETAILS_ID = "monks-combat-details";
 const MODULE_ID = "gm-combat-workspace";
 const REACTION_FLAG_KEY = "reactionStates";
+const LEGENDARY_LOCK_FLAG_KEY = "legendaryActionLocks";
 const LEGACY_REACTION_MODULE_ID = "reaction-tracker";
 const LEGACY_REACTION_FLAG_KEY = "states";
 
@@ -66,6 +67,7 @@ function summarizeCombatant(combatant, scene) {
   const token = resolveCombatantToken(combatant, scene);
   const hp = actor?.system?.attributes?.hp ?? {};
   const ac = actor?.system?.attributes?.ac ?? {};
+  const legendary = actor?.system?.resources?.legact ?? {};
   const savingThrows = Object.fromEntries(
     ["str", "dex", "con", "int", "wis", "cha"].map((abilityId) => {
       const ability = actor?.system?.abilities?.[abilityId] ?? {};
@@ -91,6 +93,9 @@ function summarizeCombatant(combatant, scene) {
     hpValue: Number(hp.value) || 0,
     hpMax: Number(hp.max) || 0,
     hpTemp: Number(hp.temp) || 0,
+    legendaryMaximum: Number(legendary.max) || 0,
+    legendaryRemaining: Number(legendary.value) || 0,
+    legendarySpent: Number(legendary.spent) || 0,
     savingThrows
   };
 }
@@ -109,6 +114,7 @@ export function createCombatSnapshot(combat) {
       activeTokenId: null,
       activeHidden: false,
       reactionStates: {},
+      legendaryLocks: {},
       combatants: [],
       context: null,
       signature: "none"
@@ -138,6 +144,7 @@ export function createCombatSnapshot(combat) {
     activeTokenId: activeToken?.id ?? activeCombatant?.tokenId ?? null,
     activeHidden: Boolean(activeCombatant?.hidden || activeToken?.hidden),
     reactionStates: reactionStates(combat),
+    legendaryLocks: readFlag(combat, MODULE_ID, LEGENDARY_LOCK_FLAG_KEY) ?? {},
     combatants
   };
 

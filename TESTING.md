@@ -1,5 +1,20 @@
 # Manual test checklist
 
+## Legendäre Aktionen – Version 0.9.1
+
+- [ ] Im linken Kopf steht exakt **Version 0.9.1**.
+- [ ] Hinter `Adult Red Dragon` steht ein Kronenzähler mit dem aktuellen Wert, zu Beginn beispielsweise `3/3`.
+- [ ] `Commanding Presence` verbraucht genau einen legendären Punkt, zeigt `WEI-Rettungswurf · SG 20` und würfelt keinen Rettungswurf für den Spieler.
+- [ ] `Commanding Presence` ist anschließend bis zum Beginn des nächsten Drachenzugs sichtbar gesperrt.
+- [ ] `Fiery Rays` verbraucht genau einen legendären Punkt und erzeugt genau drei Angriffswürfe mit `Scorching Ray`.
+- [ ] Nach `Fiery Rays` erscheinen genau drei getrennte Schadensbuttons; jeder würfelt einmal `2W6 Feuer` und verschwindet anschließend.
+- [ ] `Fiery Rays` ist anschließend bis zum Beginn des nächsten Drachenzugs sichtbar gesperrt.
+- [ ] `Pounce` verbraucht genau einen legendären Punkt, erzeugt genau einen `Rend`-Angriff und anschließend genau einen Schadensbutton.
+- [ ] `Pounce` bleibt bei noch vorhandenem Budget erneut ausführbar und besitzt keine individuelle Zug-Sperre.
+- [ ] Bei `0/3` erzeugt ein Klick auf eine legendäre Aktion eine verständliche Fehlermeldung, aber keine Chatkarte und keinen Wurf.
+- [ ] Beginnt der Zug des Drachen, werden Kronenzähler und individuelle Sperren automatisch auf `3/3` beziehungsweise verfügbar zurückgesetzt.
+- [ ] Der Zähler der legendären Resistenzen wird durch keine dieser Aktionen oder Resets verändert.
+
 ## Zughinweise und feste Kampfsteuerung – Version 0.9.0
 
 - [ ] Im linken Kopf steht exakt **Version 0.9.0**.

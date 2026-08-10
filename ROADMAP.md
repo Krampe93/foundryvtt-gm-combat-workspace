@@ -487,7 +487,7 @@ Verwendete Reaktionen entsprechend ihrer tatsächlichen Regel automatisch zurüc
 
 ## Etappe 8 – Legendary Actions und Ressourcen
 
-**Status:** `[ ]`
+**Status:** `[~]` – Budget, Kostenprüfung, Aktionssperren, Dashboard-Zähler und Zugreset in Version 0.9.1 umgesetzt; In-Lair-Sonderwerte bleiben im Foundry-Test
 
 ### Ziel
 
@@ -539,7 +539,7 @@ Ressourcen werden erst verändert, wenn die Aktivität tatsächlich verwendet wu
 
 ## Etappe 9 – Legendary Follow-up Attacks
 
-**Status:** `[ ]`
+**Status:** `[~]` – eindeutige eingebettete Angriffe, getrennte Schadensbuttons und Spieler-SG-Anzeige in Version 0.9.1 umgesetzt; uneindeutige Auswahlsituationen bleiben offen
 
 ### Ziel
 

@@ -8,6 +8,8 @@ import {
   actorReactions,
   actorTurnStartEffects,
   isPlayerFacingTurn,
+  legendaryExecutionPlan,
+  legendaryResourceState,
   mergeReactionStates,
   reactionExecutionPlan,
   reactionResourceState,
@@ -218,6 +220,77 @@ test("finds structured legendary actions with their costs", () => {
     activityId: "command",
     cost: 2
   }]);
+});
+
+test("reads legendary actions without confusing legendary resistances", () => {
+  const actor = {
+    system: {
+      resources: {
+        legact: { max: 3, spent: 2, value: 1 },
+        legres: { max: 3, spent: 0, value: 3 }
+      }
+    }
+  };
+
+  assert.deepEqual(legendaryResourceState(actor), {
+    available: true,
+    maximum: 3,
+    remaining: 1,
+    spent: 2,
+    spentPath: "system.resources.legact.spent"
+  });
+});
+
+test("locks repeat-restricted actions until the actor's next turn", () => {
+  const use = activity("use", "utility", "legendary");
+  const actor = {
+    items: [item("rays", "Fiery Rays", [use], "The dragon can't take this action again until the start of its next turn.")]
+  };
+
+  assert.equal(actorLegendaryActions(actor)[0].locksUntilNextTurn, true);
+});
+
+test("resolves Scorching Ray once and plans three attack and damage opportunities", () => {
+  const use = activity("use", "utility", "legendary");
+  const attack = { ...activity("attack", "attack", "action", "ranged"), rollAttack() {}, rollDamage() {} };
+  const fiery = item("fiery", "Fiery Rays", [use], "The dragon casts @spell[Scorching Ray|XPHB].");
+  const rayA = item("ray-a", "Scorching Ray", [attack], "You create three rays of fire.");
+  rayA.identifier = "scorching-ray";
+  const rayB = item("ray-b", "Scorching Ray", [attack], "You create three rays of fire.");
+  rayB.identifier = "scorching-ray";
+  const actor = { items: [fiery, rayA, rayB] };
+
+  assert.deepEqual(legendaryExecutionPlan(actor, fiery), {
+    linkedItemId: "ray-a",
+    linkedIdentifier: "scorching-ray",
+    linkedName: "Scorching Ray",
+    attackActivityId: "attack",
+    attackCount: 3,
+    save: null
+  });
+});
+
+test("resolves Command as a Wisdom DC 20 player save without rolling it", () => {
+  const use = activity("use", "utility", "legendary");
+  const save = { ...activity("save", "save", "action"), save: { ability: {}, dc: { value: 20 } } };
+  const presence = item("presence", "Commanding Presence", [use], "The dragon casts @spell[Command|XPHB].");
+  const command = item("command", "Command", [save], "The target must make a Wisdom saving throw.");
+  command.identifier = "command";
+  const actor = { items: [presence, command] };
+
+  assert.deepEqual(legendaryExecutionPlan(actor, presence).save, { ability: "wis", dc: 20 });
+});
+
+test("resolves Pounce to one naturally mentioned Rend attack", () => {
+  const use = activity("use", "utility", "legendary");
+  const attack = { ...activity("attack", "attack", "action", "melee"), rollAttack() {}, rollDamage() {} };
+  const pounce = item("pounce", "Pounce", [use], "The dragon moves and makes one Rend attack.");
+  const rend = item("rend", "Rend", [attack], "Melee attack.");
+  rend.identifier = "rend";
+  const actor = { items: [pounce, rend] };
+
+  assert.equal(legendaryExecutionPlan(actor, pounce).linkedItemId, "rend");
+  assert.equal(legendaryExecutionPlan(actor, pounce).attackCount, 1);
 });
 
 test("turn reminders retain the originating item id and full text", () => {

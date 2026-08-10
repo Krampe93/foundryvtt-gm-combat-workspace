@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.9.1 – 2026-08-10
+
+- Verfügbare legendäre Aktionen jedes Gegners als Kronenzähler direkt hinter dessen Namen im Dashboard ergänzt.
+- Ausschließlich `resources.legact` als legendäres Aktionsbudget verwendet; legendäre Resistenzen unter `legres` bleiben unberührt.
+- Verfügbares Budget und tatsächliche Aktionskosten vor jeder Ausführung geprüft; bei fehlenden Punkten wird weder Chatkarte noch Wurf erzeugt.
+- Legendäres Aktionsbudget zu Beginn des jeweiligen Gegnerzugs vollständig wiederhergestellt.
+- Formulierungen wie `can't take this action again until the start of its next turn` als individuelle Aktionssperre umgesetzt und beim nächsten eigenen Zug zurückgesetzt.
+- Eingebettete Folgeaktionen anhand ihrer Actor-Items aufgelöst; doppelte interne `Command`- und `Scorching Ray`-Items werden nur einmal verwendet.
+- `Fiery Rays` führt drei Angriffe mit `Scorching Ray` aus und stellt anschließend getrennte Schadensbuttons bereit.
+- `Pounce` führt einen `Rend`-Angriff aus und stellt anschließend dessen Schadensbutton bereit.
+- Spielerrettungswürfe werden nicht automatisch gewürfelt; legendäre Aktionen zeigen stattdessen Attribut und SG, beispielsweise `WEI-Rettungswurf · SG 20`.
+
 ## 0.9.0 – 2026-08-10
 
 - Dauerhafte Kampfsteuerung unter dem linken Inhaltsbereich ergänzt: vorherige Runde, vorheriger Zug, `End Turn`, nächster Zug und nächste Runde.

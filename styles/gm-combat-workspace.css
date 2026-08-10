@@ -2007,3 +2007,60 @@ body.gm-combat-workspace-companion > .notifications {
   margin-top: auto;
   min-width: 190px;
 }
+
+/* Legendary action resources, lockouts, and follow-up rolls 0.9.1. */
+#gm-combat-workspace-shell .gm-workspace-enemy-open {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-legendary-resource {
+  flex: 0 0 auto;
+  padding: 0.12rem 0.3rem;
+  color: #ffe2a3;
+  background: #3a2b19;
+  border: 1px solid #8e6b38;
+  border-radius: 999px;
+  font-size: 0.64rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+#gm-combat-workspace-shell .gm-workspace-guidance-card-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 330px;
+}
+
+#gm-combat-workspace-shell .gm-workspace-guidance-card.is-unavailable .gm-workspace-guidance-card-actions [data-guidance-action="execute-legendary"] {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+#gm-combat-workspace-shell .gm-workspace-legendary-save,
+#gm-combat-workspace-shell .gm-workspace-legendary-reason {
+  display: block;
+  margin-top: 0.45rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-legendary-save {
+  width: fit-content;
+  padding: 0.25rem 0.45rem;
+  color: #fff0c9;
+  background: #45341e;
+  border: 1px solid #9e743b;
+  border-radius: 3px;
+}
+
+#gm-combat-workspace-shell .gm-workspace-legendary-reason {
+  color: #e8a49b;
+  font-size: 0.76rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-guidance-card-actions .gm-workspace-legendary-damage {
+  color: #fff1cf;
+  background: #503821;
+  border-color: #d79a49;
+}

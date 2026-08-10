@@ -1,4 +1,5 @@
 export const REACTION_FLAG_KEY = "reactionStates";
+export const LEGENDARY_LOCK_FLAG_KEY = "legendaryActionLocks";
 export const LEGACY_REACTION_MODULE_ID = "reaction-tracker";
 export const LEGACY_REACTION_FLAG_KEY = "states";
 
@@ -462,7 +463,9 @@ export function actorLegendaryActions(actor) {
         activityId: activity?.id ?? null,
         name: item?.name ?? activity?.name ?? "Unbenannte legendäre Aktion",
         description: stripFoundryMarkup(itemDescription(item)) || "Keine Beschreibung hinterlegt.",
-        cost: Number(activity?.activation?.value ?? activity?.system?.activation?.value ?? 1) || 1
+        cost: Number(activity?.activation?.value ?? activity?.system?.activation?.value ?? 1) || 1,
+        locksUntilNextTurn: /can(?:not|'t|’t)\s+take\s+this\s+action\s+again\s+until\s+the\s+start\s+of\s+its\s+next\s+turn/i
+          .test(stripFoundryMarkup(itemDescription(item)))
       });
     }
 
@@ -475,12 +478,112 @@ export function actorLegendaryActions(actor) {
         activityId: null,
         name: item?.name ?? "Unbenannte legendäre Aktion",
         description: stripFoundryMarkup(itemDescription(item)) || "Keine Beschreibung hinterlegt.",
-        cost: Number(item?.system?.activation?.cost ?? item?.system?.activation?.value ?? 1) || 1
+        cost: Number(item?.system?.activation?.cost ?? item?.system?.activation?.value ?? 1) || 1,
+        locksUntilNextTurn: /can(?:not|'t|’t)\s+take\s+this\s+action\s+again\s+until\s+the\s+start\s+of\s+its\s+next\s+turn/i
+          .test(stripFoundryMarkup(itemDescription(item)))
       });
     }
   }
 
   return actions.sort((a, b) => String(a.name).localeCompare(String(b.name), "de"));
+}
+
+function finiteNumber(value, fallback = 0) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+export function legendaryResourceState(actor) {
+  const resource = actor?.system?.resources?.legact ?? null;
+  const maximum = finiteNumber(resource?.max, 0);
+  const spent = finiteNumber(resource?.spent, 0);
+  const remaining = resource?.value === null || resource?.value === undefined || resource?.value === ""
+    ? Math.max(0, maximum - spent)
+    : finiteNumber(resource.value, Math.max(0, maximum - spent));
+  return {
+    available: maximum > 0 && remaining > 0,
+    maximum,
+    remaining,
+    spent,
+    spentPath: "system.resources.legact.spent"
+  };
+}
+
+function itemIdentifier(item) {
+  return String(item?.identifier ?? item?.system?.identifier ?? item?.name ?? "")
+    .trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function referencedItemName(description) {
+  const raw = String(description ?? "");
+  return raw.match(/@(?:spell|item)\[([^|\]]+)/i)?.[1]?.trim() ?? null;
+}
+
+function saveAbilityFromDescription(description) {
+  const text = stripFoundryMarkup(description).toLowerCase();
+  const abilities = {
+    strength: "str", dexterity: "dex", constitution: "con",
+    intelligence: "int", wisdom: "wis", charisma: "cha",
+    stärke: "str", geschicklichkeit: "dex", konstitution: "con",
+    intelligenz: "int", weisheit: "wis", charisma_de: "cha"
+  };
+  for (const [label, ability] of Object.entries(abilities)) {
+    if (new RegExp(`\\b${label === "charisma_de" ? "charisma" : label}\\b[\\s\\S]{0,30}(?:saving throw|rettungswurf)`, "i").test(text)) return ability;
+  }
+  return null;
+}
+
+function configuredSaveAbility(save) {
+  const configured = save?.ability;
+  if (typeof configured === "string" && configured) return configured.toLowerCase();
+  const values = collectionValues(configured).filter(Boolean);
+  return values.length === 1 ? String(values[0]).toLowerCase() : null;
+}
+
+function writtenAttackCount(description, linkedIdentifier) {
+  const text = stripFoundryMarkup(description).toLowerCase();
+  const words = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, eins: 1, zwei: 2, drei: 3, vier: 4, fünf: 5, sechs: 6 };
+  const match = text.match(/\b(one|two|three|four|five|six|eins|zwei|drei|vier|fünf|sechs|\d+)\s+(?:[^.]{0,24}\s+)?(?:rays?|attacks?|strahlen?|angriffe?)\b/i);
+  if (match) return words[match[1]] ?? Number.parseInt(match[1], 10) ?? 1;
+  return linkedIdentifier === "scorching-ray" ? 3 : 1;
+}
+
+export function legendaryExecutionPlan(actor, legendaryItem) {
+  const description = itemDescription(legendaryItem);
+  const explicitName = referencedItemName(description);
+  const candidates = collectionValues(actor?.items).filter((item) => item !== legendaryItem);
+  let linkedItem = explicitName
+    ? candidates.find((item) => String(item?.name ?? "").localeCompare(explicitName, undefined, { sensitivity: "base" }) === 0) ?? null
+    : null;
+
+  if (!linkedItem) {
+    const text = stripFoundryMarkup(description).toLowerCase();
+    linkedItem = candidates
+      .filter((item) => collectionValues(item?.system?.activities).some((activity) => ["attack", "save", "damage"].includes(String(activity?.type ?? "").toLowerCase())))
+      .sort((left, right) => String(right?.name ?? "").length - String(left?.name ?? "").length)
+      .find((item) => new RegExp(`\\b${String(item?.name ?? "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(text)) ?? null;
+  }
+
+  if (!linkedItem) return { linkedItemId: null, linkedIdentifier: null, attackActivityId: null, attackCount: 0, save: null };
+  const activities = collectionValues(linkedItem?.system?.activities);
+  const attack = activities.find((activity) => String(activity?.type ?? "").toLowerCase() === "attack") ?? null;
+  const saveActivity = activities.find((activity) => String(activity?.type ?? "").toLowerCase() === "save") ?? null;
+  const identifier = itemIdentifier(linkedItem);
+  const save = saveActivity ? {
+    ability: configuredSaveAbility(saveActivity?.save ?? saveActivity?.system?.save) ??
+      saveAbilityFromDescription(itemDescription(linkedItem)) ??
+      (identifier === "command" ? "wis" : null),
+    dc: finiteNumber(saveActivity?.save?.dc?.value ?? saveActivity?.system?.save?.dc?.value ?? actor?.system?.attributes?.spelldc, 0)
+  } : null;
+
+  return {
+    linkedItemId: linkedItem.id ?? null,
+    linkedIdentifier: identifier,
+    linkedName: linkedItem.name ?? null,
+    attackActivityId: attack?.id ?? null,
+    attackCount: attack ? writtenAttackCount(itemDescription(linkedItem), identifier) : 0,
+    save
+  };
 }
 
 export function mergeReactionStates(currentStates = {}, legacyStates = {}) {

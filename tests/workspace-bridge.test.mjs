@@ -122,3 +122,16 @@ test("routes reactions to damage and exposes Multiattack damage controls", () =>
   assert.match(source, /damageActivity\.rollDamage\(\{\}, \{ configure: false \}\)/);
   assert.doesNotMatch(source, /activity\.use\(\{\}, \{ configure: false \}\)/);
 });
+
+test("guards legendary resources, lockouts, linked attacks, saves, and damage", () => {
+  const source = readFileSync(new URL("../scripts/services/workspace-bridge.js", import.meta.url), "utf8");
+
+  assert.match(source, /legendaryResourceState\(actor\)/);
+  assert.match(source, /LEGENDARY_LOCK_FLAG_KEY/);
+  assert.match(source, /#restoreLegendaryAtTurnStart\(event\)/);
+  assert.match(source, /resource\.remaining < legendary\.cost/);
+  assert.match(source, /attack\.rollAttack\(\{\}, \{ configure: false \}\)/);
+  assert.match(source, /data-guidance-action="roll-legendary-damage"/);
+  assert.match(source, /Rettungswurf – SG/);
+  assert.match(source, /gm-workspace-legendary-resource/);
+});

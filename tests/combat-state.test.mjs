@@ -153,6 +153,7 @@ test("creates a resolved active NPC snapshot", () => {
   assert.equal(snapshot.combatants[0].tokenPresent, true);
   assert.equal(snapshot.combatants[0].armorClass, 15);
   assert.equal(snapshot.combatants[0].hpValue, 18);
+  assert.equal(snapshot.combatants[0].legendaryMaximum, 0);
   assert.deepEqual(snapshot.combatants[0].savingThrows, {
     str: 5, dex: 1, con: 6, int: -1, wis: 0, cha: -2
   });

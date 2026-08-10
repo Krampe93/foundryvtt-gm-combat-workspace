@@ -4,6 +4,7 @@ import { calculateHpUpdate, halfDamage, parseHpInput, uniqueHpTargets } from "./
 import {
   LEGACY_REACTION_FLAG_KEY,
   LEGACY_REACTION_MODULE_ID,
+  LEGENDARY_LOCK_FLAG_KEY,
   REACTION_FLAG_KEY,
   actorMeleeAttacks,
   actorLegendaryActions,
@@ -12,6 +13,8 @@ import {
   actorTurnStartEffects,
   collectionValues,
   isPlayerFacingTurn,
+  legendaryExecutionPlan,
+  legendaryResourceState,
   reactionExecutionPlan,
   reactionResourceState,
   shouldRestoreReaction
@@ -169,6 +172,8 @@ export class WorkspaceBridge {
   #openReactionChoices = new Set();
   #reactionBusy = new Set();
   #pendingReactionDamage = new Map();
+  #legendaryBusy = new Set();
+  #pendingLegendaryDamage = new Map();
   #turnGuidance = null;
   #combatControlBusy = false;
 
@@ -188,6 +193,7 @@ export class WorkspaceBridge {
     this.#unsubscribe = this.#eventBus.on("combatStateChanged", (event) => {
       this.#handleEncounterTransition(event);
       this.#restoreReactionAtTurnStart(event);
+      this.#restoreLegendaryAtTurnStart(event);
       this.#render();
       this.#broadcastState();
       this.#syncTokenColors();
@@ -1007,6 +1013,21 @@ export class WorkspaceBridge {
     return tokenDocument?.actor ?? game.actors?.get(entry?.actorId) ?? null;
   }
 
+  #legendaryResourceBadge(entry) {
+    const resource = legendaryResourceState(this.#actorForEntry(entry));
+    if (resource.maximum <= 0) return "";
+    return `<span class="gm-workspace-legendary-resource" title="Legendäre Aktionen: ${resource.remaining} von ${resource.maximum}"><i class="fa-solid fa-crown" aria-hidden="true"></i> ${resource.remaining}/${resource.maximum}</span>`;
+  }
+
+  #legendaryLocks() {
+    const snapshot = this.#getSnapshot?.();
+    return snapshot?.context?.combat?.getFlag?.(MODULE_ID, LEGENDARY_LOCK_FLAG_KEY) ?? snapshot?.legendaryLocks ?? {};
+  }
+
+  #legendaryActionLocked(combatantId, actionId) {
+    return Boolean(this.#legendaryLocks()?.[combatantId]?.[actionId]);
+  }
+
   #reactionEntryData(entry) {
     const actor = this.#actorForEntry(entry);
     const state = this.#getSnapshot?.()?.reactionStates?.[entry.id] ?? {};
@@ -1139,6 +1160,7 @@ export class WorkspaceBridge {
         <input type="checkbox" class="gm-workspace-enemy-check" data-action="bulk-select" ${this.#bulkSelection.has(entry.id) ? "checked" : ""} aria-label="Für Mehrfachaktion auswählen">
         <button type="button" class="gm-workspace-enemy-open" data-action="select-enemy">
           <span class="gm-workspace-enemy-name">${foundry.utils.escapeHTML(entry.displayName ?? "Unbenannter Gegner")}</span>
+          ${this.#legendaryResourceBadge(entry)}
         </button>
         <span class="gm-workspace-enemy-indicators">
           ${entry.active ? '<span class="gm-workspace-turn-badge"><i class="fa-solid fa-swords" aria-hidden="true"></i> Am Zug</span>' : ""}
@@ -1564,7 +1586,10 @@ export class WorkspaceBridge {
     const turnChanged = Boolean(previous?.started && current?.started) && (
       previous.combatId !== current.combatId || previous.round !== current.round || previous.turn !== current.turn
     );
-    if (turnChanged) this.#pendingReactionDamage.clear();
+    if (turnChanged) {
+      this.#pendingReactionDamage.clear();
+      this.#pendingLegendaryDamage.clear();
+    }
     const phases = turnGuidancePhases(previous, current);
     const nextGuidance = phases.length ? this.#buildTurnGuidance(phases) : null;
     if (phases.length) this.#turnGuidance = nextGuidance;
@@ -1579,6 +1604,8 @@ export class WorkspaceBridge {
     this.#openReactionChoices.clear();
     this.#reactionBusy.clear();
     this.#pendingReactionDamage.clear();
+    this.#legendaryBusy.clear();
+    this.#pendingLegendaryDamage.clear();
     this.#turnGuidance = null;
 
     if (this.#workspaceMode) {
@@ -1601,6 +1628,32 @@ export class WorkspaceBridge {
     this.#setReactionUsed(current.activeCombatantId, false, "turn-start").catch((error) => {
       this.#logger.error("Reaction reset at turn start failed", error);
       ui.notifications?.error(`Reaktion konnte zu Zugbeginn nicht zurückgesetzt werden: ${error.message}`);
+    });
+  }
+
+  #restoreLegendaryAtTurnStart(event) {
+    if (this.#workspaceMode) return;
+    const previous = event?.previousSnapshot ?? null;
+    const current = event?.snapshot ?? this.#getSnapshot?.();
+    if (!shouldRestoreReaction(previous, current)) return;
+
+    const actor = current?.context?.actor ?? null;
+    const combat = current?.context?.combat ?? game.combat ?? null;
+    const resource = legendaryResourceState(actor);
+    if (!actor || resource.maximum <= 0 || !combat) return;
+
+    Promise.resolve().then(async () => {
+      if (resource.spent > 0 && typeof actor.update === "function") {
+        await actor.update({ [resource.spentPath]: 0 });
+      }
+      const locks = foundry.utils.deepClone(combat.getFlag(MODULE_ID, LEGENDARY_LOCK_FLAG_KEY) ?? {});
+      if (locks[current.activeCombatantId]) {
+        delete locks[current.activeCombatantId];
+        await combat.setFlag(MODULE_ID, LEGENDARY_LOCK_FLAG_KEY, locks);
+      }
+    }).catch((error) => {
+      this.#logger.error("Legendary action reset at turn start failed", error);
+      ui.notifications?.error(`Legendäre Aktionen konnten zu Zugbeginn nicht zurückgesetzt werden: ${error.message}`);
     });
   }
 
@@ -1775,8 +1828,11 @@ export class WorkspaceBridge {
         }
         if (timing !== "end") continue;
         for (const action of actorLegendaryActions(actor)) {
+          const item = actor.items?.get?.(action.itemId) ?? collectionValues(actor.items)
+            .find(({ id }) => id === action.itemId) ?? null;
           legendary.push({
             ...action,
+            plan: legendaryExecutionPlan(actor, item),
             actorId: actor.id,
             actorName: actor.name,
             combatantId: enemy.id,
@@ -1823,27 +1879,130 @@ export class WorkspaceBridge {
       return;
     }
 
-    const entry = this.#enemyEntries().find(({ id }) => id === button.dataset.combatantId);
-    if (action === "show-actor" && entry) {
-      this.#selectEnemyEntry(entry);
+    const enemy = this.#enemyEntries().find(({ id }) => id === button.dataset.combatantId);
+    if (action === "show-actor" && enemy) {
+      this.#selectEnemyEntry(enemy);
       return;
     }
-    if (action !== "execute-legendary" || !entry) return;
+    if (action === "roll-legendary-damage" && enemy) {
+      this.#rollPendingLegendaryDamage(enemy, button.dataset.legendaryKey, button.dataset.pendingId).catch((error) => {
+        this.#logger.error("Legendary damage failed", error);
+        ui.notifications?.error(`Legendärer Schaden konnte nicht ausgewürfelt werden: ${error.message}`);
+      });
+      return;
+    }
+    if (action !== "execute-legendary" || !enemy) return;
 
-    const actor = this.#actorForEntry(entry);
-    const item = actor?.items?.get?.(button.dataset.itemId) ?? collectionValues(actor?.items)
-      .find(({ id }) => id === button.dataset.itemId) ?? null;
-    const activity = item?.system?.activities?.get?.(button.dataset.activityId) ?? collectionValues(item?.system?.activities)
-      .find(({ id }) => id === button.dataset.activityId) ?? null;
-    const activityAction = statblockActivityAction(activity);
-    if (!activity || !activityAction) {
-      ui.notifications?.warn("Diese legendäre Aktion kann nur über den Statblock ausgeführt werden.");
-      return;
-    }
-    Promise.resolve(executeStatblockActivity(activity, activityAction)).catch((error) => {
+    const legendary = this.#turnGuidance?.sections
+      ?.flatMap((section) => section.legendary)
+      ?.find((entry) => entry.combatantId === enemy.id && entry.id === button.dataset.legendaryId) ?? null;
+    if (!legendary) return;
+    this.#executeLegendaryAction(enemy, legendary).catch((error) => {
       this.#logger.error("Legendary action failed", error);
       ui.notifications?.error(`Legendäre Aktion konnte nicht ausgeführt werden: ${error.message}`);
     });
+  }
+
+  #legendaryKey(combatantId, actionId) {
+    return `${combatantId}:${actionId}`;
+  }
+
+  async #setLegendaryActionLocked(combatantId, actionId) {
+    const combat = this.#getSnapshot?.()?.context?.combat ?? game.combat ?? null;
+    if (!combat?.started) throw new Error("Es läuft kein Encounter mehr.");
+    const locks = foundry.utils.deepClone(combat.getFlag(MODULE_ID, LEGENDARY_LOCK_FLAG_KEY) ?? {});
+    locks[combatantId] = { ...(locks[combatantId] ?? {}), [actionId]: true };
+    await combat.setFlag(MODULE_ID, LEGENDARY_LOCK_FLAG_KEY, locks);
+  }
+
+  async #executeLegendaryAction(enemy, legendary) {
+    const key = this.#legendaryKey(enemy.id, legendary.id);
+    if (this.#legendaryBusy.has(key)) return;
+    const actor = this.#actorForEntry(enemy);
+    const item = actor?.items?.get?.(legendary.itemId) ?? collectionValues(actor?.items)
+      .find(({ id }) => id === legendary.itemId) ?? null;
+    const activity = item?.system?.activities?.get?.(legendary.activityId) ?? collectionValues(item?.system?.activities)
+      .find(({ id }) => id === legendary.activityId) ?? null;
+    const activityAction = statblockActivityAction(activity);
+    if (!actor || !item || !activity || !activityAction) {
+      throw new Error("Die zugehörige legendäre D&D5e-Aktivität wurde nicht gefunden.");
+    }
+
+    const resource = legendaryResourceState(actor);
+    if (resource.remaining < legendary.cost) {
+      throw new Error(`${item.name} benötigt ${legendary.cost} legendäre Aktion${legendary.cost === 1 ? "" : "en"}; verfügbar sind ${resource.remaining}.`);
+    }
+    if (this.#legendaryActionLocked(enemy.id, legendary.id)) {
+      throw new Error(`${item.name} ist bis zum Beginn des nächsten eigenen Zugs gesperrt.`);
+    }
+
+    this.#legendaryBusy.add(key);
+    this.#render();
+    this.#releaseStaleModifiers();
+    try {
+      const useResult = await executeStatblockActivity(activity, activityAction);
+      if (useResult === false || useResult === null) throw new Error(`${item.name} wurde von D&D5e nicht ausgeführt.`);
+      if (legendary.locksUntilNextTurn) await this.#setLegendaryActionLocked(enemy.id, legendary.id);
+
+      const plan = legendaryExecutionPlan(actor, item);
+      const linkedItem = actor.items?.get?.(plan.linkedItemId) ?? collectionValues(actor.items)
+        .find(({ id }) => id === plan.linkedItemId) ?? null;
+      const attack = linkedItem?.system?.activities?.get?.(plan.attackActivityId) ?? collectionValues(linkedItem?.system?.activities)
+        .find(({ id }) => id === plan.attackActivityId) ?? null;
+      const pending = [];
+
+      if (attack && typeof attack.rollAttack === "function") {
+        for (let index = 0; index < Math.max(1, plan.attackCount); index += 1) {
+          const result = await attack.rollAttack({}, { configure: false });
+          if (result === false || result === null) continue;
+          if (typeof attack.rollDamage === "function") {
+            pending.push({
+              id: `${Date.now()}-${index}-${attack.id}`,
+              itemId: linkedItem.id,
+              activityId: attack.id,
+              label: plan.attackCount > 1 ? `${linkedItem.name} ${index + 1}` : linkedItem.name
+            });
+          }
+        }
+      } else if (plan.save?.ability && plan.save.dc) {
+        ui.notifications?.info(`${linkedItem?.name ?? item.name}: ${this.#saveAbilityLabel(plan.save.ability)}-Rettungswurf – SG ${plan.save.dc}`);
+      }
+
+      if (pending.length) this.#pendingLegendaryDamage.set(key, pending);
+    } finally {
+      this.#legendaryBusy.delete(key);
+      this.#render();
+    }
+  }
+
+  #saveAbilityLabel(ability) {
+    return ({ str: "STÄ", dex: "GES", con: "KON", int: "INT", wis: "WEI", cha: "CHA" })[
+      String(ability ?? "").toLowerCase()
+    ] ?? String(ability ?? "").toUpperCase();
+  }
+
+  async #rollPendingLegendaryDamage(enemy, key, pendingId) {
+    if (this.#legendaryBusy.has(key)) return;
+    const actor = this.#actorForEntry(enemy);
+    const pending = this.#pendingLegendaryDamage.get(key) ?? [];
+    const target = pending.find(({ id }) => id === pendingId) ?? null;
+    const item = actor?.items?.get?.(target?.itemId) ?? null;
+    const activity = item?.system?.activities?.get?.(target?.activityId) ?? collectionValues(item?.system?.activities)
+      .find(({ id }) => id === target?.activityId) ?? null;
+    if (!activity || typeof activity.rollDamage !== "function") throw new Error("Der zugehörige Schadenswurf wurde nicht gefunden.");
+
+    this.#legendaryBusy.add(key);
+    try {
+      const result = await activity.rollDamage({}, { configure: false });
+      if (result !== false && result !== null) {
+        const remaining = pending.filter(({ id }) => id !== pendingId);
+        if (remaining.length) this.#pendingLegendaryDamage.set(key, remaining);
+        else this.#pendingLegendaryDamage.delete(key);
+      }
+    } finally {
+      this.#legendaryBusy.delete(key);
+      this.#render();
+    }
   }
 
   async #onCombatControl(event) {
@@ -2002,19 +2161,43 @@ export class WorkspaceBridge {
             ${section.legendary.length ? `
               <div class="gm-workspace-guidance-group">
                 <h4><i class="fa-solid fa-crown" aria-hidden="true"></i> Legendäre Aktionen</h4>
-                ${section.legendary.map((entry) => `
-                  <article class="gm-workspace-guidance-card" style="--gm-enemy-color:${entry.color}">
-                    <div>
-                      <span>${escape(entry.actorName)} · Kosten ${entry.cost}</span>
-                      <h5>${escape(entry.name)}</h5>
-                      <p>${escape(entry.description)}</p>
-                    </div>
-                    <div class="gm-workspace-guidance-card-actions">
-                      <button type="button" data-guidance-action="show-actor" data-combatant-id="${entry.combatantId}">Statblock</button>
-                      ${entry.activityId ? `<button type="button" class="is-primary" data-guidance-action="execute-legendary" data-combatant-id="${entry.combatantId}" data-item-id="${entry.itemId}" data-activity-id="${entry.activityId}">Ausführen</button>` : ""}
-                    </div>
-                  </article>
-                `).join("")}
+                ${section.legendary.map((entry) => {
+                  const enemy = this.#enemyEntries().find(({ id }) => id === entry.combatantId) ?? null;
+                  const actor = this.#actorForEntry(enemy);
+                  const resource = legendaryResourceState(actor);
+                  const locked = this.#legendaryActionLocked(entry.combatantId, entry.id);
+                  const key = this.#legendaryKey(entry.combatantId, entry.id);
+                  const busy = this.#legendaryBusy.has(key);
+                  const insufficient = resource.remaining < entry.cost;
+                  const unavailable = locked || insufficient || busy;
+                  const reason = locked
+                    ? "Bis zum Beginn des nächsten eigenen Zugs gesperrt."
+                    : insufficient
+                      ? `Nicht genügend legendäre Aktionen: ${resource.remaining}/${resource.maximum} verfügbar.`
+                      : busy ? "Wird gerade ausgeführt." : "";
+                  const save = entry.plan?.save?.ability && entry.plan?.save?.dc
+                    ? `<strong class="gm-workspace-legendary-save">${this.#saveAbilityLabel(entry.plan.save.ability)}-Rettungswurf · SG ${entry.plan.save.dc}</strong>`
+                    : "";
+                  const pending = (this.#pendingLegendaryDamage.get(key) ?? []).map((damage) => `
+                    <button type="button" class="is-primary gm-workspace-legendary-damage" data-guidance-action="roll-legendary-damage" data-combatant-id="${entry.combatantId}" data-legendary-key="${key}" data-pending-id="${damage.id}">${escape(damage.label)} – Schaden</button>
+                  `).join("");
+                  return `
+                    <article class="gm-workspace-guidance-card${unavailable ? " is-unavailable" : ""}" style="--gm-enemy-color:${entry.color}">
+                      <div>
+                        <span>${escape(entry.actorName)} · Kosten ${entry.cost} · <i class="fa-solid fa-crown" aria-hidden="true"></i> ${resource.remaining}/${resource.maximum}</span>
+                        <h5>${escape(entry.name)}</h5>
+                        <p>${escape(entry.description)}</p>
+                        ${save}
+                        ${reason ? `<em class="gm-workspace-legendary-reason">${escape(reason)}</em>` : ""}
+                      </div>
+                      <div class="gm-workspace-guidance-card-actions">
+                        <button type="button" data-guidance-action="show-actor" data-combatant-id="${entry.combatantId}">Statblock</button>
+                        ${pending}
+                        ${entry.activityId ? `<button type="button" class="is-primary" data-guidance-action="execute-legendary" data-combatant-id="${entry.combatantId}" data-legendary-id="${entry.id}" aria-disabled="${unavailable}" title="${escape(reason)}">${locked ? "Gesperrt" : "Ausführen"}</button>` : ""}
+                      </div>
+                    </article>
+                  `;
+                }).join("")}
               </div>
             ` : ""}
           </section>
