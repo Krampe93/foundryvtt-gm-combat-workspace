@@ -84,6 +84,37 @@ export function statblockActivityAction(activity) {
   return typeof activity?.use === "function" ? "use" : null;
 }
 
+/** Resolve the native sheet's item-name and enriched attack/damage links. */
+export function statblockClickRoute(actor, link) {
+  const itemId = link.closest("[data-item-id]")?.dataset?.itemId ??
+    link.closest(".statblock-action[data-id]")?.dataset?.id;
+  const item = actor?.items?.get(itemId) ?? null;
+  if (!item) return null;
+  const activities = collectionValues(item.system?.activities);
+  const group = link.closest(".roll-link-group[data-type]");
+  const requested = link.dataset.activityAction ??
+    (["attack", "damage"].includes(group?.dataset.type) ? group.dataset.type : null);
+  const activityId = link.dataset.activityId ??
+    link.closest("[data-activity-uuid]")?.dataset.activityUuid?.split(".").at(-1);
+  if (activityId) {
+    const activity = activities.find(({ id }) => id === activityId);
+    return activity ? { item, activity, action: requested ?? statblockActivityAction(activity) } : null;
+  }
+  const attacks = activities.filter((activity) => statblockActivityAction(activity) === "attack");
+  if (requested === "damage") {
+    const damage = activities.filter((activity) => statblockActivityAction(activity) === "damage");
+    const candidates = damage.length ? damage : activities.filter((activity) => typeof activity.rollDamage === "function");
+    return candidates.length === 1 ? { item, activity: candidates[0], action: "damage" } : null;
+  }
+  if (requested === "attack" || attacks.length) {
+    if (attacks.length === 1) return { item, activity: attacks[0], action: "attack" };
+    return requested ? null : { item, activity: null, action: "use" };
+  }
+  const executable = activities.filter((activity) => statblockActivityAction(activity));
+  if (executable.length === 1) return { item, activity: executable[0], action: statblockActivityAction(executable[0]) };
+  return { item, activity: null, action: "use" };
+}
+
 export function executeStatblockActivity(activity, action) {
   const dialog = { configure: false };
   if (action === "damage" && typeof activity?.rollDamage === "function") {

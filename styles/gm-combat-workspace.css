@@ -2102,53 +2102,39 @@ body.gm-combat-workspace-companion > .notifications {
 }
 
 #gm-combat-workspace-shell .gm-workspace-roll-card {
-  margin-bottom: 0.35rem;
-  padding: 0.4rem 0.5rem;
+  min-width: max-content;
+  margin-bottom: 0.2rem;
+  padding: 0.25rem 0.4rem;
   border: 1px solid #465265;
   border-radius: 5px;
   background: #202833;
   color: #edf2f8;
   font-size: 0.75rem;
-  overflow-wrap: anywhere;
 }
 
-#gm-combat-workspace-shell .gm-workspace-roll-card > header {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  padding-bottom: 0.2rem;
-  border-bottom: 1px solid #3b4654;
-}
-
-#gm-combat-workspace-shell .gm-workspace-roll-card > header > span {
-  color: #bdc9d9;
-}
-
-#gm-combat-workspace-shell .gm-workspace-roll-card small {
-  font-size: 0.65rem;
-}
-
-#gm-combat-workspace-shell .gm-workspace-roll-row {
-  padding-top: 0.25rem;
-}
-
-#gm-combat-workspace-shell .gm-workspace-roll-result,
+#gm-combat-workspace-shell .gm-workspace-roll-row,
 #gm-combat-workspace-shell .gm-workspace-roll-sum {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
-  gap: 0.35rem;
+  gap: 0.5rem;
+  white-space: nowrap;
+  line-height: 1.5;
 }
 
-#gm-combat-workspace-shell .gm-workspace-roll-result > strong {
+#gm-combat-workspace-shell .gm-workspace-roll-row > strong {
   flex-shrink: 0;
+  margin-left: auto;
   font-size: 1.05rem;
   font-variant-numeric: tabular-nums;
 }
 
+#gm-combat-workspace-shell .gm-workspace-roll-identity,
+#gm-combat-workspace-shell .gm-workspace-roll-kind {
+  flex-shrink: 0;
+}
+
 #gm-combat-workspace-shell .gm-workspace-roll-details {
-  margin: 0.12rem 0 0;
-  line-height: 1.45;
+  margin: 0;
   color: #c7d2e0;
 }
 
@@ -2177,7 +2163,7 @@ body.gm-combat-workspace-companion > .notifications {
 }
 
 #gm-combat-workspace-shell .gm-workspace-roll-miss {
-  margin: 0.3rem 0 0;
+  margin: 0;
   color: #ffb7a8;
   font-weight: 700;
 }

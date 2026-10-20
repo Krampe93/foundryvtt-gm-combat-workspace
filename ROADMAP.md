@@ -452,7 +452,7 @@ Die dauerhaft sichtbare Bildschirmaufteilung vor Reaktions-Reset, legendären Ak
 
 ## Etappe 6.6 – Würfelergebnisse
 
-**Status:** `[~]` – mit Version 0.10.0 implementiert; automatische Tests und lokale Browserprüfung erfolgreich, Foundry-Abnahme offen
+**Status:** `[~]` – mit Version 0.10.0 implementiert; Version 0.10.1 korrigiert Sheet-Klicks und verdichtet die Darstellung auf eine Zeile pro Wurf; Foundry-Abnahme offen
 
 - Gegnerwürfe aus beiden Fenstern über Chatnachrichten erfassen; Aktualisierungen ersetzen bestehende Ergebnisse.
 - Alle Einzelwürfel, Boni und Schadensarten direkt ohne Aufklappen anzeigen.

@@ -25,6 +25,8 @@ test("normal d20 results display their total and every individual term", () => {
   assert.match(output, /<strong>20<\/strong>/);
   assert.match(output, /1W20 \[<b>13<\/b>\] \+ 7/);
   assert.doesNotMatch(output, /NAT|<details|hidden/);
+  assert.match(output, /class="gm-workspace-roll-identity"><b>Drache<\/b> · Rend<\/span>/);
+  assert.doesNotMatch(output, /<header|<p |<div class="gm-workspace-roll-result"/);
 });
 
 test("natural 1 and 20 have distinct markers and omit modifier and modified total", () => {

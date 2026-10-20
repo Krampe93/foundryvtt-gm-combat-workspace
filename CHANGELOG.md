@@ -1,3 +1,12 @@
+## 0.10.1 – 2026-10-20
+
+- Klick auf einen eindeutigen Angriffsnamen wie Club führt im eingebetteten Statblock direkt den Angriffswurf aus. Der bisherige allgemeine Item-Aufruf mit ziellosem synthetischem Event entfällt.
+- Native Schadensformeln über ihre umgebende Statblock-Aktion und gegebenenfalls Activity-UUID der passenden Schadensaktivität zugeordnet. Schaden bleibt separat auslösbar, auch nach einem Angriff im Hauptfenster.
+- Stabile Klickdelegation am Sheet-Element statt an einzelnen ersetzten Links; Namen und Formeln bleiben nach Neurendern und späterem Austauschen des Beschreibungsinhalts bedienbar.
+- Gleichzeitige doppelte Ausführung derselben Statblock-Aktivität verhindert. Mehrdeutige Angriffszuordnungen behalten die native Auswahl mit dem echten Klickereignis.
+- Würfelergebnisse auf eine Zeile pro Wurf verdichtet: Gegner, Fähigkeit, Wurfart, Einzelwürfel und Ergebnis stehen nebeneinander, ohne Werte abzuschneiden. NAT-Farben und Zugwechsel-Ausgrauung bleiben erhalten.
+- 79 automatische Tests erfolgreich. Lokaler Browser-Klicktest reproduziert das Problem mit 0.10.0 und prüft die Korrektur einschließlich neu aufgebautem Sheet. Live-Foundry-Abnahme offen.
+
 ## 0.10.0 – 2026-10-20
 
 - Würfelergebnisse im vorgesehenen Workspace-Bereich ergänzt: Gegnername, Fähigkeit, Einzelwürfel, Boni und Gesamtergebnis ohne Aufklappen.
