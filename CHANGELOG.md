@@ -1,3 +1,10 @@
+## 0.9.2 – 2026-10-20
+
+- Rechtsklick auf ausstehende Schadensbuttons bestätigt einen Fehlschlag ohne Schadenswurf.
+- Gilt für Reaktionen und legendäre Folgeangriffe; andere Angriffe und verbrauchte Ressourcen bleiben erhalten.
+- Während eines laufenden Wurfs wird kein ausstehender Angriff verworfen.
+- Die gemeldete gemeinsame Sperre von Commanding Presence und Fiery Rays bleibt zur Diagnose offen.
+
 # Changelog
 
 ## 0.9.1 – 2026-08-10

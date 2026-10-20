@@ -641,3 +641,11 @@ Do not approve Stage 3 if the dashboard moves the laptop camera, selects the wro
 - [ ] Heal a defeated unlinked token through the token HUD and confirm that Dead/Bloodied is removed without `ActiveEffect does not exist` errors.
 - [ ] End the encounter and confirm that pin, statblock, dashboard rows, token colors, hover, and laptop token selection all clear.
 - [ ] Start a new encounter and confirm that no enemy from the previous encounter remains selected or pinned.
+
+## 0.9.2: Fehlschläge bestätigen
+
+- Reaktionsangriff ausführen: Rechtsklick auf Schaden entfernt nur diesen Button ohne Wurf; Reaktion bleibt verbraucht.
+- Fiery Rays ausführen: von drei Schadensbuttons einen rechts anklicken; zwei bleiben und das Budget bleibt unverändert.
+- Übrige Buttons links anklicken: normaler Schaden, jeweils nur der verwendete Button verschwindet.
+- Während laufendem Schadenswurf rechts klicken: kein zusätzlicher Zustandswechsel.
+- Rechtsklick außerhalb der Schadensbuttons: normales Kontextmenü.

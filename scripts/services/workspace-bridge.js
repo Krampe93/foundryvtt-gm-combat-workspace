@@ -497,6 +497,7 @@ export class WorkspaceBridge {
       .addEventListener("pointerout", (event) => this.#onEnemyHover(event, false));
     root.querySelector('[data-role="reaction-panel"]')
       .addEventListener("click", (event) => this.#onReactionClick(event));
+    this.#root.addEventListener("contextmenu", (event) => this.#onPendingDamageMiss(event));
 
     document.body.append(root);
     this.#root = root;
@@ -1099,7 +1100,7 @@ export class WorkspaceBridge {
       ` : "";
 
       const pendingDamage = entry.pendingDamage.map((pending) => `
-        <button type="button" class="gm-workspace-reaction-action gm-workspace-pending-damage" data-action="roll-pending-damage" data-pending-id="${pending.id}">
+        <button type="button" class="gm-workspace-reaction-action gm-workspace-pending-damage" title="Linksklick: Schaden würfeln · Rechtsklick: Verfehlt bestätigen" data-action="roll-pending-damage" data-pending-id="${pending.id}">
           ${foundry.utils.escapeHTML(pending.label)} – Schaden
         </button>
       `).join("");
@@ -1395,6 +1396,22 @@ export class WorkspaceBridge {
       this.#reactionBusy.delete(entry.id);
       this.#renderReactionOverview();
     }
+  }
+
+  #onPendingDamageMiss(event) {
+    const button = event.target.closest?.('[data-action="roll-pending-damage"], [data-guidance-action="roll-legendary-damage"]');
+    if (!button) return;
+    event.preventDefault();
+    const legendary = button.dataset.guidanceAction === "roll-legendary-damage";
+    const combatantId = legendary ? button.dataset.combatantId : button.closest?.("[data-combatant-id]")?.dataset.combatantId;
+    const key = legendary ? button.dataset.legendaryKey : combatantId;
+    if (!key || (legendary ? this.#legendaryBusy.has(key) : this.#reactionBusy.has(key))) return;
+    const pending = legendary ? this.#pendingLegendaryDamage : this.#pendingReactionDamage;
+    const remaining = (pending.get(key) ?? []).filter(({ id }) => id !== button.dataset.pendingId);
+    if (remaining.length) pending.set(key, remaining);
+    else pending.delete(key);
+    if (legendary) this.#render();
+    else this.#renderReactionOverview();
   }
 
   async #rollPendingReactionDamage(entry, pendingId) {
@@ -2179,7 +2196,7 @@ export class WorkspaceBridge {
                     ? `<strong class="gm-workspace-legendary-save">${this.#saveAbilityLabel(entry.plan.save.ability)}-Rettungswurf · SG ${entry.plan.save.dc}</strong>`
                     : "";
                   const pending = (this.#pendingLegendaryDamage.get(key) ?? []).map((damage) => `
-                    <button type="button" class="is-primary gm-workspace-legendary-damage" data-guidance-action="roll-legendary-damage" data-combatant-id="${entry.combatantId}" data-legendary-key="${key}" data-pending-id="${damage.id}">${escape(damage.label)} – Schaden</button>
+                    <button type="button" class="is-primary gm-workspace-legendary-damage" title="Linksklick: Schaden würfeln · Rechtsklick: Verfehlt bestätigen" data-guidance-action="roll-legendary-damage" data-combatant-id="${entry.combatantId}" data-legendary-key="${key}" data-pending-id="${damage.id}">${escape(damage.label)} – Schaden</button>
                   `).join("");
                   return `
                     <article class="gm-workspace-guidance-card${unavailable ? " is-unavailable" : ""}" style="--gm-enemy-color:${entry.color}">

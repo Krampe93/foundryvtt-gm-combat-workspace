@@ -135,3 +135,31 @@ test("guards legendary resources, lockouts, linked attacks, saves, and damage", 
   assert.match(source, /Rettungswurf – SG/);
   assert.match(source, /gm-workspace-legendary-resource/);
 });
+
+test("right-click dismisses only the chosen damage and respects in-flight rolls", () => {
+  const source = readFileSync(new URL("../scripts/services/workspace-bridge.js", import.meta.url), "utf8");
+  const body = source.split("  #onPendingDamageMiss(event) {")[1].split("\n  async #rollPendingReactionDamage")[0].replace(/\n  }\s*$/, "").replaceAll("this.#", "this.");
+  const handle = new Function("event", body);
+  for (const legendary of [false, true]) {
+    const pending = new Map([["enemy", [{ id: "miss" }, { id: "hit" }]]]);
+    const busy = new Set();
+    let rendered = 0;
+    let prevented = 0;
+    const context = { pendingLegendaryDamage: pending, pendingReactionDamage: pending, legendaryBusy: busy, reactionBusy: busy, render() { rendered++; }, renderReactionOverview() { rendered++; } };
+    const button = { dataset: { guidanceAction: legendary ? "roll-legendary-damage" : undefined, combatantId: "enemy", legendaryKey: "enemy", pendingId: "miss" }, closest: () => ({ dataset: { combatantId: "enemy" } }) };
+    const event = { target: { closest: () => button }, preventDefault() { prevented++; } };
+    busy.add("enemy");
+    handle.call(context, event);
+    assert.equal(pending.get("enemy").length, 2);
+    assert.equal(rendered, 0);
+    busy.clear();
+    handle.call(context, event);
+    assert.deepEqual(pending.get("enemy"), [{ id: "hit" }]);
+    button.dataset.pendingId = "hit";
+    handle.call(context, event);
+    assert.equal(pending.has("enemy"), false);
+    assert.equal(rendered, 2);
+    assert.equal(prevented, 3);
+  }
+  handle.call({}, { target: { closest: () => null }, preventDefault() { assert.fail("unrelated context menu suppressed"); } });
+});
