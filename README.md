@@ -22,6 +22,8 @@ Version `0.10.0` adds an always-expanded enemy roll history in the reserved resu
 
 Version `0.10.1` fixes embedded statblock attack-name and damage-formula clicks, including links replaced after rendering. Enemy, activity, roll type, individual dice and result now share a single line per roll. Long result lines remain accessible through scrolling rather than truncated values.
 
+Version `0.11.0` labels each total by roll type and adds house rules for NPC attacks. A natural 20 uses ordinary damage dice plus their maximum, keeping fixed modifiers single (for example `1d6 + 4` becomes `1d6 + 6 + 4`). Both a natural 1 and a natural 20 automatically generate one independent extra d20, with a voluntary, one-time 2d6 button in the results panel. These extra rolls do not change the attack and do not trigger recursive rolls. Saves, checks and player-character attacks do not receive these house rules.
+
 ## Development
 
 Validate the manifest, referenced files, optional-dependency policy, and matching translation keys:

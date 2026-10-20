@@ -1,6 +1,8 @@
 import { MODULE_ID } from "../config.js";
+import { keptD20 } from "./combat-roll-rules.js";
 
-const KIND_LABELS = { attack: "Angriff", damage: "Schaden", save: "Rettungswurf", check: "Probe", roll: "Wurf" };
+const KIND_LABELS = { attack: "Angriff", damage: "Schaden", save: "Rettungswurf", check: "Probe", roll: "Wurf", extra: "Zusatz-W20", extraDice: "Zusatz-2W6" };
+const KIND_ICONS = { attack: "fa-crosshairs", damage: "fa-burst", save: "fa-shield-halved", check: "fa-dice-d20", roll: "fa-dice", extra: "fa-dice-d20", extraDice: "fa-dice" };
 const ABILITIES = { str: "Stärke", dex: "Geschicklichkeit", con: "Konstitution", int: "Intelligenz", wis: "Weisheit", cha: "Charisma" };
 
 function escape(value) {
@@ -52,6 +54,9 @@ function termDetails(term) {
 }
 
 function rollKind(message, roll) {
+  const special = message.flags?.[MODULE_ID]?.kind;
+  if (special === "attackExtra") return "extra";
+  if (special === "extraDice") return "extraDice";
   // RSReforged combines attack and damage rolls on one attack-flagged message.
   if (roll?.constructor?.name === "DamageRoll" || roll?.class === "DamageRoll") return "damage";
   const type = String(message.flags?.dnd5e?.roll?.type ?? "").toLowerCase();
@@ -70,10 +75,8 @@ export function rollMessageEntry(message, { actor, item, damageLabel = (type) =>
     if (number(roll?.total) === null) return [];
     const kind = rollKind(message, roll);
     const dice = values(roll.terms).flatMap(diceIn);
-    const d20 = dice.find((die) => Number(die.faces) === 20);
-    const active = d20?.results.filter((result) => result.active !== false && result.discarded !== true) ?? [];
-    const face = active.length === 1 ? number(active[0].result) : null;
-    const natural = kind !== "damage" && [1, 20].includes(face) ? face : null;
+    const face = keptD20(roll);
+    const natural = !["damage", "extra", "extraDice"].includes(kind) && [1, 20].includes(face) ? face : null;
     const details = natural ? dice.map(dieDetail) : values(roll.terms).flatMap(termDetails);
     if (!details.length && !natural) details.push({ text: String(roll.formula ?? roll.total) });
     const type = roll.options?.type ?? roll.options?.damageType ?? null;
@@ -81,7 +84,10 @@ export function rollMessageEntry(message, { actor, item, damageLabel = (type) =>
     return [{
       id: `${message.id}:${index}`, kind, natural,
       total: natural ?? roll.total,
+      extraMessageId: kind === "extra" ? message.id : null,
+      extraDiceRolled: Boolean(message.flags?.[MODULE_ID]?.extraDiceRolled),
       label: kind === "damage" && type ? String(damageLabel(type)) :
+        kind === "extra" ? `${message.flags?.[MODULE_ID]?.sourceNatural === 1 ? "Patzer" : "Krit"}-W20` :
         kind === "save" && ABILITIES[ability] ? `${KIND_LABELS[kind]} · ${ABILITIES[ability]}` : KIND_LABELS[kind],
       details
     }];
@@ -165,7 +171,8 @@ export function renderRollHistory(history) {
         <span class="gm-workspace-roll-identity"><b>${escape(entry.actorName)}</b> · ${escape(entry.title)}</span>
         <span class="gm-workspace-roll-kind">${escape(row.label)}</span>
         <span class="gm-workspace-roll-details">${renderDetails(row.details)}</span>
-        <strong>${row.natural ? `NAT ${row.natural}` : escape(row.total)}</strong>
+        <span class="gm-workspace-roll-total"><small class="gm-workspace-roll-badge is-${row.kind}"><i class="fa-solid ${KIND_ICONS[row.kind]}" aria-hidden="true"></i> ${KIND_LABELS[row.kind]}</small><strong>${row.natural ? `NAT ${row.natural}` : escape(row.total)}</strong></span>
+        ${row.extraMessageId && !row.extraDiceRolled ? `<button type="button" data-action="roll-extra-dice" data-message-id="${escape(row.extraMessageId)}">2W6 nachwerfen</button>` : ""}
         ${entry.missed && row.kind === "attack" ? '<span class="gm-workspace-roll-miss">Verfehlt</span>' : ""}
       </div>`).join("")}
       ${damages.length > 1 ? `<div class="gm-workspace-roll-sum">Gesamtschaden <strong>${damages.reduce((sum, row) => sum + row.total, 0)}</strong></div>` : ""}

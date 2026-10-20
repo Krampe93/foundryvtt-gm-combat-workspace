@@ -133,6 +133,8 @@ function applicationElement(application, renderedHtml = null) {
 export class WorkspaceBridge {
   #eventBus;
   #getSnapshot;
+  #rollRules;
+  #extraDiceBusy = new Set();
   #logger;
   #channel = null;
   #unsubscribe = null;
@@ -181,9 +183,10 @@ export class WorkspaceBridge {
   #turnGuidance = null;
   #combatControlBusy = false;
 
-  constructor({ eventBus, getSnapshot, logger = createLogger("WorkspaceBridge") }) {
+  constructor({ eventBus, getSnapshot, rollRules = null, logger = createLogger("WorkspaceBridge") }) {
     this.#eventBus = eventBus;
     this.#getSnapshot = getSnapshot;
+    this.#rollRules = rollRules;
     this.#logger = logger;
   }
 
@@ -508,6 +511,20 @@ export class WorkspaceBridge {
       this.#rollHistory.clear();
       this.#renderRollResults();
     });
+    root.querySelector('[data-role="roll-results"]').addEventListener("click", (event) => {
+      const button = event.target.closest?.('[data-action="roll-extra-dice"]');
+      if (!button || !this.#rollRules || this.#extraDiceBusy.has(button.dataset.messageId)) return;
+      const messageId = button.dataset.messageId;
+      this.#extraDiceBusy.add(messageId);
+      button.disabled = true;
+      this.#rollRules.rollExtraDice(messageId).catch((error) => {
+        this.#logger.error("Optional extra dice failed", error);
+        ui.notifications?.error(`2W6 konnten nicht gewürfelt werden: ${error.message}`);
+      }).finally(() => {
+        this.#extraDiceBusy.delete(messageId);
+        this.#renderRollResults();
+      });
+    });
 
     document.body.append(root);
     this.#root = root;
@@ -561,6 +578,9 @@ export class WorkspaceBridge {
     const previousScroll = list.scrollTop;
     const previousHeight = list.scrollHeight;
     list.innerHTML = renderRollHistory(this.#rollHistory);
+    for (const button of list.querySelectorAll('[data-action="roll-extra-dice"]')) {
+      button.disabled = this.#extraDiceBusy.has(button.dataset.messageId);
+    }
     list.scrollTop = scrolledToTop ? 0 : previousScroll + list.scrollHeight - previousHeight;
   }
 

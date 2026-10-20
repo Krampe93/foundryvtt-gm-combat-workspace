@@ -24,7 +24,7 @@ test("normal d20 results display their total and every individual term", () => {
   const output = html(piece);
   assert.match(output, /<strong>20<\/strong>/);
   assert.match(output, /1W20 \[<b>13<\/b>\] \+ 7/);
-  assert.doesNotMatch(output, /NAT|<details|hidden/);
+  assert.doesNotMatch(output, /NAT|<details|\shidden(?:[=>\s])/);
   assert.match(output, /class="gm-workspace-roll-identity"><b>Drache<\/b> · Rend<\/span>/);
   assert.doesNotMatch(output, /<header|<p |<div class="gm-workspace-roll-result"/);
 });
@@ -61,7 +61,7 @@ test("damage types, individual dice and combined damage remain expanded", () => 
   assert.match(output, /Feuer/);
   assert.match(output, /2W6 \[<b>4<\/b>, <b>5<\/b>\] \+ 5/);
   assert.match(output, /Gesamtschaden <strong>17<\/strong>/);
-  assert.doesNotMatch(output, /details>|hidden/);
+  assert.doesNotMatch(output, /details>|\shidden(?:[=>\s])/);
 });
 
 test("a d20 damage die never becomes NAT 1 or NAT 20", () => {
@@ -194,4 +194,36 @@ test("names and roll labels cannot inject markup into the results panel", () => 
   const output = html(piece);
   assert.doesNotMatch(output, /<img|<script/);
   assert.match(output, /&lt;img/);
+});
+
+test("attack, damage and save badges immediately precede the final number", () => {
+  for (const [type, label] of [["attack", "Angriff"], ["damage", "Schaden"], ["save", "Rettungswurf"]]) {
+    const output = html(entry(`badge-${type}`, [d20(13)], type));
+    assert.match(output, new RegExp(`gm-workspace-roll-total[\\s\\S]*?${label}<\\/small><strong>`));
+  }
+});
+
+test("extra W20 for NAT 1 and NAT 20 is independent and offers voluntary 2W6", () => {
+  for (const sourceNatural of [1, 20]) {
+    const extra = message(`extra-${sourceNatural}`, [d20(20, 0)], "");
+    extra.flags["gm-combat-workspace"] = { kind: "attackExtra", sourceNatural, rollGroupId: "extra-group" };
+    const piece = rollMessageEntry(extra, { actor });
+    assert.equal(piece.rows[0].kind, "extra");
+    assert.equal(piece.rows[0].natural, null, "extra W20 never becomes another NAT-triggered attack");
+    const output = html(piece);
+    assert.match(output, /2W6 nachwerfen/);
+    assert.match(output, new RegExp(sourceNatural === 1 ? "Patzer-W20" : "Krit-W20"));
+    assert.doesNotMatch(output, /NAT 20/);
+    extra.flags["gm-combat-workspace"].extraDiceRolled = true;
+    assert.doesNotMatch(html(rollMessageEntry(extra, { actor })), /2W6 nachwerfen/);
+  }
+});
+
+test("optional 2W6 results are labelled as extra dice and are not counted as attack damage", () => {
+  const extra = message("bonus", [{ total: 7, terms: [die(6, 2, 5)] }], "");
+  extra.flags["gm-combat-workspace"] = { kind: "extraDice", sourceNatural: 20 };
+  const piece = rollMessageEntry(extra, { actor });
+  assert.equal(piece.rows[0].kind, "extraDice");
+  assert.match(html(piece), /Zusatz-2W6/);
+  assert.doesNotMatch(html(piece), /Gesamtschaden/);
 });
