@@ -450,6 +450,23 @@ Die dauerhaft sichtbare Bildschirmaufteilung vor Reaktions-Reset, legendären Ak
 
 ---
 
+## Etappe 6.6 – Würfelergebnisse
+
+**Status:** `[~]` – mit Version 0.10.0 implementiert; automatische Tests und lokale Browserprüfung erfolgreich, Foundry-Abnahme offen
+
+- Gegnerwürfe aus beiden Fenstern über Chatnachrichten erfassen; Aktualisierungen ersetzen bestehende Ergebnisse.
+- Alle Einzelwürfel, Boni und Schadensarten direkt ohne Aufklappen anzeigen.
+- Natürliche 1 und 20 ausschließlich als NAT 1 / NAT 20 farblich hervorheben; tatsächliche Foundry-Würfe nicht verändern.
+- Bei Vorteil und Nachteil gewertete und verworfene Würfel sichtbar unterscheiden.
+- Schaden eindeutig zum zugehörigen Gelegenheits- oder legendären Folgeangriff zuordnen.
+- Rechtsklick-Fehlschläge am zugehörigen Angriff markieren.
+- Beim Zugwechsel alle bisherigen Einträge ausgrauen; neue Würfe normal anzeigen.
+- Papierkorb zum vollständigen Leeren des Ergebnisverlaufs ergänzen.
+- Schadensbuttons verbrauchter Reaktionen mit korrektem Handzeiger darstellen.
+- Verlauf ab Öffnen des Companion-Fensters führen; Reload startet einen neuen Verlauf.
+
+---
+
 ## Etappe 7 – Reaktions-Reset
 
 **Status:** `[~]` – normaler Reset und Recharge-Verbrauch in Version 0.8.11 umgesetzt; Sonderregeln und automatische Recharge-Würfe folgen

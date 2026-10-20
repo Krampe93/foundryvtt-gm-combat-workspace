@@ -1846,7 +1846,7 @@ body.gm-combat-workspace-companion > .notifications {
   min-height: 42px;
 }
 
-#gm-combat-workspace-shell .gm-workspace-reaction-enemy.is-used:not(.is-busy) .gm-workspace-reaction-abilities .gm-workspace-reaction-action {
+#gm-combat-workspace-shell .gm-workspace-reaction-enemy.is-used:not(.is-busy) .gm-workspace-reaction-abilities .gm-workspace-reaction-action:not(.gm-workspace-pending-damage) {
   cursor: not-allowed;
   pointer-events: auto;
 }
@@ -2063,4 +2063,132 @@ body.gm-combat-workspace-companion > .notifications {
   color: #fff1cf;
   background: #503821;
   border-color: #d79a49;
+}
+
+/* Always-expanded roll results. Only the history scrolls, never individual cards. */
+#gm-combat-workspace-shell .gm-workspace-reaction-enemy.is-busy .gm-workspace-reaction-abilities .gm-workspace-pending-damage {
+  cursor: wait;
+  pointer-events: none;
+}
+
+#gm-combat-workspace-shell .gm-workspace-roll-results > header {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  min-height: 30px;
+}
+
+#gm-combat-workspace-shell .gm-workspace-roll-results h2 {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+#gm-combat-workspace-shell [data-action="clear-roll-history"] {
+  flex: 0 0 25px;
+  width: 25px;
+  height: 25px;
+  padding: 0;
+  cursor: pointer;
+}
+
+#gm-combat-workspace-shell .gm-workspace-roll-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 0.3rem 0.1rem 0 0;
+  overscroll-behavior: contain;
+  user-select: text;
+}
+
+#gm-combat-workspace-shell .gm-workspace-roll-card {
+  margin-bottom: 0.35rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #465265;
+  border-radius: 5px;
+  background: #202833;
+  color: #edf2f8;
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+#gm-combat-workspace-shell .gm-workspace-roll-card > header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid #3b4654;
+}
+
+#gm-combat-workspace-shell .gm-workspace-roll-card > header > span {
+  color: #bdc9d9;
+}
+
+#gm-combat-workspace-shell .gm-workspace-roll-card small {
+  font-size: 0.65rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-roll-row {
+  padding-top: 0.25rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-roll-result,
+#gm-combat-workspace-shell .gm-workspace-roll-sum {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-roll-result > strong {
+  flex-shrink: 0;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+}
+
+#gm-combat-workspace-shell .gm-workspace-roll-details {
+  margin: 0.12rem 0 0;
+  line-height: 1.45;
+  color: #c7d2e0;
+}
+
+#gm-combat-workspace-shell .gm-workspace-roll-discarded {
+  color: #929ba8;
+  text-decoration-thickness: 2px;
+}
+
+#gm-combat-workspace-shell .gm-workspace-roll-row.is-natural-20 {
+  border-left: 3px solid #63df9a;
+  padding-left: 0.35rem;
+  color: #7eedaf;
+}
+
+#gm-combat-workspace-shell .gm-workspace-roll-row.is-natural-1 {
+  border-left: 3px solid #ff8585;
+  padding-left: 0.35rem;
+  color: #ff9898;
+}
+
+#gm-combat-workspace-shell .gm-workspace-roll-sum {
+  margin-top: 0.3rem;
+  padding-top: 0.2rem;
+  border-top: 1px solid #465265;
+  font-weight: 700;
+}
+
+#gm-combat-workspace-shell .gm-workspace-roll-miss {
+  margin: 0.3rem 0 0;
+  color: #ffb7a8;
+  font-weight: 700;
+}
+
+#gm-combat-workspace-shell .gm-workspace-roll-card.is-previous-turn {
+  filter: grayscale(1);
+  opacity: 0.6;
+}
+
+#gm-combat-workspace-shell .gm-workspace-roll-empty {
+  margin: 0.5rem 0;
+  color: #aab3bf;
+  font-size: 0.75rem;
 }

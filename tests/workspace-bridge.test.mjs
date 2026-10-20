@@ -33,6 +33,9 @@ test("starts the companion shell and registers right-click before the first rend
   const body = new Element();
   const messages = [];
   const errors = [];
+  const hooks = new Map();
+  let combatChanged;
+  let snapshot = null;
   const environment = {
     document: { body, createElement: () => new Element(), querySelector: () => null },
     window: {
@@ -46,8 +49,9 @@ test("starts the companion shell and registers right-click before the first rend
       postMessage(message) { messages.push(message); }
       close() {}
     },
-    Hooks: { on: () => 1, off() {} },
-    game: { modules: new Map(), keyboard: { downKeys: new Set() } }
+    Hooks: { on: (name, callback) => { hooks.set(name, callback); return name; }, off: (name) => hooks.delete(name) },
+    game: { modules: new Map(), keyboard: { downKeys: new Set() }, i18n: { localize: (value) => value } },
+    CONFIG: { DND5E: { damageTypes: { fire: { label: "Feuer" } } } }
   };
   const originals = new Map(Object.keys(environment).map((key) => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
   let bridge;
@@ -56,8 +60,8 @@ test("starts the companion shell and registers right-click before the first rend
       Object.defineProperty(globalThis, key, { value, configurable: true, writable: true });
     }
     bridge = new WorkspaceBridge({
-      eventBus: { on: () => () => {} },
-      getSnapshot: () => null,
+      eventBus: { on: (_name, callback) => { combatChanged = callback; return () => {}; } },
+      getSnapshot: () => snapshot,
       logger: { error: (...args) => errors.push(args), warn() {} }
     });
     assert.doesNotThrow(() => bridge.start());
@@ -71,6 +75,32 @@ test("starts the companion shell and registers right-click before the first rend
     let prevented = false;
     shell.listeners.get("contextmenu")({ target: { closest: () => null }, preventDefault() { prevented = true; } });
     assert.equal(prevented, false, "unrelated context menus remain available");
+    const resultList = shell.querySelector('[data-role="roll-results"]');
+    assert.match(resultList.innerHTML, /Noch keine Gegnerwürfe/);
+    const message = {
+      id: "from-either-window", speaker: { alias: "Drache" },
+      getAssociatedActor: () => ({ type: "npc", name: "Drache" }),
+      getAssociatedItem: () => ({ name: "Rend" }),
+      flags: { dnd5e: { roll: { type: "attack" } } },
+      rolls: [{ total: 20, terms: [{ faces: 20, number: 1, results: [{ result: 13, active: true }] }, { operator: "+" }, { number: 7 }] }]
+    };
+    hooks.get("createChatMessage")(message);
+    hooks.get("updateChatMessage")(message);
+    assert.equal((resultList.innerHTML.match(/<article/g) ?? []).length, 1, "a message seen twice only appears once");
+    assert.match(resultList.innerHTML, /<strong>20<\/strong>/);
+    assert.doesNotMatch(resultList.innerHTML, /is-previous-turn/);
+    const previousSnapshot = { combatId: "fight", started: true, round: 1, turn: 0, activeType: "npc", combatants: [] };
+    snapshot = { ...previousSnapshot, turn: 1 };
+    combatChanged({ previousSnapshot, snapshot });
+    assert.match(resultList.innerHTML, /is-previous-turn/, "turn changes repaint existing results immediately");
+    hooks.get("createChatMessage")({ ...message, id: "new-turn" });
+    assert.equal((resultList.innerHTML.match(/is-previous-turn/g) ?? []).length, 1);
+    assert.equal((resultList.innerHTML.match(/<article/g) ?? []).length, 2);
+    shell.querySelector('[data-action="clear-roll-history"]').listeners.get("click")();
+    assert.match(resultList.innerHTML, /Noch keine Gegnerwürfe/);
+    hooks.get("updateChatMessage")(message);
+    assert.doesNotMatch(resultList.innerHTML, /<article/);
+    assert.deepEqual(errors, [], "message hooks and turn changes succeed");
   } finally {
     bridge?.stop();
     await new Promise((resolve) => setImmediate(resolve));
@@ -79,6 +109,7 @@ test("starts the companion shell and registers right-click before the first rend
       else delete globalThis[key];
     }
   }
+  assert.equal(hooks.has("createChatMessage"), false, "message hooks are removed on shutdown");
 });
 
 test("assigns 30 distinct encounter palette colors", () => {
@@ -202,7 +233,7 @@ test("guards legendary resources, lockouts, linked attacks, saves, and damage", 
   assert.match(source, /LEGENDARY_LOCK_FLAG_KEY/);
   assert.match(source, /#restoreLegendaryAtTurnStart\(event\)/);
   assert.match(source, /resource\.remaining < legendary\.cost/);
-  assert.match(source, /attack\.rollAttack\(\{\}, \{ configure: false \}\)/);
+  assert.match(source, /attack\.rollAttack\(\{\}, \{ configure: false \}, rollMessageConfig\(rollGroupId\)\)/);
   assert.match(source, /data-guidance-action="roll-legendary-damage"/);
   assert.match(source, /Rettungswurf – SG/);
   assert.match(source, /gm-workspace-legendary-resource/);

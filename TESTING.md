@@ -650,6 +650,21 @@ Do not approve Stage 3 if the dashboard moves the laptop camera, selects the wro
 - Während laufendem Schadenswurf rechts klicken: kein zusätzlicher Zustandswechsel.
 - Rechtsklick außerhalb der Schadensbuttons: normales Kontextmenü.
 
+## 0.10.0: Würfelprotokoll und Mauszeiger
+
+1. Modul aktualisieren, Welt neu laden und Companion-Fenster neu öffnen; 0.10.0 im Kopf prüfen.
+2. Gelegenheitsangriff: Schadensbutton zeigt trotz verbrauchter Reaktion einen Handzeiger. Links würfelt Schaden, rechts bestätigt Verfehlt. Kein Ressourcen-Refund.
+3. Angriff mit 13 + 7: 20 anzeigen, ohne NAT-Markierung. Alle Würfel und Boni sind ohne Aufklappen sichtbar.
+4. Natürliche 20 + 8: grünes NAT 20 ohne 28 oder +8. Natürliche 1: rotes NAT 1 ohne addierten Bonus. Foundry-Chatwerte bleiben unverändert.
+5. Vorteil/Nachteil: beide W20 sichtbar, verworfener Wert durchgestrichen. Verworfene 20 bei gewerteter 13 darf kein NAT 20 ergeben.
+6. Schaden mit mehreren Typen: jeden Typ, alle Einzelwürfel und Modifikatoren sowie Gesamtschaden prüfen.
+7. Fiery Rays: Schadensbuttons in anderer Reihenfolge anklicken und einen Angriff per Rechtsklick verwerfen. Schaden und Fehlschlag müssen bei genau dem zugehörigen Angriff stehen.
+8. Rettungswürfe aus Dashboard und Statblock sowie Würfe vom Laptop und Companion auslösen. Keine doppelten Einträge.
+9. Zug per End Turn und über den normalen Combat Tracker wechseln: bestehende Einträge sofort grau, neue Würfe normal. Auch Rückwärts- und Rundenwechsel prüfen.
+10. Papierkorb klicken: kompletter Ergebnisverlauf leer, Foundry-Chat weiterhin vorhanden. Änderungen an alten Chatkarten dürfen gelöschte Einträge nicht zurückholen.
+11. RSReforged ein- und ausschalten; kombinierte Angriffs-/Schadenskarten und nachträglich ergänzten Schaden prüfen.
+12. Ohne Encounter öffnen, schließen und erneut öffnen sowie Welt-Reload prüfen. Das Ergebnisfenster muss korrekt starten; der Verlauf beginnt nach Reload neu.
+
 ## 0.9.3: Workspace-Start
 
 - Von 0.9.2 auf 0.9.3 aktualisieren. Altes Companion-Fenster schließen und die Welt neu laden.
