@@ -650,6 +650,21 @@ Do not approve Stage 3 if the dashboard moves the laptop camera, selects the wro
 - Während laufendem Schadenswurf rechts klicken: kein zusätzlicher Zustandswechsel.
 - Rechtsklick außerhalb der Schadensbuttons: normales Kontextmenü.
 
+## 0.11.0: Wurfarten, kritischer Schaden und Zusatzwürfe
+
+1. Auf 0.11.0 aktualisieren, Welt neu laden und Companion neu öffnen.
+2. Normale Angriffe, Schaden und Rettungswürfe auslösen. Symbol/Text muss unmittelbar vor der Endzahl stehen; Darstellung bleibt einzeilig.
+3. NPC-Angriffs-NAT-20 würfeln, danach Schaden auslösen: 1W6 + X wird 1W6 + 6 + X; 1W8 + X wird 1W8 + 8 + X. 2W6 + X wird 2W6 + 12 + X. Ergebnis muss auch in Foundrys Chat stimmen.
+4. Bei mehreren Schadensarten jeden normalen Würfelsatz berücksichtigen, feste Boni nicht verdoppeln. Schaden ohne zugehörige NAT 20 bleibt unverändert.
+5. Bei Fiery Rays eine NAT 20 und einen normalen Angriff erzeugen und Schäden in anderer Reihenfolge anklicken. Nur der zugehörige kritische Schaden erhält den Maximalbonus.
+6. Sowohl NAT 1 als auch NAT 20 erzeugt einen eigenen zusätzlichen W20. Angriffsergebnis und Ressourcenverbrauch bleiben unverändert.
+7. Zusatz-W20 mit Ergebnis 1 oder 20 darf keine Würfelkette starten. 2W6 werden erst bei Klick geworfen und sind kein Angriffsschaden.
+8. 2W6-Button einmal und rasch mehrfach anklicken: insgesamt nur ein Zusatzwurf. Nach erfolgreichem Wurf verschwindet der Button.
+9. Rettungswurf-NAT-1/-20 und Proben sowie Spieler-Actors prüfen: keine automatischen Sonderwürfe oder Hausregel-Schadensänderungen.
+10. Angriff im Hauptfenster und im Companion sowie mit und ohne RSReforged prüfen: pro Angriff nur ein automatischer Zusatz-W20.
+11. Nach Zugwechsel darf eine alte NAT 20 keinen neuen, unabhängigen Schaden kritisch machen. Einträge werden weiterhin grau; Papierkorb funktioniert.
+12. Private/GM-Würfe und ihre Zusatzwürfe auf korrekte Empfänger prüfen. Club-Angriffs- und Schadensklicks aus 0.10.1 erneut prüfen.
+
 ## 0.10.1: Eingebettete Angriffe und Schadensformeln
 
 1. Auf 0.10.1 aktualisieren, Welt neu laden und Companion neu öffnen.

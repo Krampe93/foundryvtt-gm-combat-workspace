@@ -462,6 +462,7 @@ Die dauerhaft sichtbare Bildschirmaufteilung vor Reaktions-Reset, legendären Ak
 - Rechtsklick-Fehlschläge am zugehörigen Angriff markieren.
 - Beim Zugwechsel alle bisherigen Einträge ausgrauen; neue Würfe normal anzeigen.
 - Papierkorb zum vollständigen Leeren des Ergebnisverlaufs ergänzen.
+- Mit 0.11.0 Wurfart direkt vor der Endzahl kennzeichnen; NPC-Angriffs-NAT-20 mit normalem Schaden plus maximalem Würfelsatz, sowie NAT 1 und NAT 20 mit separatem Zusatz-W20 und freiwilligen 2W6 behandeln. Foundry-Abnahme offen.
 - Schadensbuttons verbrauchter Reaktionen mit korrektem Handzeiger darstellen.
 - Verlauf ab Öffnen des Companion-Fensters führen; Reload startet einen neuen Verlauf.
 

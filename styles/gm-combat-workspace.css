@@ -2121,11 +2121,39 @@ body.gm-combat-workspace-companion > .notifications {
   line-height: 1.5;
 }
 
-#gm-combat-workspace-shell .gm-workspace-roll-row > strong {
+#gm-combat-workspace-shell .gm-workspace-roll-total {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
   flex-shrink: 0;
   margin-left: auto;
+}
+
+#gm-combat-workspace-shell .gm-workspace-roll-total > strong {
   font-size: 1.05rem;
   font-variant-numeric: tabular-nums;
+}
+
+#gm-combat-workspace-shell .gm-workspace-roll-badge {
+  padding: 0.05rem 0.25rem;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  font-size: 0.65rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-roll-badge.is-attack { color: #99caff; }
+#gm-combat-workspace-shell .gm-workspace-roll-badge.is-damage { color: #ffc58a; }
+#gm-combat-workspace-shell .gm-workspace-roll-badge.is-save { color: #d1b3ff; }
+#gm-combat-workspace-shell .gm-workspace-roll-badge.is-extra,
+#gm-combat-workspace-shell .gm-workspace-roll-badge.is-extraDice { color: #eee09a; }
+
+#gm-combat-workspace-shell [data-action="roll-extra-dice"] {
+  width: auto;
+  height: 24px;
+  margin: 0;
+  padding: 0 0.35rem;
+  font-size: 0.7rem;
+  cursor: pointer;
 }
 
 #gm-combat-workspace-shell .gm-workspace-roll-identity,

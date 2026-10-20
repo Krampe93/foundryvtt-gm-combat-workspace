@@ -1,3 +1,13 @@
+## 0.11.0 – 2026-10-20
+
+- Wurfart mit Symbol und Text unmittelbar vor der Endzahl markiert: Angriff, Schaden und Rettungswurf sind klar unterscheidbar.
+- Hausregel für NPC-Angriffs-NAT-20 ergänzt: normaler Schadenswurf plus maximaler Wert eines normalen Würfelsatzes, feste Boni einmal. Nutzt D&D5es native powerfulCritical-Option, ohne globale Systemeinstellungen zu verändern.
+- Kritischen Schaden je Gegner, Item, Aktivität und expliziter Angriffsgruppe zugeordnet. Bei Zugwechsel werden alte Zuordnungen verworfen.
+- Bei NAT 1 und NAT 20 eines NPC-Angriffs automatisch genau einen separaten Zusatz-W20 gewürfelt. Der Angriff bleibt unverändert, Zusatzwürfe lösen keine weiteren Zusatzwürfe aus.
+- Zusatz-W20 mit einmaligem freiwilligen 2W6-Button versehen; Ergebnis separat von Angriffsschaden angezeigt. Rettungswürfe, Proben und Spieler-Actors erhalten keine Sonderregeln.
+- Hook-Aliase und synchronisierte Chatnachrichten erzeugen keine doppelten Zusatzwürfe; optionale Würfe übernehmen die Sichtbarkeit ihrer Quelle.
+- 93 automatisierte Tests erfolgreich, native kritische Berechnung mit D&D5e 5.3.2 geprüft und lokale Browser-Klicktests erfolgreich. Live-Foundry-Abnahme offen.
+
 ## 0.10.1 – 2026-10-20
 
 - Klick auf einen eindeutigen Angriffsnamen wie Club führt im eingebetteten Statblock direkt den Angriffswurf aus. Der bisherige allgemeine Item-Aufruf mit ziellosem synthetischem Event entfällt.
