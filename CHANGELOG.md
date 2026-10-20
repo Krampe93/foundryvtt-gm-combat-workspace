@@ -1,3 +1,15 @@
+## 0.10.0 – 2026-10-20
+
+- Würfelergebnisse im vorgesehenen Workspace-Bereich ergänzt: Gegnername, Fähigkeit, Einzelwürfel, Boni und Gesamtergebnis ohne Aufklappen.
+- Natürliche 1 und 20 farblich als NAT 1 und NAT 20 dargestellt; Modifikatoren werden in diesen Fällen nicht zum angezeigten W20-Ergebnis addiert. Foundrys Würfe bleiben unverändert.
+- Bei Vorteil und Nachteil sämtliche W20 anzeigen und verworfene Werte durchstreichen; nur der gewertete Würfel bestimmt NAT 1/20.
+- Schaden nach Typ und Einzelwürfeln aufschlüsseln; mehrere Schadensarten ergeben zusätzlich einen Gesamtschaden.
+- Angriffe und späteren Schaden bei Gelegenheitsangriffen und legendären Folgeangriffen mit eindeutiger Zuordnung zusammenhalten; bestätigte Fehlschläge im Protokoll markieren.
+- Beim Zugwechsel bisherige Einträge ausgrauen; neue Würfe normal hervorheben. Papierkorb leert den gesamten Ergebnisverlauf dieses Fensters.
+- Neue und aktualisierte Chatnachrichten aus beiden Foundry-Fenstern lesen, ohne erneut zu würfeln oder dieselbe Nachricht doppelt anzuzeigen. Gemischte RSReforged-Karten berücksichtigen.
+- Falschen Verbot-Mauszeiger auf weiterhin nutzbaren Schadensbuttons verbrauchter Reaktionen behoben.
+- Automatische Tests einschließlich Workspace-Start und Nachrichtenverarbeitung sowie eine lokale Browserprüfung durchgeführt; Foundry-Abnahme steht noch aus.
+
 ## 0.9.3 – 2026-10-20
 
 - Blackscreen beim Öffnen des GM-Workspace behoben: Der Rechtsklick-Handler wird am bereits erzeugten Element registriert, bevor dieses als Workspace-Root gespeichert wird.

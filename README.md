@@ -18,7 +18,7 @@ https://raw.githubusercontent.com/Krampe93/foundryvtt-gm-combat-workspace/main/m
 
 This manifest URL is permanent. Foundry can use it to discover and install future test versions through the normal update function.
 
-Version `0.9.1` adds tracked legendary-action budgets and per-action lockouts to the player-turn guidance introduced in 0.9.0. Linked attacks such as Scorching Ray and Rend use the established attack-then-damage workflow, while player-facing saves are displayed without being rolled automatically. No third-party module is required; existing `reaction-tracker` combat flags are read when present.
+Version `0.10.0` adds an always-expanded enemy roll history in the reserved results panel. Individual dice, modifiers and damage types are visible immediately. Natural 1 and 20 are displayed as distinct colored NAT results without adding modifiers to the displayed value; the actual Foundry rolls are unchanged. Existing results turn grey when combat advances, and the trash button clears the panel history. The history tracks new messages and updates received while this companion window is open; reloading the window starts a fresh history. No third-party module is required.
 
 ## Development
 

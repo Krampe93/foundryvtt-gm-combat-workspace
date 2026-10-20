@@ -1,6 +1,7 @@
 import { MODULE_ID } from "../config.js";
 import { createLogger } from "../core/logger.js";
 import { calculateHpUpdate, halfDamage, parseHpInput, uniqueHpTargets } from "./hp-operations.js";
+import { RollHistory, renderRollHistory, rollMessageConfig, rollMessageEntry } from "./roll-results.js";
 import {
   LEGACY_REACTION_FLAG_KEY,
   LEGACY_REACTION_MODULE_ID,
@@ -139,6 +140,8 @@ export class WorkspaceBridge {
   #systemStatusGuardHook = null;
   #systemStatusDeleteGuardHook = null;
   #rollAttackHook = null;
+  #rollMessageHooks = [];
+  #rollHistory = new RollHistory();
   #sheetRenderHooks = [];
   #sheetDiagnosticHooks = [];
   #sheetHostObserver = null;
@@ -191,6 +194,7 @@ export class WorkspaceBridge {
     this.#channel = new BroadcastChannel(CHANNEL_NAME);
     this.#channel.addEventListener("message", (event) => this.#receive(event.data));
     this.#unsubscribe = this.#eventBus.on("combatStateChanged", (event) => {
+      this.#rollHistory.advance(event.previousSnapshot, event.snapshot);
       this.#handleEncounterTransition(event);
       this.#restoreReactionAtTurnStart(event);
       this.#restoreLegendaryAtTurnStart(event);
@@ -229,6 +233,7 @@ export class WorkspaceBridge {
       this.#registerModifierReset();
       this.#registerRollDiagnostics();
       this.#renderWorkspace();
+      this.#registerRollHistory();
       this.#channel.postMessage({ type: "workspaceReady" });
     } else {
       this.#renderLauncher();
@@ -266,6 +271,8 @@ export class WorkspaceBridge {
       Hooks.off("dnd5e.rollAttackV2", this.#rollAttackHook);
       this.#rollAttackHook = null;
     }
+    for (const [hookName, hookId] of this.#rollMessageHooks) Hooks.off(hookName, hookId);
+    this.#rollMessageHooks = [];
 
     for (const [hookName, hookId] of this.#sheetRenderHooks) {
       Hooks.off(hookName, hookId);
@@ -451,11 +458,9 @@ export class WorkspaceBridge {
               <section class="gm-workspace-reserved gm-workspace-roll-results" aria-label="Würfelergebnisse">
                 <header>
                   <h2><i class="fa-solid fa-dice-d20" aria-hidden="true"></i> Würfelergebnisse</h2>
+                  <button type="button" data-action="clear-roll-history" title="Würfelverlauf vollständig leeren" aria-label="Würfelverlauf vollständig leeren"><i class="fa-solid fa-trash-can" aria-hidden="true"></i></button>
                 </header>
-                <div class="gm-workspace-reserved-empty">
-                  <i class="fa-solid fa-dice" aria-hidden="true"></i>
-                  <span>Für eine spätere Etappe reserviert</span>
-                </div>
+                <div class="gm-workspace-roll-list" data-role="roll-results" role="log" aria-label="Würfelverlauf"></div>
               </section>
               <section class="gm-workspace-reserved gm-workspace-minimap" aria-label="Minimap">
                 <header>
@@ -498,6 +503,10 @@ export class WorkspaceBridge {
     root.querySelector('[data-role="reaction-panel"]')
       .addEventListener("click", (event) => this.#onReactionClick(event));
     root.addEventListener("contextmenu", (event) => this.#onPendingDamageMiss(event));
+    root.querySelector('[data-action="clear-roll-history"]').addEventListener("click", () => {
+      this.#rollHistory.clear();
+      this.#renderRollResults();
+    });
 
     document.body.append(root);
     this.#root = root;
@@ -511,6 +520,47 @@ export class WorkspaceBridge {
     if (!notifications) return;
     if (notifications.parentElement !== document.body) document.body.append(notifications);
     notifications.classList.add("gm-workspace-notifications");
+  }
+
+  #registerRollHistory() {
+    for (const hookName of ["createChatMessage", "updateChatMessage"]) {
+      const id = Hooks.on(hookName, (message) => {
+        try {
+          const speaker = message.speaker ?? {};
+          const actor = message.getAssociatedActor?.() ??
+            game.scenes?.get(speaker.scene)?.tokens?.get(speaker.token)?.actor ?? game.actors?.get(speaker.actor);
+          const itemFlag = message.flags?.dnd5e?.item;
+          const item = itemFlag ? actor?.items?.get(itemFlag.id) ?? message.getAssociatedItem?.() : null;
+          const piece = rollMessageEntry(message, {
+            actor, item,
+            damageLabel: (type) => {
+              const configured = CONFIG.DND5E?.damageTypes?.[type] ?? CONFIG.DND5E?.healingTypes?.[type];
+              const label = typeof configured === "string" ? configured : configured?.label ?? type;
+              return game.i18n.localize(label);
+            }
+          });
+          if (this.#rollHistory.add(piece)) this.#renderRollResults();
+        } catch (error) {
+          this.#logger.error("Roll result could not be displayed", error);
+        }
+      });
+      this.#rollMessageHooks.push([hookName, id]);
+    }
+    const id = Hooks.on("deleteChatMessage", (message) => {
+      this.#rollHistory.remove(message.id);
+      this.#renderRollResults();
+    });
+    this.#rollMessageHooks.push(["deleteChatMessage", id]);
+  }
+
+  #renderRollResults() {
+    const list = this.#root?.querySelector('[data-role="roll-results"]');
+    if (!list) return;
+    const scrolledToTop = list.scrollTop < 8;
+    const previousScroll = list.scrollTop;
+    const previousHeight = list.scrollHeight;
+    list.innerHTML = renderRollHistory(this.#rollHistory);
+    list.scrollTop = scrolledToTop ? 0 : previousScroll + list.scrollHeight - previousHeight;
   }
 
   #registerSheetHooks() {
@@ -1376,12 +1426,14 @@ export class WorkspaceBridge {
         if (!activity || typeof activity.rollAttack !== "function") {
           throw new Error(`${attack.name} besitzt keinen ausführbaren Angriffswurf.`);
         }
-        const result = await activity.rollAttack({}, { configure: false });
+        const rollGroupId = foundry.utils.randomID();
+        const result = await activity.rollAttack({}, { configure: false }, rollMessageConfig(rollGroupId));
         const succeeded = Array.isArray(result) ? result.length > 0 : Boolean(result);
         if (!succeeded) continue;
         if (typeof activity.rollDamage === "function") {
           pending.push({
             id: `${Date.now()}-${index}-${attack.activityId}`,
+            rollGroupId,
             itemId: attack.itemId,
             activityId: attack.activityId,
             label: sequence.length > 1 ? `${attack.itemName ?? attack.name} ${index + 1}` : attack.itemName ?? attack.name
@@ -1407,6 +1459,11 @@ export class WorkspaceBridge {
     const key = legendary ? button.dataset.legendaryKey : combatantId;
     if (!key || (legendary ? this.#legendaryBusy.has(key) : this.#reactionBusy.has(key))) return;
     const pending = legendary ? this.#pendingLegendaryDamage : this.#pendingReactionDamage;
+    const target = (pending.get(key) ?? []).find(({ id }) => id === button.dataset.pendingId);
+    if (target?.rollGroupId) {
+      this.#rollHistory.markMiss(target.rollGroupId);
+      this.#renderRollResults();
+    }
     const remaining = (pending.get(key) ?? []).filter(({ id }) => id !== button.dataset.pendingId);
     if (remaining.length) pending.set(key, remaining);
     else pending.delete(key);
@@ -1427,7 +1484,7 @@ export class WorkspaceBridge {
     this.#reactionBusy.add(entry.id);
     this.#releaseStaleModifiers();
     try {
-      const result = await activity.rollDamage({}, { configure: false });
+      const result = await activity.rollDamage({}, { configure: false }, rollMessageConfig(target.rollGroupId));
       const succeeded = Array.isArray(result) ? result.length > 0 : Boolean(result);
       if (succeeded) {
         const remaining = pending.filter(({ id }) => id !== pendingId);
@@ -1970,11 +2027,13 @@ export class WorkspaceBridge {
 
       if (attack && typeof attack.rollAttack === "function") {
         for (let index = 0; index < Math.max(1, plan.attackCount); index += 1) {
-          const result = await attack.rollAttack({}, { configure: false });
+          const rollGroupId = foundry.utils.randomID();
+          const result = await attack.rollAttack({}, { configure: false }, rollMessageConfig(rollGroupId));
           if (result === false || result === null) continue;
           if (typeof attack.rollDamage === "function") {
             pending.push({
               id: `${Date.now()}-${index}-${attack.id}`,
+              rollGroupId,
               itemId: linkedItem.id,
               activityId: attack.id,
               label: plan.attackCount > 1 ? `${linkedItem.name} ${index + 1}` : linkedItem.name
@@ -2010,7 +2069,7 @@ export class WorkspaceBridge {
 
     this.#legendaryBusy.add(key);
     try {
-      const result = await activity.rollDamage({}, { configure: false });
+      const result = await activity.rollDamage({}, { configure: false }, rollMessageConfig(target.rollGroupId));
       if (result !== false && result !== null) {
         const remaining = pending.filter(({ id }) => id !== pendingId);
         if (remaining.length) this.#pendingLegendaryDamage.set(key, remaining);
@@ -2078,6 +2137,7 @@ export class WorkspaceBridge {
     this.#renderEnemyList();
     this.#renderReactionOverview();
     this.#renderCombatControls();
+    this.#renderRollResults();
 
     const guidanceReturn = this.#root.querySelector('[data-action="show-turn-guidance"]');
     guidanceReturn.hidden = !this.#turnGuidance || this.#turnGuidance.visible;
