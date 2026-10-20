@@ -160,14 +160,15 @@ export function renderRollHistory(history) {
   return history.entries.map((entry) => {
     const rows = Array.from(entry.pieces.values()).flatMap((piece) => piece.rows);
     const damages = rows.filter(({ kind }) => kind === "damage");
-    return `<article class="gm-workspace-roll-card${entry.stale ? " is-previous-turn" : ""}">
-      <header><strong>${escape(entry.actorName)}</strong><span>${escape(entry.title)}</span>${entry.stale ? '<small>Vorheriger Zug</small>' : ""}</header>
+    return `<article class="gm-workspace-roll-card${entry.stale ? " is-previous-turn" : ""}"${entry.stale ? ' aria-label="Vorheriger Zug"' : ""}>
       ${rows.map((row) => `<div class="gm-workspace-roll-row${row.natural ? ` is-natural-${row.natural}` : ""}">
-        <div class="gm-workspace-roll-result"><span>${escape(row.label)}</span><strong>${row.natural ? `NAT ${row.natural}` : escape(row.total)}</strong></div>
-        <p class="gm-workspace-roll-details">${renderDetails(row.details)}</p>
+        <span class="gm-workspace-roll-identity"><b>${escape(entry.actorName)}</b> · ${escape(entry.title)}</span>
+        <span class="gm-workspace-roll-kind">${escape(row.label)}</span>
+        <span class="gm-workspace-roll-details">${renderDetails(row.details)}</span>
+        <strong>${row.natural ? `NAT ${row.natural}` : escape(row.total)}</strong>
+        ${entry.missed && row.kind === "attack" ? '<span class="gm-workspace-roll-miss">Verfehlt</span>' : ""}
       </div>`).join("")}
       ${damages.length > 1 ? `<div class="gm-workspace-roll-sum">Gesamtschaden <strong>${damages.reduce((sum, row) => sum + row.total, 0)}</strong></div>` : ""}
-      ${entry.missed ? '<p class="gm-workspace-roll-miss">Verfehlt</p>' : ""}
     </article>`;
   }).join("");
 }

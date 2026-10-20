@@ -20,6 +20,8 @@ This manifest URL is permanent. Foundry can use it to discover and install futur
 
 Version `0.10.0` adds an always-expanded enemy roll history in the reserved results panel. Individual dice, modifiers and damage types are visible immediately. Natural 1 and 20 are displayed as distinct colored NAT results without adding modifiers to the displayed value; the actual Foundry rolls are unchanged. Existing results turn grey when combat advances, and the trash button clears the panel history. The history tracks new messages and updates received while this companion window is open; reloading the window starts a fresh history. No third-party module is required.
 
+Version `0.10.1` fixes embedded statblock attack-name and damage-formula clicks, including links replaced after rendering. Enemy, activity, roll type, individual dice and result now share a single line per roll. Long result lines remain accessible through scrolling rather than truncated values.
+
 ## Development
 
 Validate the manifest, referenced files, optional-dependency policy, and matching translation keys:

@@ -26,7 +26,8 @@ import {
   prepareInlineActivityCommands,
   prepareStatblockDescription,
   prepareStatblockSource,
-  statblockActivityAction
+  statblockActivityAction,
+  statblockClickRoute
 } from "./statblock-operations.js";
 
 const CHANNEL_NAME = `${MODULE_ID}.workspace`;
@@ -155,7 +156,7 @@ export class WorkspaceBridge {
   #sheetMinimizePatch = null;
   #sheetStateObserver = null;
   #preparedSheetElements = new WeakSet();
-  #preparedItemLinks = new WeakSet();
+  #statblockBusy = new Set();
   #selectionRevision = 0;
   #rollDebug = {
     status: "Noch kein Item im Workspace benutzt.",
@@ -678,21 +679,14 @@ export class WorkspaceBridge {
       element.addEventListener("click", (event) => {
         if (event.altKey || event.ctrlKey || event.shiftKey || event.metaKey) return;
         this.#releaseStaleModifiers();
+        const link = event.target.closest?.('.roll-link[data-action="use"][data-item-id], .gm-workspace-inline-activity, .roll-link-group[data-type="attack"], .roll-link-group[data-type="damage"]');
+        if (link && element.contains(link)) this.#useItemWithoutStaleModifiers(event, link);
       }, { capture: true });
     }
 
-    this.#wireStatblockItemLinks(element);
     void this.#augmentStatblock(element, this.#displayedActor).catch((error) => {
       this.#logger.warn("Statblock additions could not be prepared", error);
     });
-  }
-
-  #wireStatblockItemLinks(element) {
-    for (const link of element.querySelectorAll('.roll-link[data-action="use"][data-item-id]')) {
-      if (this.#preparedItemLinks.has(link)) continue;
-      this.#preparedItemLinks.add(link);
-      link.addEventListener("click", (event) => this.#useItemWithoutStaleModifiers(event, link));
-    }
   }
 
   async #augmentStatblock(element, actor) {
@@ -773,7 +767,6 @@ export class WorkspaceBridge {
       section.append(action);
     }
 
-    this.#wireStatblockItemLinks(element);
   }
 
   #statblockActivityRoutes(item) {
@@ -826,14 +819,10 @@ export class WorkspaceBridge {
   #useItemWithoutStaleModifiers(event, link) {
     if (event.altKey || event.ctrlKey || event.shiftKey || event.metaKey) return;
 
-    const itemId = link.closest("[data-item-id]")?.dataset?.itemId;
-    const item = this.#displayedActor?.items?.get(itemId) ?? null;
-    if (!item || link.ariaDisabled === "true") return;
-    const activityId = link.dataset.activityId ?? null;
-    const activity = activityId
-      ? item.system?.activities?.get?.(activityId) ?? Array.from(item.system?.activities?.values?.() ?? [])
-        .find(({ id }) => id === activityId) ?? null
-      : null;
+    const route = statblockClickRoute(this.#displayedActor, link);
+    if (!route || link.ariaDisabled === "true") return;
+    const { item, activity, action } = route;
+    const activityId = activity?.id ?? null;
 
     const downKeysBefore = Array.from(game.keyboard?.downKeys ?? []).sort();
     const bindings = this.#rollKeybindings();
@@ -842,6 +831,8 @@ export class WorkspaceBridge {
     event.stopImmediatePropagation();
     event.stopPropagation();
     this.#releaseStaleModifiers();
+    const busyKey = `${this.#displayedActor?.uuid ?? this.#displayedActor?.id}:${item.id}:${activityId}:${action}`;
+    if (this.#statblockBusy.has(busyKey)) return;
 
     this.#rollDebug = {
       status: activity
@@ -861,8 +852,8 @@ export class WorkspaceBridge {
         keybindings: bindings,
         activity: activity?.name ?? null,
         activityId,
-        activityAction: link.dataset.activityAction ?? null,
-        route: activity ? "Workspace → activity" : "Workspace → item.use(cleanEvent)"
+        activityAction: action,
+        route: activity ? "Workspace → activity" : "Workspace → item.use(originalEvent)"
       },
       roll: null
     };
@@ -873,34 +864,19 @@ export class WorkspaceBridge {
       snapshot: this.#sheetSnapshot(this.#displayedSheet)
     });
 
-    const cleanEvent = new MouseEvent("click", {
-      bubbles: true,
-      cancelable: true,
-      composed: true,
-      view: window,
-      detail: event.detail,
-      screenX: event.screenX,
-      screenY: event.screenY,
-      clientX: event.clientX,
-      clientY: event.clientY,
-      button: event.button,
-      buttons: event.buttons,
-      relatedTarget: event.relatedTarget,
-      ctrlKey: false,
-      shiftKey: false,
-      altKey: false,
-      metaKey: false
-    });
-
+    this.#statblockBusy.add(busyKey);
     try {
       let result;
-      if (activity) result = executeStatblockActivity(activity, link.dataset.activityAction);
-      else result = item.use({ event: cleanEvent });
-      result?.catch?.((error) => {
+      if (activity) result = executeStatblockActivity(activity, action);
+      else result = item.use({ event });
+      Promise.resolve(result).catch((error) => {
         this.#logger.error(`Statblock activity failed: ${item.name}`, error);
         ui.notifications?.error(`${item.name} konnte nicht ausgeführt werden: ${error.message}`);
+      }).finally(() => {
+        this.#statblockBusy.delete(busyKey);
       });
     } catch (error) {
+      this.#statblockBusy.delete(busyKey);
       this.#logger.error(`Statblock activity failed: ${item.name}`, error);
       ui.notifications?.error(`${item.name} konnte nicht ausgeführt werden: ${error.message}`);
     }

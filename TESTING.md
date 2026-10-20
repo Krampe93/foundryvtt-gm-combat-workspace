@@ -650,6 +650,17 @@ Do not approve Stage 3 if the dashboard moves the laptop camera, selects the wro
 - Während laufendem Schadenswurf rechts klicken: kein zusätzlicher Zustandswechsel.
 - Rechtsklick außerhalb der Schadensbuttons: normales Kontextmenü.
 
+## 0.10.1: Eingebettete Angriffe und Schadensformeln
+
+1. Auf 0.10.1 aktualisieren, Welt neu laden und Companion neu öffnen.
+2. Goblin Commoner auswählen. Im eingebetteten Sheet Club anklicken: genau ein Angriffswurf und ein Ergebniseintrag, noch kein Schadenswurf.
+3. Die Schadensformel (1d4 - 1) im selben Sheet anklicken: genau ein Schadenswurf.
+4. Angriff im Hauptfenster würfeln und anschließend im Companion-Sheet die Schadensformel anklicken. Schaden muss weiterhin funktionieren.
+5. Gegner wechseln, zurückwechseln, Trefferpunkte ändern und Sheet neu rendern. Name und Formel müssen weiter bedienbar sein, ohne doppelte Würfe.
+6. Monster mit separater Damage-Aktivität und eingebetteten ergänzten Fähigkeiten prüfen. Explizite Activity-UUID muss die zugehörige Aktivität verwenden.
+7. Gegnername, Fähigkeit, Wurfart, Einzelwürfel und Ergebnis stehen in einer Zeile. NAT 1/20, mehrere Schadensarten, Papierkorb und Zugwechsel-Ausgrauung bleiben funktionsfähig.
+8. Mit und ohne RSReforged prüfen. Mehrdeutige Aktivitäten werden über Foundrys native Auswahl behandelt, nicht geraten.
+
 ## 0.10.0: Würfelprotokoll und Mauszeiger
 
 1. Modul aktualisieren, Welt neu laden und Companion-Fenster neu öffnen; 0.10.0 im Kopf prüfen.
