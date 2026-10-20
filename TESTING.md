@@ -649,3 +649,11 @@ Do not approve Stage 3 if the dashboard moves the laptop camera, selects the wro
 - Übrige Buttons links anklicken: normaler Schaden, jeweils nur der verwendete Button verschwindet.
 - Während laufendem Schadenswurf rechts klicken: kein zusätzlicher Zustandswechsel.
 - Rechtsklick außerhalb der Schadensbuttons: normales Kontextmenü.
+
+## 0.9.3: Workspace-Start
+
+- Von 0.9.2 auf 0.9.3 aktualisieren. Altes Companion-Fenster schließen und die Welt neu laden.
+- GM-Workspace öffnen: Oberfläche und Gegnerübersicht müssen erscheinen, kein Blackscreen.
+- Ohne Encounter: verständliche Leeransicht. Mit Encounter: Gegnerübersicht und Statblock prüfen.
+- Fenster schließen und erneut öffnen; anschließend beide Foundry-Fenster neu laden.
+- Rechtsklick-Tests aus 0.9.2 wiederholen.

@@ -3,11 +3,83 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
+  WorkspaceBridge,
   combatantColor,
   isAutomaticActorDeltaStatus,
   savingThrowConfig,
   turnGuidancePhases
 } from "../scripts/services/workspace-bridge.js";
+
+test("starts the companion shell and registers right-click before the first render", async () => {
+  class Element {
+    children = [];
+    selectors = new Map();
+    listeners = new Map();
+    classNames = new Set();
+    classList = {
+      add: (name) => this.classNames.add(name),
+      remove: (name) => this.classNames.delete(name),
+      toggle: (name, active) => active ? this.classNames.add(name) : this.classNames.delete(name)
+    };
+    addEventListener(type, handler) { this.listeners.set(type, handler); }
+    querySelector(selector) {
+      if (!this.selectors.has(selector)) this.selectors.set(selector, new Element());
+      return this.selectors.get(selector);
+    }
+    querySelectorAll() { return []; }
+    append(child) { child.parentElement = this; this.children.push(child); }
+    remove() { this.parentElement.children = this.parentElement.children.filter((child) => child !== this); }
+  }
+  const body = new Element();
+  const messages = [];
+  const errors = [];
+  const environment = {
+    document: { body, createElement: () => new Element(), querySelector: () => null },
+    window: {
+      location: { href: "https://foundry.example/game?gmCombatWorkspace=1" },
+      addEventListener() {}, removeEventListener() {}, dispatchEvent() {}
+    },
+    KeyboardEvent: class {},
+    MutationObserver: class { observe() {} disconnect() {} },
+    BroadcastChannel: class {
+      addEventListener() {}
+      postMessage(message) { messages.push(message); }
+      close() {}
+    },
+    Hooks: { on: () => 1, off() {} },
+    game: { modules: new Map(), keyboard: { downKeys: new Set() } }
+  };
+  const originals = new Map(Object.keys(environment).map((key) => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
+  let bridge;
+  try {
+    for (const [key, value] of Object.entries(environment)) {
+      Object.defineProperty(globalThis, key, { value, configurable: true, writable: true });
+    }
+    bridge = new WorkspaceBridge({
+      eventBus: { on: () => () => {} },
+      getSnapshot: () => null,
+      logger: { error: (...args) => errors.push(args), warn() {} }
+    });
+    assert.doesNotThrow(() => bridge.start());
+    await new Promise((resolve) => setImmediate(resolve));
+    const shell = body.children.find(({ id }) => id === "gm-combat-workspace-shell");
+    assert.ok(shell, "companion shell is attached to the page");
+    assert.equal(typeof shell.listeners.get("contextmenu"), "function");
+    assert.ok(messages.some(({ type }) => type === "workspaceReady"));
+    assert.match(shell.querySelector('[data-role="enemy-list"]').innerHTML, /Kein laufender Encounter/);
+    assert.deepEqual(errors, [], "initial asynchronous rendering succeeds");
+    let prevented = false;
+    shell.listeners.get("contextmenu")({ target: { closest: () => null }, preventDefault() { prevented = true; } });
+    assert.equal(prevented, false, "unrelated context menus remain available");
+  } finally {
+    bridge?.stop();
+    await new Promise((resolve) => setImmediate(resolve));
+    for (const [key, descriptor] of originals) {
+      if (descriptor) Object.defineProperty(globalThis, key, descriptor);
+      else delete globalThis[key];
+    }
+  }
+});
 
 test("assigns 30 distinct encounter palette colors", () => {
   const colors = Array.from({ length: 30 }, (_, index) => combatantColor(index));

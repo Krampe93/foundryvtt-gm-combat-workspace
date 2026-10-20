@@ -1,3 +1,8 @@
+## 0.9.3 – 2026-10-20
+
+- Blackscreen beim Öffnen des GM-Workspace behoben: Der Rechtsklick-Handler wird am bereits erzeugten Element registriert, bevor dieses als Workspace-Root gespeichert wird.
+- Starttest ergänzt, der den Aufbau des Companion-Fensters einschließlich Eventregistrierung und erstem Rendern ausführt.
+
 ## 0.9.2 – 2026-10-20
 
 - Rechtsklick auf ausstehende Schadensbuttons bestätigt einen Fehlschlag ohne Schadenswurf.

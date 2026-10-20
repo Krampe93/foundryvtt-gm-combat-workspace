@@ -497,7 +497,7 @@ export class WorkspaceBridge {
       .addEventListener("pointerout", (event) => this.#onEnemyHover(event, false));
     root.querySelector('[data-role="reaction-panel"]')
       .addEventListener("click", (event) => this.#onReactionClick(event));
-    this.#root.addEventListener("contextmenu", (event) => this.#onPendingDamageMiss(event));
+    root.addEventListener("contextmenu", (event) => this.#onPendingDamageMiss(event));
 
     document.body.append(root);
     this.#root = root;
