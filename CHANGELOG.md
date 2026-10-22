@@ -1,3 +1,8 @@
+## 0.11.2 – 2026-10-22
+
+- Schadensart direkt hinter den jeweiligen Endwert verschoben, beispielsweise `Schaden 8 Bludgeoning` und `Schaden 32 Necrotic`. Bei mehreren Schadensarten bleibt die gemeinsame Gesamtsumme darunter erhalten.
+- Krit-Bonus aus 0.11.1 durch Tim in Foundry als funktionierend bestätigt.
+
 ## 0.11.1 – 2026-10-22
 
 - Krit-Bonus an den einzelnen Angriff gebunden und nach dessen erstem abgeschlossenen Schadenswurf verbraucht. Alle Schadensarten dieses Wurfs erhalten den Bonus gemeinsam; weitere Würfe derselben Waffe bleiben normal.

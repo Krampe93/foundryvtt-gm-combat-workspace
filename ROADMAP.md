@@ -464,6 +464,7 @@ Die dauerhaft sichtbare Bildschirmaufteilung vor Reaktions-Reset, legendären Ak
 - Papierkorb zum vollständigen Leeren des Ergebnisverlaufs ergänzen.
 - Mit 0.11.0 Wurfart direkt vor der Endzahl kennzeichnen; NPC-Angriffs-NAT-20 mit normalem Schaden plus maximalem Würfelsatz, sowie NAT 1 und NAT 20 mit separatem Zusatz-W20 und freiwilligen 2W6 behandeln. Foundry-Abnahme offen.
 - Mit 0.11.1 Krit-Bonus je Angriff nach dem ersten abgeschlossenen Schadenswurf verbrauchen. Gegnerfläche bis zur bisherigen Obergrenze dynamisch verkleinern, gewonnenen Platz den Ergebnissen geben und Minimap-Größe beibehalten. 98 automatische Tests und lokale Browserprüfungen erfolgreich; Foundry-Abnahme offen.
+- Krit-Korrektur von Tim am 2026-10-22 in Foundry bestätigt. Mit 0.11.2 Schadensart hinter den jeweiligen Endwert verschoben; Layout-Abnahme bleibt offen.
 - Schadensbuttons verbrauchter Reaktionen mit korrektem Handzeiger darstellen.
 - Verlauf ab Öffnen des Companion-Fensters führen; Reload startet einen neuen Verlauf.
 

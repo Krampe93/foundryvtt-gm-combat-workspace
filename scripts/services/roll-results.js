@@ -169,9 +169,9 @@ export function renderRollHistory(history) {
     return `<article class="gm-workspace-roll-card${entry.stale ? " is-previous-turn" : ""}"${entry.stale ? ' aria-label="Vorheriger Zug"' : ""}>
       ${rows.map((row) => `<div class="gm-workspace-roll-row${row.natural ? ` is-natural-${row.natural}` : ""}">
         <span class="gm-workspace-roll-identity"><b>${escape(entry.actorName)}</b> · ${escape(entry.title)}</span>
-        <span class="gm-workspace-roll-kind">${escape(row.label)}</span>
+        ${row.kind !== "damage" ? `<span class="gm-workspace-roll-kind">${escape(row.label)}</span>` : ""}
         <span class="gm-workspace-roll-details">${renderDetails(row.details)}</span>
-        <span class="gm-workspace-roll-total"><small class="gm-workspace-roll-badge is-${row.kind}"><i class="fa-solid ${KIND_ICONS[row.kind]}" aria-hidden="true"></i> ${KIND_LABELS[row.kind]}</small><strong>${row.natural ? `NAT ${row.natural}` : escape(row.total)}</strong></span>
+        <span class="gm-workspace-roll-total"><small class="gm-workspace-roll-badge is-${row.kind}"><i class="fa-solid ${KIND_ICONS[row.kind]}" aria-hidden="true"></i> ${KIND_LABELS[row.kind]}</small><strong>${row.natural ? `NAT ${row.natural}` : escape(row.total)}</strong>${row.kind === "damage" && row.label !== KIND_LABELS.damage ? `<span class="gm-workspace-roll-damage-type">${escape(row.label)}</span>` : ""}</span>
         ${row.extraMessageId && !row.extraDiceRolled ? `<button type="button" data-action="roll-extra-dice" data-message-id="${escape(row.extraMessageId)}">2W6 nachwerfen</button>` : ""}
         ${entry.missed && row.kind === "attack" ? '<span class="gm-workspace-roll-miss">Verfehlt</span>' : ""}
       </div>`).join("")}
