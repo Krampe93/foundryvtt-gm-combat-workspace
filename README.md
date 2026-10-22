@@ -24,6 +24,8 @@ Version `0.10.1` fixes embedded statblock attack-name and damage-formula clicks,
 
 Version `0.11.0` labels each total by roll type and adds house rules for NPC attacks. A natural 20 uses ordinary damage dice plus their maximum, keeping fixed modifiers single (for example `1d6 + 4` becomes `1d6 + 6 + 4`). Both a natural 1 and a natural 20 automatically generate one independent extra d20, with a voluntary, one-time 2d6 button in the results panel. These extra rolls do not change the attack and do not trigger recursive rolls. Saves, checks and player-character attacks do not receive these house rules.
 
+Version `0.11.1` limits that critical bonus to the first completed damage operation for each critical attack, including all its damage types. Cancelling a damage dialog preserves the bonus; later damage rolls stay normal until another critical attack. The enemy panel now shrinks to its content while retaining its previous maximum height. Freed space goes to roll results, and the minimap keeps its original size for the current window. Enemy and reaction lists scroll only when their rows exceed the available space.
+
 ## Development
 
 Validate the manifest, referenced files, optional-dependency policy, and matching translation keys:
