@@ -1,5 +1,12 @@
 # Manual test checklist
 
+## 0.11.2: Schadensart hinter dem Ergebnis
+
+- Auf 0.11.2 aktualisieren, Welt neu laden und Workspace neu öffnen.
+- Bodak-Fist mit zwei Schadensarten würfeln: rechts beispielsweise `Schaden 8 Bludgeoning` und `Schaden 32 Necrotic`; die Schadensart steht jeweils nach der Zahl und nicht mehr vor der Würfelformel.
+- Darunter weiterhin `Gesamtschaden 40`; alle Einzelwürfel bleiben sichtbar und jede Schadenszeile bleibt einzeilig.
+- Angriff und Rettungswurf behalten ihre bisherigen Anzeigen. Die Krit-Korrektur aus 0.11.1 wurde von Tim in Foundry als funktionierend bestätigt.
+
 ## 0.11.1: Einmaliger Krit-Bonus und dynamische Flächen
 
 1. Auf 0.11.1 aktualisieren, Welt neu laden und Workspace neu öffnen; Versionsanzeige kontrollieren.

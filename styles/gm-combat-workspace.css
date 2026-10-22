@@ -2157,7 +2157,8 @@ body.gm-combat-workspace-companion > .notifications {
 }
 
 #gm-combat-workspace-shell .gm-workspace-roll-identity,
-#gm-combat-workspace-shell .gm-workspace-roll-kind {
+#gm-combat-workspace-shell .gm-workspace-roll-kind,
+#gm-combat-workspace-shell .gm-workspace-roll-damage-type {
   flex-shrink: 0;
 }
 

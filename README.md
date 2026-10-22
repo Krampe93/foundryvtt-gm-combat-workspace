@@ -26,6 +26,8 @@ Version `0.11.0` labels each total by roll type and adds house rules for NPC att
 
 Version `0.11.1` limits that critical bonus to the first completed damage operation for each critical attack, including all its damage types. Cancelling a damage dialog preserves the bonus; later damage rolls stay normal until another critical attack. The enemy panel now shrinks to its content while retaining its previous maximum height. Freed space goes to roll results, and the minimap keeps its original size for the current window. Enemy and reaction lists scroll only when their rows exceed the available space.
 
+Version `0.11.2` places the damage type directly after each damage total, for example `8 Bludgeoning` and `32 Necrotic`. Mixed damage retains the combined total below the individual rows.
+
 ## Development
 
 Validate the manifest, referenced files, optional-dependency policy, and matching translation keys:
