@@ -1281,32 +1281,6 @@ body.gm-combat-workspace-companion > .notifications {
   font-size: 0.72rem;
 }
 
-#gm-combat-workspace-shell .gm-workspace-minimap-placeholder {
-  flex: 1 1 auto;
-  position: relative;
-  min-height: 120px;
-  margin-top: 0.45rem;
-  overflow: hidden;
-  background: #1a1d20;
-  border: 1px solid #41464c;
-  border-radius: 4px;
-}
-
-#gm-combat-workspace-shell .gm-workspace-minimap-placeholder::before {
-  content: "";
-  position: absolute;
-  inset: 50% auto auto 50%;
-  width: 42px;
-  height: 42px;
-  opacity: 0.18;
-  transform: translate(-50%, -50%) rotate(45deg);
-  border: 2px solid var(--gm-combat-muted);
-}
-
-#gm-combat-workspace-shell .gm-workspace-minimap-placeholder span {
-  display: none;
-}
-
 #gm-combat-workspace-shell .gm-workspace-minimap p {
   margin-top: 0.45rem;
   text-align: center;
@@ -1596,15 +1570,6 @@ body.gm-combat-workspace-companion > .notifications {
   position: relative;
 }
 
-#gm-combat-workspace-shell .gm-workspace-minimap-placeholder {
-  flex: 1 1 auto;
-  align-self: center;
-  width: 100%;
-  min-height: 0;
-  max-height: none;
-  aspect-ratio: 16 / 9;
-}
-
 #gm-combat-workspace-shell .gm-workspace-minimap p {
   position: absolute;
   right: 1rem;
@@ -1612,6 +1577,37 @@ body.gm-combat-workspace-companion > .notifications {
   left: 1rem;
   margin: 0;
   pointer-events: none;
+}
+
+#gm-combat-workspace-shell .gm-workspace-minimap-view {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: 0.4rem;
+  overflow: hidden;
+  background: #14181c;
+  border: 1px solid var(--gm-combat-border);
+  border-radius: 3px;
+}
+
+#gm-combat-workspace-shell .gm-workspace-minimap-view canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#gm-combat-workspace-shell .gm-workspace-minimap-view p {
+  bottom: 0.6rem;
+  padding: 0.25rem;
+  color: var(--gm-combat-muted);
+  background: rgb(20 24 28 / 88%);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+#gm-combat-workspace-shell .gm-workspace-minimap-view p[hidden] {
+  display: none;
 }
 
 #gm-combat-workspace-shell .gm-workspace-reaction-list {

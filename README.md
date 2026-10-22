@@ -28,6 +28,8 @@ Version `0.11.1` limits that critical bonus to the first completed damage operat
 
 Version `0.11.2` places the damage type directly after each damage total, for example `8 Bludgeoning` and `32 Necrotic`. Mixed damage retains the combined total below the individual rows.
 
+Version `0.12.0` adds the first GM minimap: the main window's current scene/level background, enemy dots matching the overview colors, and an outer ring around the active enemy. Token positions, turn changes and scene changes update automatically. Hidden NPCs are included; defeated, deleted and other-level tokens are excluded. The existing panel size remains fixed. This version shows the background image (a static preview for video backgrounds), without additional tiles, drawings, lighting or vision overlays. Names on hover and clicking dots are planned next.
+
 ## Development
 
 Validate the manifest, referenced files, optional-dependency policy, and matching translation keys:

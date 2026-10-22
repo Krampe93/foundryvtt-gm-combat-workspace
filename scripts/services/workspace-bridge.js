@@ -3,6 +3,7 @@ import { createLogger } from "../core/logger.js";
 import { calculateHpUpdate, halfDamage, parseHpInput, uniqueHpTargets } from "./hp-operations.js";
 import { RollHistory, renderRollHistory, rollMessageConfig, rollMessageEntry } from "./roll-results.js";
 import { WorkspaceLayout } from "./workspace-layout.js";
+import { createMinimapState, MinimapSource, MinimapView } from "./minimap.js";
 import {
   LEGACY_REACTION_FLAG_KEY,
   LEGACY_REACTION_MODULE_ID,
@@ -153,6 +154,8 @@ export class WorkspaceBridge {
   #windowFocusHandler = null;
   #root = null;
   #layout = null;
+  #minimapSource = null;
+  #minimapView = null;
   #selectedToken = null;
   #pinnedSelection = null;
   #displayedActor = null;
@@ -207,6 +210,7 @@ export class WorkspaceBridge {
       this.#render();
       this.#broadcastState();
       this.#syncTokenColors();
+      this.#minimapSource?.refresh();
     });
 
     this.#controlTokenHook = Hooks.on("controlToken", () => {
@@ -243,6 +247,16 @@ export class WorkspaceBridge {
       this.#channel.postMessage({ type: "workspaceReady" });
     } else {
       this.#renderLauncher();
+      this.#minimapSource = new MinimapSource({
+        getState: () => createMinimapState({
+          canvas, snapshot: this.#getSnapshot?.(), baseUrl: window.location.href,
+          enemies: this.#enemyEntries().map((enemy) => ({ ...enemy,
+            color: this.#remoteEnemyColors.find((entry) => entry.sceneId === enemy.sceneId && entry.tokenId === enemy.tokenId)?.color ?? enemy.color
+          }))
+        }),
+        publish: (state) => this.#channel?.postMessage({ type: "minimapState", state })
+      });
+      this.#minimapSource.start();
     }
 
     this.#render();
@@ -250,6 +264,10 @@ export class WorkspaceBridge {
   }
 
   stop() {
+    this.#minimapSource?.stop();
+    this.#minimapSource = null;
+    this.#minimapView?.stop();
+    this.#minimapView = null;
     this.#layout?.stop();
     this.#layout = null;
     this.#unsubscribe?.();
@@ -474,10 +492,10 @@ export class WorkspaceBridge {
                 <header>
                   <h2><i class="fa-solid fa-map" aria-hidden="true"></i> Minimap</h2>
                 </header>
-                <div class="gm-workspace-minimap-placeholder" aria-hidden="true">
-                  <span></span><span></span><span></span><span></span>
+                <div class="gm-workspace-minimap-view" data-role="minimap">
+                  <canvas role="img" aria-label="Minimap"></canvas>
+                  <p data-role="minimap-status">Minimap wartet auf das Hauptfenster.</p>
                 </div>
-                <p>Interaktive Gegnerpunkte folgen in einer späteren Etappe.</p>
               </section>
             </div>
           </section>
@@ -534,6 +552,7 @@ export class WorkspaceBridge {
     this.#root = root;
     this.#layout = new WorkspaceLayout(root);
     this.#layout.start();
+    this.#minimapView = new MinimapView(root.querySelector('[data-role="minimap"]'));
     this.#exposeNotifications();
     this.#registerSheetDiagnostics();
 
@@ -988,6 +1007,12 @@ export class WorkspaceBridge {
     if (message.type === "workspaceReady" && !this.#workspaceMode) {
       this.#broadcastState();
       this.#broadcastControlledToken();
+      this.#minimapSource?.refresh();
+      return;
+    }
+
+    if (message.type === "minimapState" && this.#workspaceMode) {
+      this.#minimapView?.setState(message.state ?? null);
       return;
     }
 
@@ -1026,6 +1051,7 @@ export class WorkspaceBridge {
     if (message.type === "enemyColors" && !this.#workspaceMode) {
       this.#remoteEnemyColors = Array.isArray(message.entries) ? message.entries : [];
       this.#syncTokenColors();
+      this.#minimapSource?.refresh();
     }
   }
 
