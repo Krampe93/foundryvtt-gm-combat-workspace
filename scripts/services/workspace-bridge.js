@@ -2,6 +2,7 @@ import { MODULE_ID } from "../config.js";
 import { createLogger } from "../core/logger.js";
 import { calculateHpUpdate, halfDamage, parseHpInput, uniqueHpTargets } from "./hp-operations.js";
 import { RollHistory, renderRollHistory, rollMessageConfig, rollMessageEntry } from "./roll-results.js";
+import { WorkspaceLayout } from "./workspace-layout.js";
 import {
   LEGACY_REACTION_FLAG_KEY,
   LEGACY_REACTION_MODULE_ID,
@@ -151,6 +152,7 @@ export class WorkspaceBridge {
   #sheetMountTimers = new Set();
   #windowFocusHandler = null;
   #root = null;
+  #layout = null;
   #selectedToken = null;
   #pinnedSelection = null;
   #displayedActor = null;
@@ -248,6 +250,8 @@ export class WorkspaceBridge {
   }
 
   stop() {
+    this.#layout?.stop();
+    this.#layout = null;
     this.#unsubscribe?.();
     this.#unsubscribe = null;
 
@@ -528,6 +532,8 @@ export class WorkspaceBridge {
 
     document.body.append(root);
     this.#root = root;
+    this.#layout = new WorkspaceLayout(root);
+    this.#layout.start();
     this.#exposeNotifications();
     this.#registerSheetDiagnostics();
 

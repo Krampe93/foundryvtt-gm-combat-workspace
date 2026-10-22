@@ -152,12 +152,12 @@ test("keeps the approved lower workspace areas in the permanent shell", () => {
   assert.doesNotMatch(source, /<details class="gm-workspace-diagnostics">/);
 });
 
-test("locks the optimized right column and 16:9 utility layout", () => {
+test("keeps the original size limits as the adaptive layout fallback", () => {
   const css = readFileSync(new URL("../styles/gm-combat-workspace.css", import.meta.url), "utf8");
 
-  assert.match(css, /\.gm-workspace-context-panel\s*\{[\s\S]*?grid-template-rows:\s*minmax\(0, 47fr\) minmax\(0, 53fr\)/);
+  assert.match(css, /grid-template-rows: var\(--gm-workspace-context-rows, minmax\(0, 47fr\) minmax\(0, 53fr\)\)/);
   assert.match(css, /\.gm-workspace-lower-deck\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\) minmax\(0, 1fr\)/);
-  assert.match(css, /\.gm-workspace-utility-column\s*\{[\s\S]*?grid-template-rows:\s*minmax\(0, 30fr\) minmax\(0, 70fr\)/);
+  assert.match(css, /grid-template-rows: var\(--gm-workspace-utility-rows, minmax\(0, 30fr\) minmax\(0, 70fr\)\)/);
   assert.match(css, /\.gm-workspace-minimap-placeholder\s*\{[\s\S]*?aspect-ratio:\s*16 \/ 9/);
   assert.match(css.slice(css.lastIndexOf("Design correction 0.8.7")), /\.gm-workspace-save-mode,[\s\S]*?\{[^}]*display:\s*block/);
 });
@@ -185,7 +185,7 @@ test("keeps reactions in a fixed raster and defers aura reminders", () => {
   assert.match(source, /item\.update\(\{ \[resource\.spentPath\]: resource\.spent \+ 1 \}\)/);
   assert.match(source, /aria-disabled="\$\{entry\.used\}"/);
   assert.doesNotMatch(source, /title="\$\{tooltip\}" \$\{entry\.used \? "disabled"/);
-  assert.match(css, /grid-auto-rows:\s*minmax\(42px, auto\)/);
+  assert.match(css, /grid-auto-rows:\s*minmax\(42px, max-content\)/);
   assert.match(css, /align-content:\s*start/);
   assert.match(css, /is-used:not\(\.is-busy\)[\s\S]*?pointer-events:\s*auto/);
 });

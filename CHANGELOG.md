@@ -1,3 +1,12 @@
+## 0.11.1 – 2026-10-22
+
+- Krit-Bonus an den einzelnen Angriff gebunden und nach dessen erstem abgeschlossenen Schadenswurf verbraucht. Alle Schadensarten dieses Wurfs erhalten den Bonus gemeinsam; weitere Würfe derselben Waffe bleiben normal.
+- Abgebrochene Dialoge und nicht ausgewertete Würfe verbrauchen den Bonus nicht. Angriffsidentität und verbrauchter Bonus werden über Chatnachrichten zwischen Hauptfenster und Workspace zugeordnet; Hook-Aliase und spätere Nachrichtenupdates erneuern den Bonus nicht.
+- Gegnerübersicht auf die tatsächlich benötigte Zeilenhöhe verkleinert, mit der bisherigen 47-Prozent-Fläche als Obergrenze. Frei werdende Höhe geht vollständig an die Würfelergebnisse.
+- Minimap behält die bisherige Größe zur jeweiligen Fenstergröße. Reaktionen erhalten die verbleibende untere Fläche; Gegner und Reaktionen scrollen bei Überfüllung innerhalb ihrer Listen.
+- Änderungen der Fenstergröße, neu aufgebaute Listen und veränderte Zeilenhöhen automatisch berücksichtigt. Beobachter werden beim Schließen entfernt.
+- 98 automatisierte Tests erfolgreich; native D&D5e-5.3.2-Schadensberechnung und lokale Browserprüfungen für vier Fenstergrößen sowie 0/2/6/20 Gegner erfolgreich. Live-Foundry-Abnahme offen.
+
 ## 0.11.0 – 2026-10-20
 
 - Wurfart mit Symbol und Text unmittelbar vor der Endzahl markiert: Angriff, Schaden und Rettungswurf sind klar unterscheidbar.

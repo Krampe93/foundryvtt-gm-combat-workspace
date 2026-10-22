@@ -31,11 +31,13 @@ export class AttackLedger {
   #records = new Map();
   #sequence = 0;
   #retired = new Set();
+  #consumed = new Set();
 
   remember(record) {
     if (this.#retired.has(record.id)) return;
     const previous = this.#records.get(record.id);
-    this.#records.set(record.id, { ...record, sequence: previous?.sequence ?? ++this.#sequence });
+    this.#records.set(record.id, { ...record, groupId: record.groupId ?? previous?.groupId,
+      sequence: previous?.sequence ?? ++this.#sequence });
   }
 
   find({ actor, itemId, activityId, groupId }) {
@@ -43,6 +45,14 @@ export class AttackLedger {
     return candidates.filter((record) => groupId ? record.groupId === groupId :
       record.itemId === itemId && (!activityId || !record.activityId || record.activityId === activityId)
     ).sort((a, b) => b.sequence - a.sequence)[0] ?? null;
+  }
+
+  consume(id) {
+    this.#consumed.add(id);
+  }
+
+  isConsumed(id) {
+    return this.#consumed.has(id);
   }
 
   clear() {
@@ -64,6 +74,14 @@ export function configureMaxCritical(config, rollConfig = null) {
   }
 }
 
+function configureNormalDamage(config, rollConfig = null) {
+  config.isCritical = false;
+  for (const roll of rollConfig ? [rollConfig] : config.rolls ?? []) {
+    roll.options ??= {};
+    roll.options.isCritical = false;
+  }
+}
+
 function snapshotKey(snapshot) {
   return JSON.stringify([snapshot?.combatId, snapshot?.started, snapshot?.round, snapshot?.turn, snapshot?.activeCombatantId]);
 }
@@ -75,7 +93,7 @@ export class CombatRollRules {
   #unsubscribe = null;
   #ledger = new AttackLedger();
   #seenRolls = new WeakSet();
-  #criticalProcesses = new WeakSet();
+  #criticalProcesses = new WeakMap();
   #bonusBusy = new Set();
 
   constructor({ eventBus, logger = createLogger("CombatRollRules") }) {
@@ -89,7 +107,10 @@ export class CombatRollRules {
 
   start() {
     const remember = (message) => {
-      try { this.#rememberMessage(message); }
+      try {
+        this.#consumeDamage(message.rolls);
+        this.#rememberMessage(message);
+      }
       catch (error) { this.#logger.error("Attack context could not be read", error); }
     };
     this.#on("createChatMessage", remember);
@@ -99,6 +120,14 @@ export class CombatRollRules {
     for (const name of ["dnd5e.rollAttack", "dnd5e.rollAttackV2"]) {
       this.#on(name, (rolls, data) => this.#afterAttack(rolls, data));
     }
+    this.#on("dnd5e.postAttackRollConfiguration", (rolls, config) => {
+      if (config.subject?.actor?.type !== "npc") return;
+      // Persist identity through ChatMessage serialization and both attack hook aliases.
+      for (const roll of values(rolls)) this.#attackId(roll);
+    });
+    for (const name of ["dnd5e.rollDamage", "dnd5e.rollDamageV2"]) {
+      this.#on(name, (rolls) => this.#consumeDamage(rolls));
+    }
     for (const name of ["dnd5e.preRollDamage", "dnd5e.preRollDamageV2"]) {
       this.#on(name, (config, _dialog, message) => {
         const subject = config.subject;
@@ -107,12 +136,29 @@ export class CombatRollRules {
           message?.data?.["flags.dnd5e.originatingMessage"];
         const source = this.#ledger.find({ actor: actorKey(subject.actor), itemId: subject.item?.id, activityId: subject.id, groupId });
         if (source?.face !== 20) return;
-        this.#criticalProcesses.add(config);
-        configureMaxCritical(config);
+        this.#criticalProcesses.set(config, source);
+        this.#configureCritical(config, source);
       });
     }
     this.#on("dnd5e.postBuildDamageRollConfig", (config, rollConfig) => {
-      if (this.#criticalProcesses.has(config)) configureMaxCritical(config, rollConfig);
+      const source = this.#criticalProcesses.get(config);
+      if (source) this.#configureCritical(config, source, rollConfig);
+    });
+    this.#on("dnd5e.postDamageRollConfiguration", (rolls, config) => {
+      const source = this.#criticalProcesses.get(config);
+      if (!source || config.evaluate === false) return;
+      // A cancelled dialog never reaches a successful evaluated roll/message.
+      // Recheck here as another damage roll may have finished while this dialog was open.
+      const consumed = this.#ledger.isConsumed(source.id);
+      for (const roll of values(rolls)) {
+        roll.options ??= {};
+        if (consumed) {
+          roll.options.isCritical = false;
+          roll.configureDamage?.();
+        } else {
+          roll.options[MODULE_ID] = { ...roll.options[MODULE_ID], criticalAttackId: source.id };
+        }
+      }
     });
     this.#unsubscribe = this.#eventBus.on("combatStateChanged", ({ previousSnapshot, snapshot }) => {
       if (snapshotKey(previousSnapshot) !== snapshotKey(snapshot)) this.#ledger.clear();
@@ -127,6 +173,24 @@ export class CombatRollRules {
     this.#ledger.clear();
   }
 
+  #attackId(roll, fallback) {
+    roll.options ??= {};
+    roll.options[MODULE_ID] ??= {};
+    return roll.options[MODULE_ID].attackId ??= fallback ?? foundry.utils.randomID();
+  }
+
+  #configureCritical(config, source, rollConfig = null) {
+    if (this.#ledger.isConsumed(source.id)) configureNormalDamage(config, rollConfig);
+    else configureMaxCritical(config, rollConfig);
+  }
+
+  #consumeDamage(rolls) {
+    for (const roll of values(rolls)) {
+      const id = roll?.options?.[MODULE_ID]?.criticalAttackId;
+      if (id && roll.evaluated !== false && roll._evaluated !== false) this.#ledger.consume(id);
+    }
+  }
+
   #rememberMessage(message) {
     if (message.flags?.dnd5e?.roll?.type !== "attack" || message.flags?.[MODULE_ID]?.kind) return;
     const actor = message.getAssociatedActor?.() ?? game.scenes?.get(message.speaker?.scene)?.tokens?.get(message.speaker?.token)?.actor ?? game.actors?.get(message.speaker?.actor);
@@ -137,7 +201,7 @@ export class CombatRollRules {
       if (roll.constructor?.name === "DamageRoll" || roll.class === "DamageRoll") continue;
       const face = keptD20(roll);
       if (face === null) continue;
-      this.#ledger.remember({ id: `${message.id}:${index}`, actor: actorKey(actor),
+      this.#ledger.remember({ id: this.#attackId(roll, `${message.id}:${index}`), actor: actorKey(actor),
         itemId: message.flags?.dnd5e?.item?.id, activityId: message.flags?.dnd5e?.activity?.id,
         groupId, face, whisper: message.whisper, blind: message.blind });
     }
@@ -152,8 +216,9 @@ export class CombatRollRules {
       const face = keptD20(roll);
       if (face === null) continue;
       const source = this.#ledger.find({ actor: actorKey(activity.actor), itemId: activity.item?.id, activityId: activity.id });
-      this.#ledger.remember({ id: foundry.utils.randomID(), actor: actorKey(activity.actor), itemId: activity.item?.id,
-        activityId: activity.id, face, whisper: source?.whisper, blind: source?.blind });
+      this.#ledger.remember({ id: this.#attackId(roll), actor: actorKey(activity.actor), itemId: activity.item?.id,
+        activityId: activity.id, groupId: source?.id === this.#attackId(roll) ? source.groupId : undefined,
+        face, whisper: source?.whisper, blind: source?.blind });
       if (![1, 20].includes(face)) continue;
       this.#createAttackExtra(activity, face, source).catch((error) => {
         this.#logger.error("Automatic attack extra roll failed", error);

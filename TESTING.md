@@ -1,5 +1,20 @@
 # Manual test checklist
 
+## 0.11.1: Einmaliger Krit-Bonus und dynamische Flächen
+
+1. Auf 0.11.1 aktualisieren, Welt neu laden und Workspace neu öffnen; Versionsanzeige kontrollieren.
+2. Mit einem Skeleton eine Angriffs-NAT-20 erzeugen. Erster Shortsword-Schaden: `1W6 + 3 + 6`. Zweiter und dritter Schadensklick ohne neuen Angriff: jeweils nur `1W6 + 3`.
+3. Neue Angriffs-NAT-20 erzeugen: Wieder nur der erste Schaden erhält den maximalen Zusatz. Normale Angriffe, Rettungswürfe und Zusatz-W20 lösen keinen Krit-Schaden aus.
+4. Schadensdialog nach NAT20 abbrechen und erneut öffnen: Bonus noch verfügbar. Schaden mit mehreren Schadensarten: alle Teile des ersten abgeschlossenen Wurfs erhalten ihre zulässigen Krit-Boni gemeinsam.
+5. Angriff im Hauptfenster und ersten Schaden im Workspace würfeln, danach umgekehrt prüfen: Wiederholter Schaden erhält keinen erneuten Bonus. Getrennte legendäre Angriffsgruppen bleiben korrekt zugeordnet.
+6. Mit sechs Gegnern prüfen: Gegnerübersicht endet direkt unter den Zeilen, Gegner und Reaktionen sind ohne Scrollen sichtbar; Ergebnisse erhalten die freie Höhe. Minimap bleibt gegenüber dem bisherigen Layout gleich groß.
+7. Gegnerzahl auf zwei verringern: Gegnerübersicht wird kleiner und Ergebnisfläche entsprechend größer. Minimap bleibt gleich groß und an derselben unteren Position.
+8. Gegnerzahl deutlich über die bisherige Kapazität erhöhen: Gegnerübersicht wächst höchstens bis zur bisherigen Maximalhöhe. Überfüllte Gegner- und Reaktionslisten scrollen intern, die Minimap bleibt unverändert.
+9. Fenster vergrößern und verkleinern, Auswahl für mehrere Gelegenheitsangriffe öffnen sowie Gegner entfernen: Flächen passen sich an; bei echtem Platzmangel sind die überfüllten Listen scrollbar. Keine abgeschnittenen oder übereinanderliegenden Zeilen.
+10. Keine roten Modulfehler beim Starten, Schließen oder erneuten Öffnen. NAT1/NAT20-Zusatz-W20 und einmalige freiwillige 2W6 bleiben verfügbar.
+
+Lokale Prüfung: 98 automatische Tests; native D&D5e-5.3.2-Berechnung mit aufeinanderfolgenden Kurzschwert-Würfen `+6 / +0 / +0`, neuer Krit `+6`; Browserprüfung mit 1920×958, 1920×1080, 1440×900 und 1280×720 sowie 0/2/6/20 Gegnern, unveränderter Minimap-Größe und bereinigten Beobachtern. Zusätzlich bestehende Statblock-Klick- und Zusatzwürfelprüfungen erfolgreich. Live-Foundry-Abnahme steht aus.
+
 ## Legendäre Aktionen – Version 0.9.1
 
 - [ ] Im linken Kopf steht exakt **Version 0.9.1**.

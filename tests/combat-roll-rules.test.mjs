@@ -161,6 +161,84 @@ test("turn changes retire old criticals and later message updates cannot restore
   });
 });
 
+test("only the first completed damage operation after a crit receives the maximum bonus", async () => {
+  await runtime(async ({ fire }) => {
+    const source = message("critical", 20);
+    fire("createChatMessage", source);
+    // Real native attack hooks run after the chat message has been created.
+    fire("dnd5e.rollAttack", source.rolls, { subject: activity });
+    fire("dnd5e.rollAttackV2", source.rolls, { subject: activity });
+    const config = { subject: activity, rolls: [{ options: {} }, { options: {} }] };
+    fire("dnd5e.preRollDamage", config, {}, {});
+    fire("dnd5e.preRollDamageV2", config, {}, {});
+    const damage = config.rolls.map(({ options }) => ({ options: structuredClone(options), evaluated: true }));
+    fire("dnd5e.postDamageRollConfiguration", damage, config);
+    assert.ok(damage.every((roll) => roll.options.isCritical), "all damage types in the first operation are critical");
+    fire("dnd5e.rollDamage", damage, { subject: activity });
+    fire("dnd5e.rollDamageV2", damage, { subject: activity });
+    fire("updateChatMessage", source, { rolls: source.rolls });
+    for (const groupId of [undefined, "critical"]) {
+      const next = { subject: activity, isCritical: true, rolls: [{ options: { isCritical: true } }] };
+      fire("dnd5e.preRollDamage", next, {}, { data: { flags: { [MODULE]: { rollGroupId: groupId } } } });
+      assert.equal(next.isCritical, false, "repeated damage stays normal, including native critical buttons");
+      assert.equal(next.rolls[0].options.isCritical, false);
+    }
+    fire("createChatMessage", message("new-critical", 20));
+    const nextCrit = { subject: activity, rolls: [] };
+    fire("dnd5e.preRollDamage", nextCrit, {}, {});
+    assert.equal(nextCrit.isCritical, true, "a fresh critical attack grants one new bonus");
+  });
+});
+
+test("cancelled or failed damage does not consume the crit; a delayed open dialog rechecks consumption", async () => {
+  await runtime(async ({ fire }) => {
+    fire("createChatMessage", message("critical", 20));
+    const configure = () => {
+      const config = { subject: activity, rolls: [] };
+      fire("dnd5e.preRollDamage", config, {}, {});
+      assert.equal(config.isCritical, true);
+      return config;
+    };
+    configure(); // Cancelled before roll construction.
+    const failed = configure();
+    const unevaluated = [{ options: {}, evaluated: false }];
+    fire("dnd5e.postDamageRollConfiguration", unevaluated, failed);
+    fire("dnd5e.rollDamage", unevaluated);
+    const delayed = configure();
+    const successful = configure();
+    const rolls = [{ options: {}, evaluated: true }];
+    fire("dnd5e.postDamageRollConfiguration", rolls, successful);
+    fire("dnd5e.rollDamage", rolls);
+    let rebuilt = false;
+    const delayedRoll = { options: { isCritical: true }, configureDamage() { rebuilt = true; } };
+    fire("dnd5e.postDamageRollConfiguration", [delayedRoll], delayed);
+    assert.equal(delayedRoll.options.isCritical, false);
+    assert.equal(rebuilt, true, "native damage terms are reset before evaluation");
+    assert.equal(delayedRoll.options[MODULE]?.criticalAttackId, undefined);
+  });
+});
+
+test("serialized damage consumes its specific attack across windows without spending another crit", async () => {
+  await runtime(async ({ fire }) => {
+    const critical = message("critical", 20, "first");
+    // The id is attached before native chat serialization, so chat and local hooks share it.
+    fire("dnd5e.postAttackRollConfiguration", critical.rolls, { subject: activity });
+    const serialized = structuredClone({ ...critical, getAssociatedActor: undefined });
+    serialized.getAssociatedActor = () => npc;
+    fire("createChatMessage", serialized);
+    fire("dnd5e.rollAttack", critical.rolls, { subject: activity });
+    fire("createChatMessage", message("other-critical", 20, "second"));
+    fire("createChatMessage", { rolls: [{ options: { [MODULE]: {
+      criticalAttackId: critical.rolls[0].options[MODULE].attackId
+    } } }] });
+    for (const groupId of ["first", "second"]) {
+      const config = { subject: activity, rolls: [] };
+      fire("dnd5e.preRollDamage", config, {}, { data: { flags: { [MODULE]: { rollGroupId: groupId } } } });
+      assert.equal(config.isCritical, groupId === "second");
+    }
+  });
+});
+
 test("saving throws and player attacks do not trigger the house rules", async () => {
   await runtime(async ({ fire, generated }) => {
     fire("dnd5e.rollSavingThrow", [attack(1)], { subject: activity });
