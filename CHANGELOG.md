@@ -1,3 +1,13 @@
+## 0.12.0 – 2026-10-22
+
+- Minimap-Platzhalter durch Kartenbild der im Hauptfenster geöffneten Szene/Ebene ersetzt. Die vollständige Szene einschließlich Kartenrand passt unverzerrt in die bestehende Minimap-Fläche.
+- Nicht besiegte NPC-Kampfteilnehmer als Punkte in ihren bekannten Übersichtsfarben angezeigt, einschließlich verborgener Gegner. Tokenmittelpunkte berücksichtigen unterschiedliche Größen und Foundrys native Positionsberechnung.
+- Aktiven Gegner mit einem kontrastreichen äußeren Ring markiert; bei Spielerzügen kein Gegner-Ring. Bewegung, Entfernen von Tokens und Zugwechsel aktualisieren die Punkte automatisch.
+- Kartenbild und Punkte aus dem Hauptfenster übertragen, damit beim Szenenwechsel keine alte Karte oder fremde Tokenpositionen stehen bleiben. Kartenbildposition, Skalierung und Drehung aus dem nativen Hintergrundmesh übernommen, wenn verfügbar.
+- Kartenbild bei unveränderter Quelle wiederverwendet; Neuzeichnen nur bei Datenänderung, geladenem Bild und Größenänderung. Videos liefern ein statisches Vorschaubild. Fehlende Bilder erhalten einen verständlichen Hinweis.
+- Erste Version zeigt den Szenen-/Ebenenhintergrund; zusätzliche Tiles, Zeichnungen, Beleuchtung und Sichtbereiche sind nicht Teil des Bildes. Namens-Tooltips und Klickauswahl bleiben für den nächsten Schritt vorgesehen.
+- 106 automatisierte Tests und lokale Browserprüfung mit zwei Fenstern erfolgreich; feste Flächenaufteilung in vier Fenstergrößen erneut geprüft. Live-Foundry-Abnahme offen.
+
 ## 0.11.2 – 2026-10-22
 
 - Schadensart direkt hinter den jeweiligen Endwert verschoben, beispielsweise `Schaden 8 Bludgeoning` und `Schaden 32 Necrotic`. Bei mehreren Schadensarten bleibt die gemeinsame Gesamtsumme darunter erhalten.

@@ -470,6 +470,22 @@ Die dauerhaft sichtbare Bildschirmaufteilung vor Reaktions-Reset, legendären Ak
 
 ---
 
+## Etappe 6.7 – Minimap
+
+**Status:** `[~]` – erste Version mit 0.12.0 implementiert; Foundry-Abnahme offen
+
+- Hintergrundbild der im Hauptfenster geöffneten Szene und Ebene innerhalb der bestehenden Minimap-Fläche anzeigen.
+- Gesamte Szene inklusive Kartenrand unverzerrt einpassen; Hintergrundposition und native Skalierung/Drehung berücksichtigen.
+- Lebende NPC-Kampfteilnehmer mit Token als Punkte in denselben Farben wie die Gegnerübersicht darstellen. Verborgene Gegner gehören zur GM-Ansicht.
+- Aktiven NPC mit hellem Außenring hervorheben; Spielerzüge markieren keinen Gegner.
+- Tokenmittelpunkte, Bewegung, Entfernung, Zug- und Szenenwechsel automatisch synchronisieren.
+- Fehlende Bilder und leere Szenen verständlich darstellen; Beobachter und Hooks beim Schließen entfernen.
+- 106 automatische Tests sowie lokale Browserprüfung mit zwei Fenstern und erneute Layoutprüfung erfolgreich. Live-Foundry-Abnahme offen.
+- Erste Version nutzt Szenen-/Ebenenhintergründe, ohne zusätzliche Tiles, Zeichnungen, Licht oder Sichtbereiche; Videohintergründe liefern eine statische Vorschau.
+- Als Nächstes: Namen beim Darüberfahren und Auswahl des Gegners per Punktklick ergänzen.
+
+---
+
 ## Etappe 7 – Reaktions-Reset
 
 **Status:** `[~]` – normaler Reset und Recharge-Verbrauch in Version 0.8.11 umgesetzt; Sonderregeln und automatische Recharge-Würfe folgen

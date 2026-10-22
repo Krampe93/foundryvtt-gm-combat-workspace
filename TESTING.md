@@ -1,5 +1,23 @@
 # Manual test checklist
 
+## 0.12.0: Erste GM-Minimap
+
+1. Hauptfenster und Workspace schließen beziehungsweise neu laden, Modul auf 0.12.0 aktualisieren und Workspace erneut öffnen.
+2. Szene mit Hintergrundbild und laufendem Encounter öffnen: Minimap zeigt die vollständige Szene unverzerrt in der bisherigen Fläche. Jeder nicht besiegte NPC mit Token besitzt einen Punkt in seiner Übersichtsfarbe.
+3. Sichtbaren und verborgenen Gegner bewegen: Punkt aktualisiert sich auch dann, wenn Zug, TP und sonstiger Kampfzustand unverändert bleiben. Große Tokens prüfen: Punkt liegt in der Mitte der Tokenfläche.
+4. Zug wechseln: Der zusätzliche helle Außenring wandert zum aktiven Gegner. Bei Spielerzügen besitzt kein Gegner diesen Ring.
+5. Besiegten Kampfteilnehmer markieren und Token entfernen: Zugehöriger Punkt verschwindet. Neue NPC-Kampfteilnehmer erscheinen in der passenden Farbe.
+6. Karte im Hauptfenster verschieben und zoomen: Minimap zeigt weiterhin die gesamte Szene. Kartenrand sowie versetzte, skalierte oder gedrehte Hintergründe mit den Tokenpositionen vergleichen.
+7. Szene im Hauptfenster wechseln: Minimap übernimmt deren Karte und zeigt keine Punkte des vorherigen Encounters. Ohne Encounter bleibt das Kartenbild sichtbar, ohne Gegnerpunkte.
+8. Bei mehreren Foundry-Ebenen wechseln: Hintergrundbild und Punkte gehören zur im Hauptfenster gezeigten Ebene. Gegner anderer Ebenen nicht auf die falsche Karte zeichnen.
+9. Breite und hochkantige Karte sowie Fenstergrößen 1920×958, 1440×900 und 1280×720 prüfen: gleichmäßige Skalierung, gut erkennbarer Zug-Ring und unveränderte Regeln für die feste Minimap-Fläche.
+10. Fehlendes beziehungsweise ungültiges Hintergrundbild: verständlicher Hinweis, weiterhin nutzbarer Workspace. Videohintergrund: statische Vorschau ohne Ton.
+11. Workspace schließen und erneut öffnen sowie Hauptfenster neu laden: Minimap verbindet sich wieder, keine doppelten Aktualisierungen oder Modulfehler.
+
+Umfang dieser Version: Szenen-/Ebenenhintergrund und Gegnerpunkte; zusätzliche Tiles, Zeichnungen, Beleuchtung und Sichtbereiche werden nicht gerendert. Namens-Tooltips und Klickauswahl folgen im nächsten Schritt.
+
+Lokale Prüfung: 106 automatisierte Tests; zwei Browserfenster mit echtem BroadcastChannel, Positionsänderungen ohne geänderten Kampfsnapshot, aktive Ringfarbe, verborgener großer Gegner, Entfernen, Bildfehler und Wiederherstellung, Szenenwechsel und vollständiges Entfernen der Hooks. Flächenaufteilung in vier Fenstergrößen erfolgreich erneut geprüft. Live-Foundry-Abnahme offen.
+
 ## 0.11.2: Schadensart hinter dem Ergebnis
 
 - Auf 0.11.2 aktualisieren, Welt neu laden und Workspace neu öffnen.
