@@ -1748,10 +1748,10 @@ export class WorkspaceBridge {
       if (resource.spent > 0 && typeof actor.update === "function") {
         await actor.update({ [resource.spentPath]: 0 });
       }
-      const locks = foundry.utils.deepClone(combat.getFlag(MODULE_ID, LEGENDARY_LOCK_FLAG_KEY) ?? {});
+      const locks = combat.getFlag(MODULE_ID, LEGENDARY_LOCK_FLAG_KEY) ?? {};
       if (locks[current.activeCombatantId]) {
-        delete locks[current.activeCombatantId];
-        await combat.setFlag(MODULE_ID, LEGENDARY_LOCK_FLAG_KEY, locks);
+        // Document updates merge objects; omitting an old key would leave its lock stored.
+        await combat.unsetFlag(MODULE_ID, `${LEGENDARY_LOCK_FLAG_KEY}.${current.activeCombatantId}`);
       }
     }).catch((error) => {
       this.#logger.error("Legendary action reset at turn start failed", error);
@@ -2012,9 +2012,7 @@ export class WorkspaceBridge {
   async #setLegendaryActionLocked(combatantId, actionId) {
     const combat = this.#getSnapshot?.()?.context?.combat ?? game.combat ?? null;
     if (!combat?.started) throw new Error("Es läuft kein Encounter mehr.");
-    const locks = foundry.utils.deepClone(combat.getFlag(MODULE_ID, LEGENDARY_LOCK_FLAG_KEY) ?? {});
-    locks[combatantId] = { ...(locks[combatantId] ?? {}), [actionId]: true };
-    await combat.setFlag(MODULE_ID, LEGENDARY_LOCK_FLAG_KEY, locks);
+    await combat.setFlag(MODULE_ID, `${LEGENDARY_LOCK_FLAG_KEY}.${combatantId}.${actionId}`, true);
   }
 
   async #executeLegendaryAction(enemy, legendary) {
@@ -2060,7 +2058,7 @@ export class WorkspaceBridge {
           if (result === false || result === null) continue;
           if (typeof attack.rollDamage === "function") {
             pending.push({
-              id: `${Date.now()}-${index}-${attack.id}`,
+              id: rollGroupId,
               rollGroupId,
               itemId: linkedItem.id,
               activityId: attack.id,
@@ -2072,7 +2070,9 @@ export class WorkspaceBridge {
         ui.notifications?.info(`${linkedItem?.name ?? item.name}: ${this.#saveAbilityLabel(plan.save.ability)}-Rettungswurf – SG ${plan.save.dc}`);
       }
 
-      if (pending.length) this.#pendingLegendaryDamage.set(key, pending);
+      if (pending.length) {
+        this.#pendingLegendaryDamage.set(key, [...(this.#pendingLegendaryDamage.get(key) ?? []), ...pending]);
+      }
     } finally {
       this.#legendaryBusy.delete(key);
       this.#render();

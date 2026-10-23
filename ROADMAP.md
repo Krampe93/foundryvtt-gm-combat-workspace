@@ -4,6 +4,33 @@
 
 Diese Roadmap ist gleichzeitig Plan, Prüfliste und Abnahmeprotokoll.
 
+## Vereinbarter Weg zu Version 1.0 – 2026-10-23
+
+Tim hat die vollständige Umsetzung der offenen Punkte beauftragt. Nach jedem sinnvollen Abschnitt wird eine geprüfte, installierbare Testversion veröffentlicht. Tim erhält konkrete Testschritte; der nächste Abschnitt beginnt nach seinem Testergebnis. Gemeldete Fehler werden innerhalb des aktuellen Abschnitts behoben.
+
+| Schritt | Umfang | Status |
+|---|---|---|
+| A | Legendäre Aktionssperren getrennt prüfen, alten Commanding-Presence-/Fiery-Rays-Bericht untersuchen und Rücksetzung absichern | 0.12.2 implementiert und lokal geprüft; wartet auf Tims Foundry-Test |
+| B | Recharge-Verfügbarkeit, manuelles/automatisches Aufladen und Reaktionsreset-Sonderfälle | Offen |
+| C | Mehrdeutige legendäre Folgeangriffe und In-Lair-Ressourcen zuverlässig behandeln | Offen |
+| D | Minimap-Namen beim Darüberfahren und Gegnerauswahl per Punktklick | Offen |
+| E | Encounter-Vorbereitung, W12-Initiative, Spieler-Platzhalter und In-Lair-Einrichtung | Offen |
+| F | Bewegungspfad und blinkendes Ziel für verborgene Gegner; Empfängerkreis vor Umsetzung mit Tim festlegen | Offen |
+| G | Optionale RSReforged-Abläufe vollständig integrieren und mit/ohne optionale Module prüfen | Offen |
+| H | Sichtbare Einstellungen mit Funktionen verbinden, Bedienung und Dokumentation bereinigen | Offen |
+| I | Gemeinsamer Langzeittest, Berechtigungen, Neuinstallation und Upgrade; anschließend Release 1.0 | Offen |
+
+Der Stand aus 0.12.1 bleibt die Ausgangsbasis. Eine lokale Prüfung ersetzt Tims Foundry-Test nicht. Der Gesamtauftrag bleibt zwischen den Teststopps bestehen.
+
+### Teststopp A – 0.12.2
+
+- Nachgewiesener Rücksetzfehler korrigiert: Objektupdates entfernen ausgelassene alte Sperren nicht automatisch. Die Sperren des aktiven Gegners werden jetzt ausdrücklich gelöscht.
+- Einzelne Aktionen schreiben nur ihren eigenen Sperrschlüssel. Sperren anderer Gegner bleiben erhalten.
+- Zusätzlich im Browser nachgewiesenen Folgefehler korrigiert: Wiederholtes Pounce behält die noch offenen Schadensbuttons früherer Treffer.
+- 109 automatische Tests erfolgreich. Browserprüfung mit simulierten Foundry-Dokumenten: Commanding Presence und Fiery Rays in beiden Reihenfolgen, einzelne Sperren, Budget, Folgeangriffe und Schaden, Abbruch, wiederholtes Pounce sowie Rücksetzung geprüft.
+- Der alte Bericht zur gegenseitigen Sperre ließ sich lokal nicht direkt reproduzieren. Live-Gegenprobe einschließlich Drachenzug und umgekehrter Aktionsreihenfolge gemäß TESTING.md offen.
+- Nach Tims erfolgreicher Gegenprobe folgt Schritt B (Recharge und Reaktionsreset). Bei einem Fehler bleibt Schritt A der aktuelle Abschnitt.
+
 Wir bearbeiten immer nur eine Etappe. Die nächste Etappe beginnt erst, wenn:
 
 1. der Code der aktuellen Etappe vollständig ist,
@@ -837,6 +864,7 @@ Diese Punkte sind ausdrücklich nicht Teil der ersten stabilen Version, sofern s
 
 | Datum | Änderung | Entscheidung |
 |---|---|---|
+| 2026-10-23 | Vollständigen Weg zu 1.0 mit Teststopps A–I festgehalten; A als 0.12.2 implementiert und lokal geprüft | Wartet auf Tims Foundry-Test |
 | 2026-08-01 | Etappe 1 in Foundry 14.360 / D&D5e 5.3.2 geprüft | Freigegeben |
 | 2026-07-30 | Etappe 1 implementiert | Wartet auf Foundry-Abnahme |
 | 2026-07-30 | Etappe 0 abgenommen | Freigegeben |
