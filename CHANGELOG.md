@@ -1,3 +1,11 @@
+## 0.12.1 – 2026-10-23
+
+- Minimap um laufende Token-Aktualisierungen erweitert: native gerenderte Positionen und Ziehvorschauen werden bereits vor dem Speichern der Tokenposition angezeigt. Beim Abbruch oder Entfernen der Vorschau gilt wieder die tatsächliche Tokenposition.
+- Minimap-Neuzeichnen von Browser-Animationsframes entkoppelt; eingehende Daten müssen nicht mehr auf einen möglicherweise gedrosselten Companion-Frame warten.
+- Eingepasstes Kartenbild zwischengespeichert und Canvas-Größe nur bei tatsächlicher Größenänderung gesetzt. Bewegungsupdates zeichnen die Punkte über den vorhandenen Hintergrund; unveränderte Zustände werden nicht erneut gesendet. Neue Workspace-Fenster erhalten den aktuellen Zustand trotzdem sofort.
+- Doppelte Wurfart-Beschriftung entfernt: Rettungswürfe zeigen das Attribut einmal und die Wurfart einmal am Endwert. Generische englische Saving-Throw-Titel entfallen, tatsächliche Itemnamen bleiben erhalten. Auch Angriff/Probe/Wurf werden nicht mehr zusätzlich vor der Formel wiederholt.
+- 108 automatische Tests sowie lokale Browserprüfungen erfolgreich, einschließlich pausierter Animationsframes, Bewegung ohne Dokumentupdate, Ziehvorschau/Abbruch und Wiederverwendung des Kartenbilds. Live-Foundry-Abnahme der Korrektur offen.
+
 ## 0.12.0 – 2026-10-22
 
 - Minimap-Platzhalter durch Kartenbild der im Hauptfenster geöffneten Szene/Ebene ersetzt. Die vollständige Szene einschließlich Kartenrand passt unverzerrt in die bestehende Minimap-Fläche.

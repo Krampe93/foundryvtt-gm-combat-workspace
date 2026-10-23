@@ -248,8 +248,8 @@ export class WorkspaceBridge {
     } else {
       this.#renderLauncher();
       this.#minimapSource = new MinimapSource({
-        getState: () => createMinimapState({
-          canvas, snapshot: this.#getSnapshot?.(), baseUrl: window.location.href,
+        getState: ({ previews }) => createMinimapState({
+          canvas, snapshot: this.#getSnapshot?.(), baseUrl: window.location.href, previews,
           enemies: this.#enemyEntries().map((enemy) => ({ ...enemy,
             color: this.#remoteEnemyColors.find((entry) => entry.sceneId === enemy.sceneId && entry.tokenId === enemy.tokenId)?.color ?? enemy.color
           }))
@@ -1007,7 +1007,7 @@ export class WorkspaceBridge {
     if (message.type === "workspaceReady" && !this.#workspaceMode) {
       this.#broadcastState();
       this.#broadcastControlledToken();
-      this.#minimapSource?.refresh();
+      this.#minimapSource?.refresh({ force: true });
       return;
     }
 

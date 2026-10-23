@@ -483,6 +483,7 @@ Die dauerhaft sichtbare Bildschirmaufteilung vor Reaktions-Reset, legendären Ak
 - 106 automatische Tests sowie lokale Browserprüfung mit zwei Fenstern und erneute Layoutprüfung erfolgreich. Live-Foundry-Abnahme offen.
 - Erste Version nutzt Szenen-/Ebenenhintergründe, ohne zusätzliche Tiles, Zeichnungen, Licht oder Sichtbereiche; Videohintergründe liefern eine statische Vorschau.
 - Als Nächstes: Namen beim Darüberfahren und Auswahl des Gegners per Punktklick ergänzen.
+- Basis-Minimap von Tim am 2026-10-23 positiv bestätigt. Mit 0.12.1 laufende Tokenpositionen/Ziehvorschauen übertragen, Frame-Wartezeit entfernt und Kartenbild zwischengespeichert; 108 Tests und lokale Browserprüfung erfolgreich. Abnahme der Beschleunigung offen.
 
 ---
 

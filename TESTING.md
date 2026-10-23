@@ -1,5 +1,16 @@
 # Manual test checklist
 
+## 0.12.1: Schnellere Minimap und eindeutige Wurfzeilen
+
+1. Modul auf 0.12.1 aktualisieren, Hauptfenster neu laden und Workspace neu öffnen.
+2. Einen NPC bewegen: Der Minimap-Punkt folgt der gerenderten Bewegung bereits vor der endgültigen Positionsspeicherung. Ziehen und Abbrechen prüfen: Nach Abbruch gilt wieder die tatsächliche Tokenposition.
+3. Hauptfenster fokussieren, Workspace auf dem zweiten Bildschirm sichtbar lassen: Punkte aktualisieren sich weiter, ohne auf einen Companion-Animationsframe warten zu müssen.
+4. Zug wechseln, NPC entfernen, Szene wechseln und Workspace erneut öffnen: Ring, Punkte und Kartenbild weiterhin korrekt; keine alte Ziehvorschau oder leere Minimap durch unterdrückte identische Zustände.
+5. Konstitutions-Rettungswurf eines Skeleton auslösen: Attribut `Konstitution` einmal sichtbar, Wurfart `Rettungswurf` einmal unmittelbar vor der Endzahl. Kein zusätzlicher `Constitution Saving Throw`-Titel. Itembezogene Rettungswürfe behalten ihren Itemnamen.
+6. Angriff, Schaden, Probe, NAT1/NAT20 und Zusatzwürfe prüfen: Wurfart am Ergebnis klar erkennbar; Schadensart bleibt hinter dem Schadenswert, Patzer/Krit-Zusatz bleibt unterscheidbar.
+
+Lokale Prüfung: 108 automatische Tests; zwei Browserfenster mit Bewegung ohne gespeichertes Tokenupdate, Ziehvorschau und Abbruch, pausiertem requestAnimationFrame sowie null erneuten Bildskalierungen bei drei Bewegungszeichnungen. Rettungswurfzeile im Browser geprüft. Live-Foundry-Abnahme offen.
+
 ## 0.12.0: Erste GM-Minimap
 
 1. Hauptfenster und Workspace schließen beziehungsweise neu laden, Modul auf 0.12.0 aktualisieren und Workspace erneut öffnen.
