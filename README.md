@@ -32,6 +32,8 @@ Version `0.12.0` adds the first GM minimap: the main window's current scene/leve
 
 Version `0.12.1` updates minimap markers from rendered token movement and drag previews, without waiting for a saved token position or a companion animation frame. It reuses the scaled background and skips identical outgoing states. Saving throws show their ability once and the roll type once beside the total; redundant generic English save titles are omitted while actual item names remain visible.
 
+Version `0.12.2` explicitly deletes the active NPC's stored legendary action locks at turn start, preserving other NPCs' locks. Each action writes only its own lock. Repeated legendary attacks such as Pounce keep each outstanding damage button. This is the first test checkpoint on the agreed path to 1.0; the next section starts after Tim's Foundry test. The older Commanding Presence/Fiery Rays report still requires that live check; local tests cover both execution orders, resource guards and reset behavior.
+
 ## Development
 
 Validate the manifest, referenced files, optional-dependency policy, and matching translation keys:

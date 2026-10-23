@@ -1,5 +1,16 @@
 # Manual test checklist
 
+## 0.12.2: Teststopp A – getrennte legendäre Sperren und Rücksetzung
+
+1. Auf 0.12.2 aktualisieren, Hauptfenster neu laden und Workspace neu öffnen. Versionsanzeige kontrollieren. Adult Red Dragon mit Commanding Presence, Fiery Rays, Pounce, Command, Scorching Ray und Rend im Encounter verwenden; für die erste Prüfung am eigenen Drachenzug beginnen, damit das Budget frisch ist.
+2. Beim Zugende eines Spielers mit 3/3 Budget Commanding Presence ausführen: genau ein Punkt verbraucht, WEI-Rettungswurf/SG 20 angezeigt, kein Spieler-Rettungswurf automatisch gewürfelt. Nur Commanding Presence ist individuell gesperrt; Fiery Rays und Pounce bleiben verfügbar.
+3. Danach Fiery Rays: Budget 1/3, genau drei Scorching-Ray-Angriffe und drei getrennte Schadensbuttons. Commanding Presence und Fiery Rays sind jetzt jeweils gesperrt; Pounce bleibt ausführbar. Einen Schadensbutton ausführen: genau ein Schaden, nur dieser Button verschwindet.
+4. Beginnt der nächste Drachenzug, Budget wieder 3/3. Beim nächsten Zugende eines Spielers sind beide Aktionen wieder verfügbar. Diesmal Fiery Rays zuerst, danach Commanding Presence; die jeweils andere Aktion darf nicht vorzeitig gesperrt sein.
+5. Nach einem weiteren Drachenzug Pounce zweimal ausführen, bevor Schaden gewürfelt wird: zweimal genau ein Punkt, je ein Rend-Angriff; beide Schadensbuttons bleiben erhalten und lassen sich einzeln abarbeiten. Keine individuelle Zug-Sperre. Bei leerem Budget kein weiterer Angriff. Legendäre Resistenzen bleiben unverändert.
+6. Bei einem zweiten legendären Gegner eine Aktion sperren. Der Zugbeginn des ersten Drachen darf diese fremde Sperre nicht entfernen. Workspace während eines Spielerzugs schließen und erneut öffnen: vorhandene Sperren und Budget bleiben bestehen; beim nächsten eigenen Drachenzug erfolgt der Reset.
+
+Lokale Prüfung: 109 automatische Tests; Rücksetztest mit zusammengeführten Flag-Updates vor der Korrektur fehlgeschlagen und danach erfolgreich. Browserprüfung mit simulierten Foundry-Dokumenten für beide Reihenfolgen, einzelne Sperren, Budgetgrenzen, drei Strahlen und Schadensbuttons, abgebrochene Ausführung, wiederholtes Pounce, Wiederöffnen, fremde Sperren und legendäre Resistenzen erfolgreich. Der ältere gegenseitige Sperrfehler ließ sich lokal nicht direkt reproduzieren. Live-Foundry-Abnahme offen; danach erst Schritt B.
+
 ## 0.12.1: Schnellere Minimap und eindeutige Wurfzeilen
 
 1. Modul auf 0.12.1 aktualisieren, Hauptfenster neu laden und Workspace neu öffnen.

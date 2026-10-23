@@ -1,3 +1,12 @@
+## 0.12.2 – 2026-10-23
+
+- Erster Teststopp auf dem vereinbarten Weg zu 1.0: legendäre Aktionssperren und Rücksetzung zum eigenen Zugbeginn.
+- Gespeicherte Sperren des aktiven Gegners ausdrücklich über Foundrys Flag-Löschung entfernt. Das bisherige Weglassen aus einem erneut gespeicherten Objekt konnte die alten Sperren beim Zusammenführen der Dokumentdaten erhalten. Andere Gegner behalten ihre Sperren.
+- Beim Sperren nur den einzelnen Aktionsschlüssel speichern, statt den gesamten zuvor gelesenen Sperrbestand erneut zu schreiben.
+- Wiederholte legendäre Angriffe wie Pounce behalten alle noch offenen Schadensbuttons. Der zweite Angriff ersetzt den ersten ausstehenden Treffer nicht mehr; jeder Button besitzt die eindeutige ID seiner Angriffsgruppe.
+- 109 automatische Tests erfolgreich. Neuer Verhaltenstest bildet zusammengeführte Dokumentupdates ab und reproduziert den Rücksetzfehler vor der Korrektur. Lokale Browserprüfung mit simulierten Foundry-Dokumenten: beide Reihenfolgen von Commanding Presence/Fiery Rays, getrennte Sperren, Budget, drei Folgeangriffe und Schadensbuttons, Abbruch, wiederholtes Pounce, Wiederöffnen und unveränderte legendäre Resistenzen.
+- Der ältere Bericht über eine gemeinsame Sperre von Commanding Presence und Fiery Rays ließ sich lokal nicht direkt reproduzieren. Die getrennte Bedienung und der nachgewiesene Rücksetzfehler sind geprüft; Tims Gegenprobe in Foundry steht aus. Der nächste Abschnitt beginnt nach diesem Test.
+
 ## 0.12.1 – 2026-10-23
 
 - Minimap um laufende Token-Aktualisierungen erweitert: native gerenderte Positionen und Ziehvorschauen werden bereits vor dem Speichern der Tokenposition angezeigt. Beim Abbruch oder Entfernen der Vorschau gilt wieder die tatsächliche Tokenposition.
