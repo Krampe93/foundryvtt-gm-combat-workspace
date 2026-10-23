@@ -86,6 +86,7 @@ export function rollMessageEntry(message, { actor, item, damageLabel = (type) =>
       total: natural ?? roll.total,
       extraMessageId: kind === "extra" ? message.id : null,
       extraDiceRolled: Boolean(message.flags?.[MODULE_ID]?.extraDiceRolled),
+      abilityLabel: kind === "save" ? ABILITIES[ability] ?? null : null,
       label: kind === "damage" && type ? String(damageLabel(type)) :
         kind === "extra" ? `${message.flags?.[MODULE_ID]?.sourceNatural === 1 ? "Patzer" : "Krit"}-W20` :
         kind === "save" && ABILITIES[ability] ? `${KIND_LABELS[kind]} · ${ABILITIES[ability]}` : KIND_LABELS[kind],
@@ -98,7 +99,8 @@ export function rollMessageEntry(message, { actor, item, damageLabel = (type) =>
     messageId: message.id,
     groupId: flags[MODULE_ID]?.rollGroupId ?? flags.dnd5e?.originatingMessage ?? message.id,
     actorName: message.speaker?.alias || actor.name || "Gegner",
-    title: item?.name || String(message.flavor ?? "Würfelergebnis").replace(/<[^>]*>/g, "").trim(),
+    title: item?.name || (rows.every((row) => row.kind === "save" && row.abilityLabel) ? "" :
+      String(message.flavor ?? "Würfelergebnis").replace(/<[^>]*>/g, "").trim()),
     rows
   };
 }
@@ -168,8 +170,8 @@ export function renderRollHistory(history) {
     const damages = rows.filter(({ kind }) => kind === "damage");
     return `<article class="gm-workspace-roll-card${entry.stale ? " is-previous-turn" : ""}"${entry.stale ? ' aria-label="Vorheriger Zug"' : ""}>
       ${rows.map((row) => `<div class="gm-workspace-roll-row${row.natural ? ` is-natural-${row.natural}` : ""}">
-        <span class="gm-workspace-roll-identity"><b>${escape(entry.actorName)}</b> · ${escape(entry.title)}</span>
-        ${row.kind !== "damage" ? `<span class="gm-workspace-roll-kind">${escape(row.label)}</span>` : ""}
+        <span class="gm-workspace-roll-identity"><b>${escape(entry.actorName)}</b>${entry.title ? ` · ${escape(entry.title)}` : ""}</span>
+        ${row.abilityLabel || row.kind === "extra" ? `<span class="gm-workspace-roll-kind">${escape(row.abilityLabel ?? row.label)}</span>` : ""}
         <span class="gm-workspace-roll-details">${renderDetails(row.details)}</span>
         <span class="gm-workspace-roll-total"><small class="gm-workspace-roll-badge is-${row.kind}"><i class="fa-solid ${KIND_ICONS[row.kind]}" aria-hidden="true"></i> ${KIND_LABELS[row.kind]}</small><strong>${row.natural ? `NAT ${row.natural}` : escape(row.total)}</strong>${row.kind === "damage" && row.label !== KIND_LABELS.damage ? `<span class="gm-workspace-roll-damage-type">${escape(row.label)}</span>` : ""}</span>
         ${row.extraMessageId && !row.extraDiceRolled ? `<button type="button" data-action="roll-extra-dice" data-message-id="${escape(row.extraMessageId)}">2W6 nachwerfen</button>` : ""}

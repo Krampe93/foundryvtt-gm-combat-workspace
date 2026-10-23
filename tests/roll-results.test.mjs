@@ -92,6 +92,13 @@ test("saving throws show their ability and use the same natural display", () => 
   assert.equal(piece.rows[0].total, 18);
   save.rolls = [d20(1, 6)];
   assert.equal(rollMessageEntry(save, { actor }).rows[0].natural, 1);
+  save.flavor = "Dexterity Saving Throw";
+  const output = html(rollMessageEntry(save, { actor }));
+  assert.equal((output.match(/Rettungswurf/g) ?? []).length, 1, "roll type appears only on the final-number badge");
+  assert.equal((output.match(/Geschicklichkeit/g) ?? []).length, 1);
+  assert.doesNotMatch(output, /Dexterity Saving Throw|Würfelergebnis/);
+  const itemSave = html(rollMessageEntry(save, { actor, item: { name: "Drachenodem" } }));
+  assert.match(itemSave, /Drachenodem/, "the actual ability/item name still provides useful context");
 });
 
 test("nested dice and bonus dice retain their separate results", () => {

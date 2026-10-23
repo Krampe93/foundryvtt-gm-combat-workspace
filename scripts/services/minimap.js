@@ -39,7 +39,7 @@ function backgroundAsset(scene, level, canvas, imageBounds, baseUrl) {
 }
 
 /** Read GM scene documents, including hidden tokens, without changing the map or its camera. */
-export function createMinimapState({ canvas, snapshot, enemies, baseUrl }) {
+export function createMinimapState({ canvas, snapshot, enemies, baseUrl, previews = new Map() }) {
   const scene = canvas?.scene;
   if (!canvas?.ready || !scene) return null;
   const dimensions = canvas.dimensions ?? scene.getDimensions?.() ?? scene.dimensions;
@@ -56,7 +56,8 @@ export function createMinimapState({ canvas, snapshot, enemies, baseUrl }) {
     const token = scene.tokens?.get(enemy.tokenId);
     if (!token || (level?.id && token.level && token.level !== level.id)) return [];
     const gridSize = finite(dimensions?.size ?? scene.grid?.size, 100);
-    const center = token.getCenterPoint?.() ?? {
+    const rendered = previews.get(`${scene.id}:${token.id}`) ?? token.object;
+    const center = rendered?.center ?? token.getCenterPoint?.() ?? {
       x: finite(token.x, NaN) + finite(token.width, 1) * gridSize / 2,
       y: finite(token.y, NaN) + finite(token.height, 1) * gridSize / 2
     };
@@ -83,6 +84,9 @@ export class MinimapSource {
   #active = false;
   #queued = false;
   #cleared = false;
+  #previews = new Map();
+  #signature = null;
+  #force = false;
 
   constructor({ getState, publish }) {
     this.#getState = getState;
@@ -99,22 +103,45 @@ export class MinimapSource {
     }
     this.#hooks.push(["canvasTearDown", Hooks.on("canvasTearDown", () => {
       this.#cleared = true;
+      this.#previews.clear();
+      this.#signature = "null";
       this.#publish(null);
     })]);
-    this.refresh();
+    this.#hooks.push(["refreshToken", Hooks.on("refreshToken", (token) => {
+      if (token?.isPreview) this.#previews.set(this.#tokenKey(token), token);
+      this.refresh();
+    })]);
+    this.#hooks.push(["destroyToken", Hooks.on("destroyToken", (token) => {
+      const key = this.#tokenKey(token);
+      if (this.#previews.get(key) === token) this.#previews.delete(key);
+      this.refresh();
+    })]);
+    this.refresh({ force: true });
   }
 
-  refresh() {
-    if (!this.#active || this.#queued) return;
+  #tokenKey(token) {
+    return `${token?.scene?.id ?? token?.document?.parent?.id}:${token?._original?.id ?? token?.id}`;
+  }
+
+  refresh({ force = false } = {}) {
+    if (!this.#active) return;
+    this.#force ||= force;
+    if (this.#queued) return;
     this.#queued = true;
     queueMicrotask(() => {
       this.#queued = false;
-      if (this.#active) this.#publish(this.#cleared ? null : this.#getState());
+      if (!this.#active) return;
+      const state = this.#cleared ? null : this.#getState({ previews: this.#previews });
+      const signature = JSON.stringify(state);
+      if (this.#force || signature !== this.#signature) this.#publish(state);
+      this.#signature = signature;
+      this.#force = false;
     });
   }
 
   stop() {
     this.#active = false;
+    this.#previews.clear();
     for (const [name, id] of this.#hooks) Hooks.off(name, id);
     this.#hooks = [];
   }
@@ -132,7 +159,9 @@ export class MinimapView {
   #ready = false;
   #failed = false;
   #observer = null;
-  #frame = null;
+  #queued = false;
+  #backgroundCanvas = null;
+  #backgroundKey = null;
   #active = true;
 
   constructor(host) {
@@ -191,38 +220,55 @@ export class MinimapView {
   }
 
   #schedule() {
-    if (!this.#active || !this.#context || this.#frame !== null) return;
-    this.#frame = requestAnimationFrame(() => { this.#frame = null; this.#draw(); });
+    if (!this.#active || !this.#context || this.#queued) return;
+    this.#queued = true;
+    // Do not wait for requestAnimationFrame, which can be throttled in the unfocused companion.
+    queueMicrotask(() => {
+      this.#queued = false;
+      if (this.#active) this.#draw();
+    });
   }
 
   #draw() {
     const { width, height } = this.#host.getBoundingClientRect();
     if (!(width > 0 && height > 0)) return;
     const ratio = Math.min(globalThis.devicePixelRatio || 1, 2);
-    this.#canvas.width = Math.round(width * ratio);
-    this.#canvas.height = Math.round(height * ratio);
+    const pixelWidth = Math.round(width * ratio);
+    const pixelHeight = Math.round(height * ratio);
+    if (this.#canvas.width !== pixelWidth) this.#canvas.width = pixelWidth;
+    if (this.#canvas.height !== pixelHeight) this.#canvas.height = pixelHeight;
     const context = this.#context;
-    context.setTransform(ratio, 0, 0, ratio, 0, 0);
-    context.fillStyle = "#14181c";
-    context.fillRect(0, 0, width, height);
     const state = this.#state;
     const projection = minimapProjection(state?.bounds, width, height);
+    const key = JSON.stringify([width, height, ratio, this.#ready, state?.bounds, state?.background]);
+    if (key !== this.#backgroundKey) {
+      this.#backgroundCanvas ??= document.createElement("canvas");
+      this.#backgroundCanvas.width = pixelWidth;
+      this.#backgroundCanvas.height = pixelHeight;
+      const background = this.#backgroundCanvas.getContext("2d");
+      background.setTransform(ratio, 0, 0, ratio, 0, 0);
+      background.fillStyle = "#14181c";
+      background.fillRect(0, 0, width, height);
+      if (projection && this.#ready) {
+        const { scale, x, y } = projection;
+        background.save();
+        background.beginPath();
+        background.rect(x + state.bounds.x * scale, y + state.bounds.y * scale, state.bounds.width * scale, state.bounds.height * scale);
+        background.clip();
+        const [a, b, c, d, tx, ty] = state.background.matrix;
+        background.transform(scale * a, scale * b, scale * c, scale * d, x + scale * tx, y + scale * ty);
+        background.drawImage(this.#media, 0, 0, 1, 1);
+        background.restore();
+      }
+      this.#backgroundKey = key;
+    }
+    context.setTransform(1, 0, 0, 1, 0, 0);
+    context.drawImage(this.#backgroundCanvas, 0, 0);
+    context.setTransform(ratio, 0, 0, ratio, 0, 0);
     const status = !state ? "Keine Szene im Hauptfenster geöffnet." : this.#failed ? "Kartenbild konnte nicht geladen werden." :
       !state.background ? "Diese Szene hat kein Hintergrundbild." : !this.#ready ? "Kartenbild wird geladen …" : "";
     if (projection) {
       const { scale, x, y } = projection;
-      context.save();
-      context.beginPath();
-      context.rect(x + state.bounds.x * scale, y + state.bounds.y * scale, state.bounds.width * scale, state.bounds.height * scale);
-      context.clip();
-      if (this.#ready) {
-        const [a, b, c, d, tx, ty] = state.background.matrix;
-        context.save();
-        context.transform(scale * a, scale * b, scale * c, scale * d, x + scale * tx, y + scale * ty);
-        context.drawImage(this.#media, 0, 0, 1, 1);
-        context.restore();
-      }
-      context.restore();
       // Draw the active marker last, so its ring remains visible when markers overlap.
       for (const point of [...state.points].sort((a, b) => Number(a.active) - Number(b.active))) {
         if (point.x < state.bounds.x || point.y < state.bounds.y || point.x > state.bounds.x + state.bounds.width || point.y > state.bounds.y + state.bounds.height) continue;
@@ -256,7 +302,8 @@ export class MinimapView {
   stop() {
     this.#active = false;
     this.#observer?.disconnect();
-    if (this.#frame !== null) cancelAnimationFrame(this.#frame);
+    this.#backgroundCanvas = null;
+    this.#backgroundKey = null;
     this.#releaseMedia();
   }
 }

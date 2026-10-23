@@ -42,6 +42,19 @@ test("movement and turn changes update independently of an unchanged combat snap
   assert.ok(createMinimapState(input).points.every(({ active }) => !active));
 });
 
+test("rendered movement and drag previews are visible before the token document is saved", () => {
+  const input = fixture();
+  const token = input.canvas.scene.tokens.get("small");
+  token.object = { center: { x: 480, y: 320 } };
+  assert.equal(createMinimapState(input).points[0].x, 480);
+  assert.equal(token.x, 300, "the stored document position remains unchanged");
+  const preview = { center: { x: 550, y: 350 } };
+  const previews = new Map([["map:small", preview]]);
+  assert.equal(createMinimapState({ ...input, previews }).points[0].x, 550);
+  previews.clear();
+  assert.equal(createMinimapState({ ...input, previews }).points[0].x, 480, "cancelled drag returns to the rendered token");
+});
+
 test("deleted, defeated, player and other-level tokens do not leave enemy markers", () => {
   const input = fixture();
   input.enemies.push({ id: "other", tokenId: "upstairs", type: "npc" },
@@ -111,11 +124,18 @@ test("source coalesces token hooks, clears during scene teardown and removes lis
   try {
     source.start();
     await Promise.resolve();
+    state = { ...state, moved: true };
     hooks.get("updateToken")();
     hooks.get("updateToken")();
     hooks.get("deleteToken")();
     await Promise.resolve();
     assert.equal(published.length, 2);
+    hooks.get("refreshToken")();
+    await Promise.resolve();
+    assert.equal(published.length, 2, "unrelated visual refreshes do not resend identical data");
+    source.refresh({ force: true });
+    await Promise.resolve();
+    assert.equal(published.length, 3, "a newly opened companion receives the current state even when unchanged");
     hooks.get("updateToken")();
     hooks.get("canvasTearDown")();
     await Promise.resolve();
@@ -130,6 +150,36 @@ test("source coalesces token hooks, clears during scene teardown and removes lis
     await Promise.resolve();
     assert.equal(published.length, count, "queued updates stop with the service");
     assert.equal(hooks.size, 0);
+  } finally {
+    source.stop();
+    if (previous === undefined) delete globalThis.Hooks;
+    else globalThis.Hooks = previous;
+  }
+});
+
+test("preview refresh and cancellation publish their positions and clear on scene teardown", async () => {
+  const previous = globalThis.Hooks;
+  const hooks = new Map();
+  const published = [];
+  const input = fixture();
+  globalThis.Hooks = { on: (name, callback) => { hooks.set(name, callback); return name; }, off: (name) => hooks.delete(name) };
+  const source = new MinimapSource({ getState: ({ previews }) => createMinimapState({ ...input, previews }), publish: (state) => published.push(state) });
+  try {
+    source.start();
+    await Promise.resolve();
+    const preview = { id: "small", isPreview: true, scene: { id: "map" }, center: { x: 490, y: 300 } };
+    hooks.get("refreshToken")(preview);
+    await Promise.resolve();
+    assert.equal(published.at(-1).points[0].x, 490);
+    hooks.get("destroyToken")(preview);
+    await Promise.resolve();
+    assert.equal(published.at(-1).points[0].x, 350);
+    hooks.get("refreshToken")(preview);
+    hooks.get("canvasTearDown")();
+    await Promise.resolve();
+    hooks.get("canvasReady")();
+    await Promise.resolve();
+    assert.equal(published.at(-1).points[0].x, 350, "a previous scene's drag must not persist");
   } finally {
     source.stop();
     if (previous === undefined) delete globalThis.Hooks;

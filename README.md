@@ -30,6 +30,8 @@ Version `0.11.2` places the damage type directly after each damage total, for ex
 
 Version `0.12.0` adds the first GM minimap: the main window's current scene/level background, enemy dots matching the overview colors, and an outer ring around the active enemy. Token positions, turn changes and scene changes update automatically. Hidden NPCs are included; defeated, deleted and other-level tokens are excluded. The existing panel size remains fixed. This version shows the background image (a static preview for video backgrounds), without additional tiles, drawings, lighting or vision overlays. Names on hover and clicking dots are planned next.
 
+Version `0.12.1` updates minimap markers from rendered token movement and drag previews, without waiting for a saved token position or a companion animation frame. It reuses the scaled background and skips identical outgoing states. Saving throws show their ability once and the roll type once beside the total; redundant generic English save titles are omitted while actual item names remain visible.
+
 ## Development
 
 Validate the manifest, referenced files, optional-dependency policy, and matching translation keys:
