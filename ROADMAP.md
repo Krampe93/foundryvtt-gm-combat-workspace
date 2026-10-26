@@ -10,8 +10,8 @@ Tim hat die vollständige Umsetzung der offenen Punkte beauftragt. Seit 2026-10-
 
 | Schritt | Umfang | Status |
 |---|---|---|
-| A | Legendäre Aktionssperren getrennt prüfen, alten Commanding-Presence-/Fiery-Rays-Bericht untersuchen und Rücksetzung absichern | Aktionen von Tim positiv geprüft; Recovery-Korrektur in 0.13.1 wartet auf Gegenprobe |
-| B | Recharge-Verfügbarkeit, manuelles/automatisches Aufladen und Reaktionsreset-Sonderfälle | Stone-Giant-Reset in 0.13.1 korrigiert; gemeinsame Gegenprobe offen |
+| A | Legendäre Aktionssperren getrennt prüfen, alten Commanding-Presence-/Fiery-Rays-Bericht untersuchen und Rücksetzung absichern | Aktionen von Tim positiv geprüft; Recovery-Korrektur aus 0.13.1 noch nicht getestet und in Gegenprobe 0.13.2 übernommen |
+| B | Recharge-Verfügbarkeit, manuelles/automatisches Aufladen und Reaktionsreset-Sonderfälle | Stone-Giant-Reset aus 0.13.1 noch nicht getestet; gemeinsame Gegenprobe in 0.13.2 offen |
 | C | Mehrdeutige legendäre Folgeangriffe und In-Lair-Ressourcen zuverlässig behandeln | In 0.13.0 implementiert und lokal geprüft; gemeinsame Abnahme offen |
 | D | Minimap-Namen beim Darüberfahren und Gegnerauswahl per Punktklick | Von Tim am 2026-10-26 bestätigt |
 | E | Encounter-Vorbereitung, W12-Initiative, Spieler-Platzhalter und In-Lair-Einrichtung | Offen |
@@ -21,6 +21,13 @@ Tim hat die vollständige Umsetzung der offenen Punkte beauftragt. Seit 2026-10-
 | I | Gemeinsamer Langzeittest, Berechtigungen, Neuinstallation und Upgrade; anschließend Release 1.0 | Offen |
 
 Der Stand aus 0.12.1 bleibt die Ausgangsbasis. Eine lokale Prüfung ersetzt Tims Foundry-Test nicht. Der Gesamtauftrag bleibt zwischen den Teststopps bestehen.
+
+### Weitere Rückmeldung und gemeinsamer nächster Test – 0.13.2
+
+- Tim meldet am 2026-10-26: Rettungswürfe dürfen keine NAT-1-/NAT-20-Sonderanzeige verwenden, sondern müssen normal inklusive Modifikatoren berechnet angezeigt werden. Sonderanzeige bleibt für Ability-Proben und Angriffe erhalten. Gegner stehen weiterhin nicht in Initiativreihenfolge; Screenshot enthält native Drachen- und Skelettgruppen.
+- NAT-Anzeige auf Angriffe und Proben begrenzt. Listen lesen aktuelle Einzel-/Gruppeninitiative unabhängig von einem veralteten Zuglisten-Cache; native Zugliste bestimmt weiterhin Gleichstände. Gruppenänderungen werden beobachtet.
+- **Abnahmestand:** Tim konnte den Rest aus 0.13.1 noch nicht testen. Legendäre Recovery, Stone-Giant-Reaktionsreset, Recharge, Sonderreaktionen, Sperren/Folgeaktionen, Hort-Budget und Navigation bleiben offen; keine stillschweigende Abnahme. Zusammen mit den zwei aktuellen Korrekturen vollständig in TESTING.md für 0.13.2 übernommen. Minimap bleibt bereits abgenommen.
+- 141 automatische Tests und kombinierte Browserprüfungen erfolgreich. Nächster gemeinsamer Foundry-Test erfolgt mit 0.13.2; das aktuelle Paket bleibt bis zur Gegenprobe bestehen.
 
 ### Gegenprobe und Korrektur – 0.13.1
 

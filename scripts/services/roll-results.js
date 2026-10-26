@@ -77,7 +77,7 @@ export function rollMessageEntry(message, { actor, item, damageLabel = (type) =>
     const kind = rollKind(message, roll);
     const dice = values(roll.terms).flatMap(diceIn);
     const face = keptD20(roll);
-    const natural = !["damage", "extra", "extraDice"].includes(kind) && [1, 20].includes(face) ? face : null;
+    const natural = ["attack", "check"].includes(kind) && [1, 20].includes(face) ? face : null;
     const details = natural ? dice.map(dieDetail) : values(roll.terms).flatMap(termDetails);
     if (!details.length && !natural) details.push({ text: String(roll.formula ?? roll.total) });
     const type = roll.options?.type ?? roll.options?.damageType ?? null;

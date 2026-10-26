@@ -12,8 +12,36 @@ test("initiative order comes from the live tracker, including its native tie ord
   const low = { id: "low", initiative: 4 }, highA = { id: "a", initiative: 18 }, highB = { id: "b", initiative: 18 };
   const combat = { combatants: [low, highA, highB], turns: [highB, highA, low] };
   assert.deepEqual(orderedCombatants(combat).map(({ id }) => id), ["b", "a", "low"]);
+  low.initiative = 21;
   combat.turns = [low, highA, highB];
   assert.deepEqual(orderedCombatants(combat).map(({ id }) => id), ["low", "a", "b"], "a live tracker reorder is reflected immediately");
+});
+
+test("live initiative wins over a stale turns cache and ties keep the native order", () => {
+  const marilith = { id: "marilith", initiative: 11 }, dragonA = { id: "dragon-a", initiative: 18 },
+    dragonB = { id: "dragon-b", initiative: 18 }, giant = { id: "giant", initiative: 15 },
+    bodak = { id: "bodak", initiative: 12 }, skeleton = { id: "skeleton", initiative: 7 };
+  const combat = { combatants: [marilith, dragonA, dragonB, giant, bodak, skeleton],
+    turns: [marilith, dragonB, dragonA, giant, bodak, skeleton] };
+  assert.deepEqual(orderedCombatants(combat).map(({ id }) => id),
+    ["dragon-b", "dragon-a", "giant", "bodak", "marilith", "skeleton"]);
+  giant.initiative = 22;
+  assert.equal(orderedCombatants(combat)[0], giant, "a live initiative edit is visible before setupTurns or a tracker render");
+  assert.deepEqual(combat.turns.map(({ id }) => id), ["marilith", "dragon-b", "dragon-a", "giant", "bodak", "skeleton"],
+    "reading the workspace order does not change combat turn indices");
+});
+
+test("native group initiative controls all members, including cleared and changed initiative", () => {
+  const group = { id: "dragons", initiative: 18 };
+  const dragonA = { id: "dragon-a", initiative: 2, group }, dragonB = { id: "dragon-b", initiative: 1, group },
+    giant = { id: "giant", initiative: 15 }, marilith = { id: "marilith", initiative: 11 };
+  const combat = { combatants: [marilith, dragonA, giant, dragonB], turns: [dragonB, dragonA, giant, marilith] };
+  assert.deepEqual(orderedCombatants(combat).map(({ id }) => id), ["dragon-b", "dragon-a", "giant", "marilith"]);
+  group.initiative = 9;
+  assert.deepEqual(orderedCombatants(combat).map(({ id }) => id), ["giant", "marilith", "dragon-b", "dragon-a"]);
+  group.initiative = null;
+  marilith.initiative = -1;
+  assert.deepEqual(orderedCombatants(combat).map(({ id }) => id), ["giant", "marilith", "dragon-b", "dragon-a"]);
 });
 
 test("fallback sorts initiative descending, keeps ties stable and places unrolled entries last", () => {

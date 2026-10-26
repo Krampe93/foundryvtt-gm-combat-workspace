@@ -88,7 +88,7 @@ function summarizeCombatant(combatant, scene) {
     actorLinked: Boolean(token?.actorLink),
     tokenId: token?.id ?? combatant.tokenId ?? null,
     tokenPresent: Boolean(token),
-    initiative: combatant.initiative ?? null,
+    initiative: combatantInitiative(combatant),
     hidden: Boolean(combatant.hidden || token?.hidden),
     defeated: Boolean(combatant.defeated ?? combatant.isDefeated),
     armorClass: Number(ac.value ?? ac) || 0,
@@ -103,22 +103,29 @@ function summarizeCombatant(combatant, scene) {
   };
 }
 
-/** Foundry owns initiative ties and tracker ordering; collection insertion order is unrelated. */
+function combatantInitiative(combatant) {
+  return (combatant.group ? combatant.group.initiative : combatant.initiative) ?? null;
+}
+
+/** Read live initiative; the native turns cache supplies tie order, never stale initiative order. */
 export function orderedCombatants(combat) {
-  const entries = Array.from(combat?.combatants ?? []);
-  const initiative = (entry) => entry.initiative === null || entry.initiative === undefined || entry.initiative === "" || !Number.isFinite(Number(entry.initiative))
-    ? -Infinity : Number(entry.initiative);
-  const fallback = [...entries].sort((a, b) => {
+  const collection = combat?.combatants;
+  const entries = Array.from(collection?.values?.() ?? collection ?? []);
+  const turns = Array.isArray(combat?.turns) ? combat.turns : [];
+  const nativeOrder = new Map(turns.map((entry, index) => [entry.id, index]));
+  const initiative = (entry) => {
+    const value = combatantInitiative(entry);
+    return value === null || value === "" || !Number.isFinite(Number(value)) ? -Infinity : Number(value);
+  };
+  return entries.sort((a, b) => {
     const left = initiative(a), right = initiative(b);
     if (left !== right) return left > right ? -1 : 1;
+    const leftOrder = nativeOrder.get(a.id), rightOrder = nativeOrder.get(b.id);
+    if (leftOrder !== undefined || rightOrder !== undefined) {
+      return (leftOrder ?? turns.length) - (rightOrder ?? turns.length);
+    }
     return 0;
   });
-  const turns = Array.isArray(combat?.turns) ? combat.turns : [];
-  if (!turns.length) return fallback;
-  const byId = new Map(entries.map((entry) => [entry.id, entry]));
-  const ordered = turns.flatMap((turn) => byId.has(turn.id) ? [byId.get(turn.id)] : []);
-  const present = new Set(ordered.map(({ id }) => id));
-  return [...ordered, ...fallback.filter(({ id }) => !present.has(id))];
 }
 
 export function createCombatSnapshot(combat) {
