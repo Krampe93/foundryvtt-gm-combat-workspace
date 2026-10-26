@@ -140,3 +140,41 @@ test("per-turn rules resolve unlinked NPC actors with their encounter scene", as
   assert.ok(sceneIds.every((id) => id === "token-scene"));
   assert.ok(f.resets.includes("reactive"));
 });
+
+test("native turn start resets the initiating GM's NPC even when another GM is primary", async () => {
+  const f = fixture();
+  game.users.activeGM.id = "other-gm";
+  try {
+    const service = f.create();
+    const snapshot = f.snapshot(2, 1);
+    await service.handle({ previousSnapshot: f.snapshot(2, 0, "player"), snapshot });
+    assert.deepEqual(f.resets, [], "the coordinator cannot delegate to a different primary GM's absent main window");
+    await service.handleNativeStart(snapshot, "gm");
+    assert.ok(f.resets.some(({ id }) => id === "dragon"));
+    assert.deepEqual(f.recharges, ["breath:item"]);
+    assert.equal(f.dragon.system.resources.legact.spent, 0);
+    await service.handleNativeStart(snapshot, "gm");
+    assert.equal(f.recharges.length, 1, "a second main/companion notification does not roll again");
+  } finally { game.users.activeGM.id = "gm"; }
+});
+
+test("native start never recovers on behalf of another user's window or on a backwards replay", async () => {
+  const f = fixture();
+  const service = f.create();
+  await service.initialize(f.snapshot(2, 3));
+  await service.handleNativeStart(f.snapshot(2, 4), "other-gm");
+  await service.handleNativeStart(f.snapshot(2, 2), "gm");
+  assert.deepEqual(f.recharges, []);
+  assert.deepEqual(f.resets, []);
+});
+
+test("native encounter recovery can restart an old document without doubling the first turn", async () => {
+  const f = fixture();
+  const service = f.create();
+  await service.initialize(f.snapshot(8, 4));
+  const snapshot = f.snapshot(1, 0);
+  await service.handleNativeStart(snapshot, "gm", { encounter: true });
+  await service.handleNativeStart(snapshot, "gm");
+  await service.handleNativeStart(snapshot, "gm", { encounter: true });
+  assert.equal(f.recharges.length, 1);
+});

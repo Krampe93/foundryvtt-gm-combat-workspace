@@ -18,6 +18,7 @@ const OBSERVED_HOOKS = Object.freeze([
   "createItem",
   "updateItem",
   "deleteItem",
+  "renderCombatTracker",
   "canvasReady"
 ]);
 

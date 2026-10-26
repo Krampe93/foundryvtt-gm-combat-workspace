@@ -6,6 +6,8 @@ import { WorkspaceLayout } from "./workspace-layout.js";
 import { createMinimapState, MinimapSource, MinimapView } from "./minimap.js";
 import { RechargeRolls, rechargeResources } from "./recharge-operations.js";
 import { TurnRecovery } from "./turn-recovery.js";
+import { createCombatSnapshot } from "./combat-state.js";
+import { applyLegendaryRecoveryTiming } from "./native-turn-recovery.js";
 import {
   LEGACY_REACTION_FLAG_KEY,
   LEGACY_REACTION_MODULE_ID,
@@ -193,6 +195,7 @@ export class WorkspaceBridge {
   #turnRecovery;
   #legendaryChoices = new Map();
   #itemRenderHooks = [];
+  #nativeRecoveryHooks = [];
 
   constructor({ eventBus, getSnapshot, rollRules = null, logger = createLogger("WorkspaceBridge") }) {
     this.#eventBus = eventBus;
@@ -211,6 +214,17 @@ export class WorkspaceBridge {
   start() {
     this.#channel = new BroadcastChannel(CHANNEL_NAME);
     this.#channel.addEventListener("message", (event) => this.#receive(event.data));
+    this.#nativeRecoveryHooks.push(["dnd5e.combatRecovery", Hooks.on("dnd5e.combatRecovery", applyLegendaryRecoveryTiming)]);
+    this.#nativeRecoveryHooks.push(["dnd5e.postCombatRecovery", Hooks.on("dnd5e.postCombatRecovery", (combatant, periods) => {
+      if (!periods?.includes("turnStart") && !periods?.includes("encounter")) return;
+      const snapshot = createCombatSnapshot(combatant?.parent);
+      if (!snapshot.started || snapshot.activeCombatantId !== combatant?.id) return;
+      const encounter = periods.includes("encounter");
+      if (this.#workspaceMode) {
+        this.#channel?.postMessage({ type: "nativeTurnStart", combatId: snapshot.combatId, round: snapshot.round,
+          turn: snapshot.turn, combatantId: snapshot.activeCombatantId, originUserId: game.user?.id, encounter });
+      } else this.#recoverNativeTurn(snapshot, game.user?.id, encounter);
+    })]);
     this.#unsubscribe = this.#eventBus.on("combatStateChanged", (event) => {
       this.#rollHistory.advance(event.previousSnapshot, event.snapshot);
       this.#handleEncounterTransition(event);
@@ -285,6 +299,8 @@ export class WorkspaceBridge {
 
   stop() {
     this.#turnRecovery.stop();
+    for (const [name, id] of this.#nativeRecoveryHooks) Hooks.off(name, id);
+    this.#nativeRecoveryHooks = [];
     for (const [name, id] of this.#itemRenderHooks) Hooks.off(name, id);
     this.#itemRenderHooks = [];
     this.#minimapSource?.stop();
@@ -1039,6 +1055,16 @@ export class WorkspaceBridge {
   #receive(message) {
     if (!message || typeof message !== "object") return;
 
+    if (message.type === "nativeTurnStart" && !this.#workspaceMode) {
+      if (!message.originUserId || message.originUserId !== game.user?.id) return;
+      const combat = game.combats?.get?.(message.combatId) ?? this.#getSnapshot?.()?.context?.combat;
+      const snapshot = createCombatSnapshot(combat);
+      if (snapshot.combatId !== message.combatId || snapshot.round !== message.round || snapshot.turn !== message.turn ||
+        snapshot.activeCombatantId !== message.combatantId) return;
+      this.#recoverNativeTurn(snapshot, message.originUserId, Boolean(message.encounter));
+      return;
+    }
+
     if (message.type === "workspaceReady" && !this.#workspaceMode) {
       this.#broadcastState();
       this.#broadcastControlledToken();
@@ -1088,6 +1114,13 @@ export class WorkspaceBridge {
       this.#syncTokenColors();
       this.#minimapSource?.refresh();
     }
+  }
+
+  #recoverNativeTurn(snapshot, originUserId, encounter) {
+    this.#turnRecovery.handleNativeStart(snapshot, originUserId, { encounter }).catch((error) => {
+      this.#logger.error("Native turn-start recovery failed", error);
+      ui.notifications?.error(`Rücksetzung zu Zugbeginn fehlgeschlagen: ${error.message}`);
+    });
   }
 
   #enemyEntries() {
