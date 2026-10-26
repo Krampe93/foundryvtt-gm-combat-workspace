@@ -10,10 +10,10 @@ Tim hat die vollständige Umsetzung der offenen Punkte beauftragt. Seit 2026-10-
 
 | Schritt | Umfang | Status |
 |---|---|---|
-| A | Legendäre Aktionssperren getrennt prüfen, alten Commanding-Presence-/Fiery-Rays-Bericht untersuchen und Rücksetzung absichern | Gemeinsame Abnahme mit B–D in 0.13.0 offen |
-| B | Recharge-Verfügbarkeit, manuelles/automatisches Aufladen und Reaktionsreset-Sonderfälle | In 0.13.0 implementiert und lokal geprüft; gemeinsame Abnahme offen |
+| A | Legendäre Aktionssperren getrennt prüfen, alten Commanding-Presence-/Fiery-Rays-Bericht untersuchen und Rücksetzung absichern | Aktionen von Tim positiv geprüft; Recovery-Korrektur in 0.13.1 wartet auf Gegenprobe |
+| B | Recharge-Verfügbarkeit, manuelles/automatisches Aufladen und Reaktionsreset-Sonderfälle | Stone-Giant-Reset in 0.13.1 korrigiert; gemeinsame Gegenprobe offen |
 | C | Mehrdeutige legendäre Folgeangriffe und In-Lair-Ressourcen zuverlässig behandeln | In 0.13.0 implementiert und lokal geprüft; gemeinsame Abnahme offen |
-| D | Minimap-Namen beim Darüberfahren und Gegnerauswahl per Punktklick | In 0.13.0 implementiert und lokal geprüft; gemeinsame Abnahme offen |
+| D | Minimap-Namen beim Darüberfahren und Gegnerauswahl per Punktklick | Von Tim am 2026-10-26 bestätigt |
 | E | Encounter-Vorbereitung, W12-Initiative, Spieler-Platzhalter und In-Lair-Einrichtung | Offen |
 | F | Bewegungspfad und blinkendes Ziel für verborgene Gegner; Empfängerkreis vor Umsetzung mit Tim festlegen | Offen |
 | G | Optionale RSReforged-Abläufe vollständig integrieren und mit/ohne optionale Module prüfen | Offen |
@@ -21,6 +21,13 @@ Tim hat die vollständige Umsetzung der offenen Punkte beauftragt. Seit 2026-10-
 | I | Gemeinsamer Langzeittest, Berechtigungen, Neuinstallation und Upgrade; anschließend Release 1.0 | Offen |
 
 Der Stand aus 0.12.1 bleibt die Ausgangsbasis. Eine lokale Prüfung ersetzt Tims Foundry-Test nicht. Der Gesamtauftrag bleibt zwischen den Teststopps bestehen.
+
+### Gegenprobe und Korrektur – 0.13.1
+
+- Tim bestätigt am 2026-10-26 die Minimap. Legendäre Aktionen passen ansonsten; deren Recovery erfolgt jedoch zum falschen Zeitpunkt. Stone-Giant-Reaktionsstatus bleibt verwendet, und die Listen sind nicht nach Initiative sortiert.
+- Native legendäre Recovery gezielt auf Zugbeginn verlegt. Zusätzlicher nativer Zugbeginn-Hook mit Weitergabe aus dem Companion und Zuständigkeit des auslösenden GMs sichert den normalen Reaktionsreset ab; automatische Recharge-Würfe bleiben dedupliziert.
+- Gegner- und Reaktionsliste verwenden jetzt die native Zugliste einschließlich Gleichständen. Farben bleiben stabil.
+- 137 automatische Tests und Browser-Gegenproben erfolgreich. Drei Korrekturen gemeinsam als 0.13.1 testen; Minimap bleibt abgenommen. Das aktuelle Testpaket wird bis zur erfolgreichen Gegenprobe nicht durch neue Funktionen erweitert.
 
 ### Gemeinsamer Teststopp A–D – 0.13.0
 
@@ -508,7 +515,7 @@ Die dauerhaft sichtbare Bildschirmaufteilung vor Reaktions-Reset, legendären Ak
 
 ## Etappe 6.7 – Minimap
 
-**Status:** `[~]` – erste Version mit 0.12.0 implementiert; Foundry-Abnahme offen
+**Status:** `[x]` – erste Version mit 0.12.0 implementiert, Interaktion mit 0.13.0 ergänzt; von Tim am 2026-10-26 bestätigt
 
 - Hintergrundbild der im Hauptfenster geöffneten Szene und Ebene innerhalb der bestehenden Minimap-Fläche anzeigen.
 - Gesamte Szene inklusive Kartenrand unverzerrt einpassen; Hintergrundposition und native Skalierung/Drehung berücksichtigen.
@@ -873,6 +880,7 @@ Diese Punkte sind ausdrücklich nicht Teil der ersten stabilen Version, sofern s
 
 | Datum | Änderung | Entscheidung |
 |---|---|---|
+| 2026-10-26 | Minimap von Tim bestätigt; Recovery, Stone-Giant-Reset und Initiativreihenfolge in 0.13.1 korrigiert | Gemeinsame Gegenprobe der Korrekturen offen |
 | 2026-10-26 | Auf Tims Wunsch größere Testpakete; A–D als 0.13.0 zusammengeführt und lokal geprüft | Gemeinsame Foundry-Abnahme offen |
 | 2026-10-23 | Vollständigen Weg zu 1.0 mit Teststopps A–I festgehalten; A als 0.12.2 implementiert und lokal geprüft | Wartet auf Tims Foundry-Test |
 | 2026-08-01 | Etappe 1 in Foundry 14.360 / D&D5e 5.3.2 geprüft | Freigegeben |

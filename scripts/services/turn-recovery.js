@@ -31,8 +31,10 @@ export class TurnRecovery {
     return result;
   }
 
-  #eligible(combat) {
-    return combat?.started && (!game.users?.activeGM || game.users.activeGM.id === game.user?.id);
+  #eligible(combat, originUserId = null) {
+    if (!combat?.started) return false;
+    if (originUserId) return originUserId === game.user?.id && game.user?.isGM !== false;
+    return !game.users?.activeGM || game.users.activeGM.id === game.user?.id;
   }
 
   initialize(snapshot) {
@@ -48,22 +50,29 @@ export class TurnRecovery {
     await combat.setFlag(MODULE_ID, TURN_RECOVERY_FLAG, { round: snapshot.round, turn: snapshot.turn });
   }
 
-  handle({ previousSnapshot, snapshot }) {
+  handleNativeStart(snapshot, originUserId, { encounter = false } = {}) {
+    // D&D5e's turnStart hook establishes the boundary even if the coordinator has already caught up.
+    const previousSnapshot = { ...snapshot, started: !encounter, turn: snapshot.turn - 1, activeCombatantId: null };
+    return this.handle({ previousSnapshot, snapshot, originUserId });
+  }
+
+  handle({ previousSnapshot, snapshot, originUserId = null }) {
     const reindexed = previousSnapshot?.started && snapshot?.started && snapshot.activeCombatantId && previousSnapshot.combatId === snapshot.combatId &&
       previousSnapshot.round === snapshot.round && previousSnapshot.activeCombatantId === snapshot.activeCombatantId &&
       previousSnapshot.turn !== snapshot.turn;
     if (reindexed) return this.#enqueue(async () => {
       const combat = snapshot.context?.combat;
-      if (!this.#eligible(combat)) return;
+      if (!this.#eligible(combat, originUserId)) return;
       const cursor = combat.getFlag(MODULE_ID, TURN_RECOVERY_FLAG);
       if (cursor?.round === previousSnapshot.round && cursor.turn === previousSnapshot.turn) await this.#mark(combat, snapshot);
     });
     if (!isForwardCombatTurn(previousSnapshot, snapshot)) return Promise.resolve();
     return this.#enqueue(async () => {
       const combat = snapshot.context?.combat;
-      if (!this.#eligible(combat)) return;
+      if (!this.#eligible(combat, originUserId)) return;
       const cursor = combat.getFlag(MODULE_ID, TURN_RECOVERY_FLAG);
-      if (previousSnapshot.started && cursor && !later(snapshot, cursor)) return;
+      if (cursor && !later(snapshot, cursor) && (previousSnapshot.started ||
+        (cursor.round === snapshot.round && cursor.turn === snapshot.turn))) return;
       await this.#mark(combat, snapshot);
       const errors = [];
       const attempt = async (task) => { try { await task(); } catch (error) { errors.push(error.message); } };

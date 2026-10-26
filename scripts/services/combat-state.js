@@ -103,6 +103,24 @@ function summarizeCombatant(combatant, scene) {
   };
 }
 
+/** Foundry owns initiative ties and tracker ordering; collection insertion order is unrelated. */
+export function orderedCombatants(combat) {
+  const entries = Array.from(combat?.combatants ?? []);
+  const initiative = (entry) => entry.initiative === null || entry.initiative === undefined || entry.initiative === "" || !Number.isFinite(Number(entry.initiative))
+    ? -Infinity : Number(entry.initiative);
+  const fallback = [...entries].sort((a, b) => {
+    const left = initiative(a), right = initiative(b);
+    if (left !== right) return left > right ? -1 : 1;
+    return 0;
+  });
+  const turns = Array.isArray(combat?.turns) ? combat.turns : [];
+  if (!turns.length) return fallback;
+  const byId = new Map(entries.map((entry) => [entry.id, entry]));
+  const ordered = turns.flatMap((turn) => byId.has(turn.id) ? [byId.get(turn.id)] : []);
+  const present = new Set(ordered.map(({ id }) => id));
+  return [...ordered, ...fallback.filter(({ id }) => !present.has(id))];
+}
+
 export function createCombatSnapshot(combat) {
   if (!combat) {
     return {
@@ -125,7 +143,7 @@ export function createCombatSnapshot(combat) {
   }
 
   const scene = resolveCombatScene(combat);
-  const combatants = Array.from(combat.combatants ?? [])
+  const combatants = orderedCombatants(combat)
     .map((combatant) => summarizeCombatant(combatant, scene));
   const activeCombatant = combat.combatant ?? null;
   const activeActor = activeCombatant?.actor ?? null;

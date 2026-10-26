@@ -3,9 +3,24 @@ import test from "node:test";
 
 import {
   classifyCombatant,
+  orderedCombatants,
   createCombatSnapshot,
   diffCombatSnapshots
 } from "../scripts/services/combat-state.js";
+
+test("initiative order comes from the live tracker, including its native tie order", () => {
+  const low = { id: "low", initiative: 4 }, highA = { id: "a", initiative: 18 }, highB = { id: "b", initiative: 18 };
+  const combat = { combatants: [low, highA, highB], turns: [highB, highA, low] };
+  assert.deepEqual(orderedCombatants(combat).map(({ id }) => id), ["b", "a", "low"]);
+  combat.turns = [low, highA, highB];
+  assert.deepEqual(orderedCombatants(combat).map(({ id }) => id), ["low", "a", "b"], "a live tracker reorder is reflected immediately");
+});
+
+test("fallback sorts initiative descending, keeps ties stable and places unrolled entries last", () => {
+  const entries = [{ id: "none", initiative: null }, { id: "negative", initiative: -2 }, { id: "b", initiative: 12 },
+    { id: "a", initiative: 12 }, { id: "high", initiative: 20 }];
+  assert.deepEqual(orderedCombatants({ combatants: entries }).map(({ id }) => id), ["high", "b", "a", "negative", "none"]);
+});
 
 globalThis.game = {
   scenes: new Map(),

@@ -1,5 +1,16 @@
 # Manual test checklist
 
+## 0.13.1: Gemeinsame Korrektur von Recovery und Listenreihenfolge
+
+Einmal aktualisieren, Hauptfenster neu laden und Workspace öffnen. Die bestehende Testarena weiterverwenden; Minimap wurde von Tim bereits bestätigt.
+
+1. **Legendäre Punkte:** Punkte vor dem Drachenzug verbrauchen. Beim Beginn seines eigenen Zugs wird auf das native Maximum (3 bzw. 4 im Hort) aufgefüllt und die individuellen Sperren werden aufgehoben. Den Zähler im eigenen Zug testweise wieder verringern und weiter zum nächsten Teilnehmer schalten: am Zugende darf nicht erneut aufgefüllt werden. Erst der nächste eigene Zug stellt das Budget wieder her. Legendäre Resistenzen bleiben unverändert.
+2. **Stone Giant:** Reaktion verwenden, bis der Status „Verwendet“ anzeigt. Den eigenen Stone-Giant-Zug beginnen, bevorzugt über die Workspace-Steuerung. Status wird wieder „Verfügbar“. Eine verbrauchte Deflect-Missile-Ressource erhält genau einen Recharge-Wurf; bei Fehlschlag bleibt nur diese Fähigkeit gesperrt, nicht die normale Reaktion. Hauptfenster-Steuerung ebenfalls prüfen; keine doppelten Aufladewürfe. Bei mehreren angemeldeten GMs darf ein fremder primärer GM den Reset des auslösenden GMs nicht verhindern.
+3. **Reihenfolge:** Gegnerliste und Reaktionsliste entsprechen dem Foundry-Kampftracker, nachdem Spieler aus dessen Reihenfolge herausgefiltert werden. Eine NPC-Initiative verändern: beide Listen übernehmen die neue Position. Bei gleicher Initiative bleibt Foundrys Reihenfolge maßgeblich; Farben wechseln nicht zwischen Gegnern.
+4. **Kurzprüfung:** Zurück- und wieder vorspringen erzeugt keinen zusätzlichen Recovery-Durchlauf. Commanding Presence/Fiery Rays bleiben getrennt gesperrt. Die bestätigte Minimap bleibt funktionsfähig.
+
+Lokale Prüfung: 137 automatische Tests und kombinierte Browserprüfung erfolgreich. Native Recovery-Hooks in Hauptfenster und Companion, Weitergabe eines nur im Companion ausgelösten Zugbeginns, zweiter primärer GM, gescheiterter Recharge bei erfolgreichem Reaktionsreset, Hook-Deduplizierung, beide Listen in nativer Reihenfolge und stabile Farben beim Umsortieren geprüft. Gesamtpaket aus 0.13.0 und Minimap mit zwei Fenstern erneut erfolgreich. Live-Foundry-Gegenprobe der drei gemeldeten Korrekturen offen.
+
 ## 0.13.0: Gemeinsamer Teststopp A–D
 
 Auf Tims Wunsch ersetzt dieser Durchlauf die Einzelabnahmen für A, B, C und D. Einmal auf **0.13.0** aktualisieren, Hauptfenster neu laden und Workspace öffnen. Für dieses Paket ist kein weiterer vollständiger Welt-Reload erforderlich.

@@ -2,7 +2,7 @@
 
 GM Combat Workspace is a Foundry VTT module for running D&D 5e encounters from a compact GM-facing workspace while keeping the map visible and usable.
 
-Version `0.13.0` is a development release with a working two-window combat workspace, native NPC sheets, roll history, reactions, legendary actions and an interactive GM minimap. Work towards 1.0 continues in larger test packages.
+Version `0.13.1` is a development release with a working two-window combat workspace, native NPC sheets, roll history, reactions, legendary actions and an interactive GM minimap. Work towards 1.0 continues in larger test packages.
 
 The implementation order, manual Foundry test cases, and acceptance gates are maintained in [ROADMAP.md](ROADMAP.md). Related changes are bundled into one installable version before Tim's Foundry test, reducing repeated reloads.
 
@@ -35,6 +35,8 @@ Version `0.12.1` updates minimap markers from rendered token movement and drag p
 Version `0.12.2` explicitly deletes the active NPC's stored legendary action locks at turn start, preserving other NPCs' locks. Each action writes only its own lock. Repeated legendary attacks such as Pounce keep each outstanding damage button. This is the first test checkpoint on the agreed path to 1.0; the next section starts after Tim's Foundry test. The older Commanding Presence/Fiery Rays report still requires that live check; local tests cover both execution orders, resource guards and reset behavior.
 
 ## Development
+
+Version `0.13.1` moves D&D5e's native legendary-action refill from turn end to the NPC's own turn start. Native turn-start notifications from either window also drive the normal reaction reset and recharge, including when a different GM is primary; persisted markers suppress duplicate recovery. Both lists follow Foundry's actual initiative order, including its tie ordering. Tim has confirmed the minimap behavior; the recovery/order corrections await a new Foundry check.
 
 Version `0.13.0` bundles checkpoints A–D. Structured item/activity recharge resources show their remaining uses and threshold in the reaction panel. Expended uses roll through native D&D5e recharge at the NPC's own turn start, with a manual button and GM-only results; a successful recharge does not grant another reaction. Explicit Reactive wording resets the creature's reaction every turn, while ordinary reactions reset at its own turn start. A stored turn marker prevents the module from repeating recovery on redraw, reload or backtracking. Reindexing the same active combatant does not count as a new turn.
 
@@ -119,4 +121,4 @@ When a player turn begins, the workspace prioritizes enemy reactions and legenda
 
 ## Development status
 
-Version `0.13.0` includes automatic/manual recharge, explicit per-turn reaction resets, guarded legendary follow-up selection and minimap interaction, together with the previous roll-history and critical-hit rules. Encounter preparation, hidden movement paths, remaining optional integrations/settings and final acceptance remain on the roadmap. No live Foundry acceptance is inferred from local automated or simulated browser tests.
+Version `0.13.1` includes automatic/manual recharge, explicit per-turn reaction resets, guarded legendary follow-up selection and minimap interaction, together with the previous roll-history and critical-hit rules. Encounter preparation, hidden movement paths, remaining optional integrations/settings and final acceptance remain on the roadmap. No live Foundry acceptance is inferred from local automated or simulated browser tests.

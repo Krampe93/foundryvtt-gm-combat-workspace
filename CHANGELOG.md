@@ -1,3 +1,11 @@
+## 0.13.1 – 2026-10-26
+
+- Tims Foundry-Gegenprobe aufgenommen: Minimap bestätigt; legendäre Aktionen ansonsten passend, ihre Rücksetzung jedoch am Zugende; Stone-Giant-Reaktionsstatus blieb verwendet; Listen entsprachen nicht der Initiative.
+- Native D&D5e-Rücksetzung legendärer Punkte gezielt vom Zugende auf den eigenen Zugbeginn verschoben. Nur das vorbereitete Update für legendäre Aktionen geändert; andere Ressourcen, Resistenzen, Item-Recovery und Encounter-Recovery bleiben erhalten.
+- Normalen Reaktionsreset und Recharge zusätzlich an D&D5es natives Zugbeginn-Ereignis angeschlossen. Meldungen aus dem Workspace werden an das zugehörige GM-Hauptfenster weitergegeben; der auslösende GM kann den Reset auch dann durchführen, wenn ein anderer GM als primärer GM geführt wird. Zugmarker verhindern doppelte Würfe bei paralleler Zustands- und Hook-Meldung.
+- Gegner- und Reaktionsliste übernehmen Foundrys sortierte Zugliste statt der Einfügereihenfolge der Combatant-Sammlung. Native Reihenfolge bei gleicher Initiative bleibt erhalten; Tracker-Neuzeichnen synchronisiert Änderungen. Gegnerfarben bleiben an ihren IDs gebunden.
+- 137 automatische Tests erfolgreich; Browserprüfung mit nativem Recovery-Hook, ausschließlich aus dem Companion ausgelöstem Zugbeginn, getrennten GM-Kontexten, fehlgeschlagenem Recharge bei dennoch verfügbarem Reaktionsstatus, doppelten Hook-Meldungen und Live-Umsortierung beider Listen erfolgreich. Bestehendes Gesamtpaket und Zwei-Fenster-Minimap erneut geprüft. Live-Foundry-Gegenprobe der Korrekturen offen.
+
 ## 0.13.0 – 2026-10-26
 
 - Auf Tims Wunsch die bisher getrennten Teststopps A–D in eine gemeinsame Testversion gebündelt. Keine zusätzliche Abnahme von 0.12.2 vor diesem Paket erforderlich; bisherige Live-Gegenproben bleiben Teil des gemeinsamen Tests.
