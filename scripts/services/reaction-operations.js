@@ -217,9 +217,21 @@ export function reactionResourceState(item, reactionActivity = null) {
 
 export function shouldRestoreReaction(previous, current) {
   if (!current?.started || current.activeType !== "npc" || !current.activeCombatantId) return false;
-  return !previous?.started || previous.combatId !== current.combatId ||
-    previous.round !== current.round || previous.turn !== current.turn ||
-    previous.activeCombatantId !== current.activeCombatantId;
+  return isForwardCombatTurn(previous, current);
+}
+
+export function isForwardCombatTurn(previous, current) {
+  if (!current?.started || !current.activeCombatantId || !Number.isInteger(current.round) || !Number.isInteger(current.turn)) return false;
+  if (!previous?.started) return previous?.combatId === current.combatId;
+  if (previous.round === current.round && previous.activeCombatantId === current.activeCombatantId) return false;
+  return previous.combatId === current.combatId && (current.round > previous.round ||
+    (current.round === previous.round && current.turn > previous.turn));
+}
+
+export function reactionResetMode(actor) {
+  const text = collectionValues(actor?.items).map(itemDescription).map(stripFoundryMarkup).join(" ");
+  return /(?:one|a|1)\s+reaction\b[^.]{0,70}\b(?:each|every|per)\s+turn\b|\b(?:eine|1)\s+reaktion\b[^.]{0,50}\b(?:pro|in jedem|in jedem einzelnen)\s+zug\b/i.test(text)
+    ? "turn" : "own-turn";
 }
 
 export function actorReactions(actor) {
@@ -548,26 +560,35 @@ function writtenAttackCount(description, linkedIdentifier) {
   return linkedIdentifier === "scorching-ray" ? 3 : 1;
 }
 
-export function legendaryExecutionPlan(actor, legendaryItem) {
+export function legendaryExecutionPlan(actor, legendaryItem, selected = null) {
   const description = itemDescription(legendaryItem);
   const explicitName = referencedItemName(description);
   const candidates = collectionValues(actor?.items).filter((item) => item !== legendaryItem);
-  let linkedItem = explicitName
-    ? candidates.find((item) => String(item?.name ?? "").localeCompare(explicitName, undefined, { sensitivity: "base" }) === 0) ?? null
-    : null;
-
-  if (!linkedItem) {
-    const text = stripFoundryMarkup(description).toLowerCase();
-    linkedItem = candidates
-      .filter((item) => collectionValues(item?.system?.activities).some((activity) => ["attack", "save", "damage"].includes(String(activity?.type ?? "").toLowerCase())))
-      .sort((left, right) => String(right?.name ?? "").length - String(left?.name ?? "").length)
-      .find((item) => new RegExp(`\\b${String(item?.name ?? "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(text)) ?? null;
+  const references = [...description.matchAll(/@UUID\[([^\]]+)\](?:\{([^}]+)\})?/gi)];
+  let matches = candidates.filter((item) => references.some(([, uuid]) =>
+    item.uuid === uuid || item.flags?.core?.sourceId === uuid || item._stats?.compendiumSource === uuid));
+  if (!matches.length && references.some((reference) => reference[2])) {
+    matches = candidates.filter((item) => references.some(([, , label]) => label &&
+      String(item.name ?? "").localeCompare(label, undefined, { sensitivity: "base" }) === 0));
   }
-
-  if (!linkedItem) return { linkedItemId: null, linkedIdentifier: null, attackActivityId: null, attackCount: 0, save: null };
-  const activities = collectionValues(linkedItem?.system?.activities);
-  const attack = activities.find((activity) => String(activity?.type ?? "").toLowerCase() === "attack") ?? null;
-  const saveActivity = activities.find((activity) => String(activity?.type ?? "").toLowerCase() === "save") ?? null;
+  if (!matches.length && explicitName) {
+    matches = candidates.filter((item) => String(item?.name ?? "").localeCompare(explicitName, undefined, { sensitivity: "base" }) === 0);
+  }
+  if (!matches.length && !references.length && !explicitName) {
+    const text = stripFoundryMarkup(description).toLowerCase();
+    matches = candidates.filter((item) => item?.name && new RegExp(`\\b${escapedPattern(item.name)}\\b`, "i").test(text));
+  }
+  const options = matches.flatMap((item) => collectionValues(item.system?.activities)
+    .filter((activity) => ["attack", "save"].includes(String(activity.type).toLowerCase()))
+    .map((activity) => ({ id: `${item.id}:${activity.id}`, item, activity })));
+  const chosen = options.length === 1 ? options[0] : options.find(({ id }) => id === selected);
+  const choices = options.map(({ id, item, activity }, index) => ({ id,
+    label: `${item.name} · ${activity.name || (activity.type === "attack" ? "Angriff" : "Rettungswurf")}${options.length > 1 ? ` · Variante ${index + 1}` : ""}` }));
+  const choice = options.length > 1 ? { ambiguous: !chosen, options: choices, selected: chosen?.id ?? null } : {};
+  if (!chosen) return { linkedItemId: null, linkedIdentifier: null, attackActivityId: null, attackCount: 0, save: null, ...choice };
+  const { item: linkedItem, activity } = chosen;
+  const attack = activity.type === "attack" ? activity : null;
+  const saveActivity = activity.type === "save" ? activity : null;
   const identifier = itemIdentifier(linkedItem);
   const save = saveActivity ? {
     ability: configuredSaveAbility(saveActivity?.save ?? saveActivity?.system?.save) ??
@@ -582,7 +603,8 @@ export function legendaryExecutionPlan(actor, legendaryItem) {
     linkedName: linkedItem.name ?? null,
     attackActivityId: attack?.id ?? null,
     attackCount: attack ? writtenAttackCount(itemDescription(linkedItem), identifier) : 0,
-    save
+    save,
+    ...choice
   };
 }
 

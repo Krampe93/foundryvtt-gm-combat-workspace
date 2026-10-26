@@ -180,7 +180,7 @@ test("keeps reactions in a fixed raster and defers aura reminders", () => {
   assert.match(source, /> Reaktionen<\/h2>/);
   assert.doesNotMatch(source, /data-role="turn-warnings"/);
   assert.match(source, /actorTurnStartEffects/);
-  assert.match(source, /#restoreReactionAtTurnStart\(event\)/);
+  assert.match(source, /#turnRecovery\.handle\(event\)/);
   assert.match(source, /reactionResourceState\(item, activity\)/);
   assert.match(source, /item\.update\(\{ \[resource\.spentPath\]: resource\.spent \+ 1 \}\)/);
   assert.match(source, /aria-disabled="\$\{entry\.used\}"/);
@@ -231,7 +231,7 @@ test("guards legendary resources, lockouts, linked attacks, saves, and damage", 
 
   assert.match(source, /legendaryResourceState\(actor\)/);
   assert.match(source, /LEGENDARY_LOCK_FLAG_KEY/);
-  assert.match(source, /#restoreLegendaryAtTurnStart\(event\)/);
+  assert.match(source, /#turnRecovery\.handle\(event\)/);
   assert.match(source, /resource\.remaining < legendary\.cost/);
   assert.match(source, /attack\.rollAttack\(\{\}, \{ configure: false \}, rollMessageConfig\(rollGroupId\)\)/);
   assert.match(source, /data-guidance-action="roll-legendary-damage"/);

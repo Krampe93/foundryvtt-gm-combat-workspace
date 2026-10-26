@@ -4,6 +4,8 @@ import { calculateHpUpdate, halfDamage, parseHpInput, uniqueHpTargets } from "./
 import { RollHistory, renderRollHistory, rollMessageConfig, rollMessageEntry } from "./roll-results.js";
 import { WorkspaceLayout } from "./workspace-layout.js";
 import { createMinimapState, MinimapSource, MinimapView } from "./minimap.js";
+import { RechargeRolls, rechargeResources } from "./recharge-operations.js";
+import { TurnRecovery } from "./turn-recovery.js";
 import {
   LEGACY_REACTION_FLAG_KEY,
   LEGACY_REACTION_MODULE_ID,
@@ -20,7 +22,7 @@ import {
   legendaryResourceState,
   reactionExecutionPlan,
   reactionResourceState,
-  shouldRestoreReaction
+  reactionResetMode
 } from "./reaction-operations.js";
 import {
   executeStatblockActivity,
@@ -187,12 +189,19 @@ export class WorkspaceBridge {
   #pendingLegendaryDamage = new Map();
   #turnGuidance = null;
   #combatControlBusy = false;
+  #recharge;
+  #turnRecovery;
+  #legendaryChoices = new Map();
+  #itemRenderHooks = [];
 
   constructor({ eventBus, getSnapshot, rollRules = null, logger = createLogger("WorkspaceBridge") }) {
     this.#eventBus = eventBus;
     this.#getSnapshot = getSnapshot;
     this.#rollRules = rollRules;
     this.#logger = logger;
+    this.#recharge = new RechargeRolls({ changed: () => this.#renderReactionOverview() });
+    this.#turnRecovery = new TurnRecovery({ getActor: (entry) => this.#actorForEntry(entry),
+      resetReaction: (id, source) => this.#setReactionUsed(id, false, source), recharge: this.#recharge });
   }
 
   get workspaceMode() {
@@ -205,8 +214,10 @@ export class WorkspaceBridge {
     this.#unsubscribe = this.#eventBus.on("combatStateChanged", (event) => {
       this.#rollHistory.advance(event.previousSnapshot, event.snapshot);
       this.#handleEncounterTransition(event);
-      this.#restoreReactionAtTurnStart(event);
-      this.#restoreLegendaryAtTurnStart(event);
+      if (!this.#workspaceMode) this.#turnRecovery.handle(event).catch((error) => {
+        this.#logger.error("Turn recovery failed", error);
+        ui.notifications?.error(`Rücksetzung/Aufladen fehlgeschlagen: ${error.message}`);
+      });
       this.#render();
       this.#broadcastState();
       this.#syncTokenColors();
@@ -239,6 +250,14 @@ export class WorkspaceBridge {
     }
 
     if (this.#workspaceMode) {
+      for (const name of ["createItem", "updateItem", "deleteItem"]) {
+        this.#itemRenderHooks.push([name, Hooks.on(name, (item) => {
+          if (item?.actor && this.#enemyEntries().some((entry) => {
+            const actor = this.#actorForEntry(entry);
+            return actor === item.actor || (actor?.uuid && actor.uuid === item.actor.uuid);
+          })) this.#render();
+        })]);
+      }
       this.#registerSheetHooks();
       this.#registerModifierReset();
       this.#registerRollDiagnostics();
@@ -246,6 +265,7 @@ export class WorkspaceBridge {
       this.#registerRollHistory();
       this.#channel.postMessage({ type: "workspaceReady" });
     } else {
+      this.#turnRecovery.initialize(this.#getSnapshot?.()).catch((error) => this.#logger.error("Turn recovery initialization failed", error));
       this.#renderLauncher();
       this.#minimapSource = new MinimapSource({
         getState: ({ previews }) => createMinimapState({
@@ -264,6 +284,9 @@ export class WorkspaceBridge {
   }
 
   stop() {
+    this.#turnRecovery.stop();
+    for (const [name, id] of this.#itemRenderHooks) Hooks.off(name, id);
+    this.#itemRenderHooks = [];
     this.#minimapSource?.stop();
     this.#minimapSource = null;
     this.#minimapView?.stop();
@@ -509,6 +532,12 @@ export class WorkspaceBridge {
       .addEventListener("click", () => this.#showStoredTurnGuidance());
     root.querySelector('[data-role="sheet-host"]')
       .addEventListener("click", (event) => this.#onTurnGuidanceClick(event));
+    root.querySelector('[data-role="sheet-host"]').addEventListener("change", (event) => {
+      const select = event.target.closest?.('[data-legendary-choice]');
+      if (!select) return;
+      this.#legendaryChoices.set(select.dataset.legendaryChoice, select.value);
+      this.#render();
+    });
     root.querySelector('[data-role="combat-controls"]')
       .addEventListener("click", (event) => this.#onCombatControl(event));
 
@@ -552,7 +581,13 @@ export class WorkspaceBridge {
     this.#root = root;
     this.#layout = new WorkspaceLayout(root);
     this.#layout.start();
-    this.#minimapView = new MinimapView(root.querySelector('[data-role="minimap"]'));
+    this.#minimapView = new MinimapView(root.querySelector('[data-role="minimap"]'), {
+      onSelect: (point, sceneId) => {
+        const enemy = this.#enemyEntries().find((entry) => entry.id === point.id && entry.tokenId === point.tokenId && entry.sceneId === sceneId);
+        if (enemy) this.#selectEnemyEntry(enemy);
+      },
+      onHover: (point, sceneId) => this.#channel?.postMessage({ type: "hoverToken", tokenId: point?.tokenId, sceneId, active: Boolean(point) })
+    });
     this.#exposeNotifications();
     this.#registerSheetDiagnostics();
 
@@ -1093,9 +1128,11 @@ export class WorkspaceBridge {
   }
 
   #legendaryResourceBadge(entry) {
-    const resource = legendaryResourceState(this.#actorForEntry(entry));
+    const actor = this.#actorForEntry(entry);
+    const resource = legendaryResourceState(actor);
+    const inLair = actor?.system?.resources?.lair?.value && actor?.system?.resources?.lair?.inside;
     if (resource.maximum <= 0) return "";
-    return `<span class="gm-workspace-legendary-resource" title="Legendäre Aktionen: ${resource.remaining} von ${resource.maximum}"><i class="fa-solid fa-crown" aria-hidden="true"></i> ${resource.remaining}/${resource.maximum}</span>`;
+    return `<span class="gm-workspace-legendary-resource" title="Legendäre Aktionen: ${resource.remaining} von ${resource.maximum}${inLair ? " · Im Hort; Budget aus D&D5e" : ""}"><i class="fa-solid fa-crown" aria-hidden="true"></i> ${resource.remaining}/${resource.maximum}${inLair ? ' <i class="fa-solid fa-house" aria-label="Im Hort"></i>' : ""}</span>`;
   }
 
   #legendaryLocks() {
@@ -1117,6 +1154,7 @@ export class WorkspaceBridge {
       meleeAttacks: actorMeleeAttacks(actor),
       opportunityPlan: actorOpportunityPlan(actor),
       pendingDamage: this.#pendingReactionDamage.get(entry.id) ?? [],
+      resetMode: reactionResetMode(actor),
       used: Boolean(state.used)
     };
   }
@@ -1143,11 +1181,15 @@ export class WorkspaceBridge {
 
     list.innerHTML = entries.map((entry) => {
       const nativeReactions = entry.reactions.map((reaction) => {
+        const item = entry.actor?.items?.get?.(reaction.itemId);
+        const activity = item?.system?.activities?.get?.(reaction.activityId);
+        const resource = reactionResourceState(item, activity);
+        const unavailable = entry.used || !resource.available;
         const tooltip = foundry.utils.escapeHTML(
           [reaction.condition, reaction.description].filter(Boolean).join(" — ") || "Keine Beschreibung hinterlegt."
         ).replaceAll('"', "&quot;");
         return reaction.executable
-          ? `<button type="button" class="gm-workspace-reaction-action" data-action="execute-reaction" data-item-id="${reaction.itemId}" data-activity-id="${reaction.activityId}" data-tooltip="${tooltip}" title="${tooltip}" aria-disabled="${entry.used}">${foundry.utils.escapeHTML(reaction.name)}</button>`
+          ? `<button type="button" class="gm-workspace-reaction-action" data-action="execute-reaction" data-item-id="${reaction.itemId}" data-activity-id="${reaction.activityId}" data-tooltip="${tooltip}" title="${tooltip}${!resource.available ? " — Recharge zuerst aufladen." : ""}" aria-disabled="${unavailable}">${foundry.utils.escapeHTML(reaction.name)}</button>`
           : `<button type="button" class="gm-workspace-reaction-action" data-action="show-reaction-actor" data-tooltip="${tooltip}" title="${tooltip}">${foundry.utils.escapeHTML(reaction.name)}</button>`;
       }).join("");
 
@@ -1189,7 +1231,7 @@ export class WorkspaceBridge {
           <span class="gm-workspace-reaction-color" aria-hidden="true"></span>
           <header>
             <button type="button" class="gm-workspace-reaction-name" data-action="show-reaction-actor">${foundry.utils.escapeHTML(entry.displayName)}</button>
-            <button type="button" class="gm-workspace-reaction-status ${entry.used ? "is-used" : "is-available"}" data-action="toggle-reaction-status">
+            <button type="button" class="gm-workspace-reaction-status ${entry.used ? "is-used" : "is-available"}" data-action="toggle-reaction-status" title="${entry.resetMode === "turn" ? "Reaktion pro Zug: Rücksetzung bei jedem Zugbeginn." : "Rücksetzung beim nächsten eigenen Zugbeginn."}">
               <i class="fa-solid ${entry.used ? "fa-bolt-slash" : "fa-bolt"}" aria-hidden="true"></i>
               ${entry.used ? "Verwendet" : "Verfügbar"}
             </button>
@@ -1199,9 +1241,22 @@ export class WorkspaceBridge {
             ${opportunityAction}
             ${pendingDamage}
             ${attackChoices}
+            ${this.#rechargeButtons(entry)}
           </div>
         </article>
       `;
+    }).join("");
+  }
+
+  #rechargeButtons(entry) {
+    const escape = foundry.utils.escapeHTML;
+    return rechargeResources(entry.actor).map((resource) => {
+      const busy = this.#recharge.isBusy(entry.actor, resource.id);
+      const threshold = resource.threshold === 6 ? "6" : `${resource.threshold ?? "?"}–6`;
+      return `<button type="button" class="gm-workspace-recharge" data-action="roll-recharge" data-recharge-id="${resource.id}"
+        ${resource.spent <= 0 || busy || !resource.threshold ? "disabled" : ""}
+        title="${escape(resource.spent <= 0 ? "Bereits aufgeladen." : "Recharge jetzt mit dem nativen W6 würfeln. Automatisch zu Beginn des eigenen Zugs.")}">
+        <i class="fa-solid fa-rotate" aria-hidden="true"></i> ${escape(resource.name)} · ${resource.remaining}/${resource.maximum} · ${busy ? "Würfelt …" : resource.spent <= 0 ? "Bereit" : `Recharge ${threshold}`}</button>`;
     }).join("");
   }
 
@@ -1314,6 +1369,13 @@ export class WorkspaceBridge {
     if (!enemy) return;
     const entry = this.#reactionEntryData(enemy);
 
+    if (button.dataset.action === "roll-recharge") {
+      this.#recharge.roll(entry.actor, button.dataset.rechargeId).catch((error) => {
+        ui.notifications?.error(`Aufladen fehlgeschlagen: ${error.message}`);
+      });
+      return;
+    }
+
     if (button.dataset.action === "show-reaction-actor") {
       this.#selectEnemyEntry(entry);
       return;
@@ -1386,19 +1448,19 @@ export class WorkspaceBridge {
     if (resource.recharge && !resource.available) {
       throw new Error(`${item.name} ist nicht verfügbar. Die Recharge-Ressource muss zuerst wiederhergestellt werden.`);
     }
-    if (resource.recharge) {
-      if (!resource.spentPath || typeof item.update !== "function") {
-        throw new Error(`Die Recharge-Ressource von ${item.name} konnte nicht aktualisiert werden.`);
-      }
-      await item.update({ [resource.spentPath]: resource.spent + 1 });
-    }
-
     this.#reactionBusy.add(entry.id);
     this.#renderReactionOverview();
     this.#releaseStaleModifiers();
-
+    let succeeded = false;
+    let spentRecharge = false;
     try {
-      let succeeded = false;
+      if (resource.recharge) {
+        if (!resource.spentPath || typeof item.update !== "function") {
+          throw new Error(`Die Recharge-Ressource von ${item.name} konnte nicht aktualisiert werden.`);
+        }
+        await item.update({ [resource.spentPath]: resource.spent + 1 });
+        spentRecharge = true;
+      }
       if (plan.reductionFormula) {
         const roll = await new Roll(plan.reductionFormula, actor.getRollData?.() ?? {}).evaluate();
         await roll.toMessage({
@@ -1418,8 +1480,12 @@ export class WorkspaceBridge {
         this.#openReactionChoices.delete(entry.id);
       }
     } finally {
-      this.#reactionBusy.delete(entry.id);
-      this.#renderReactionOverview();
+      try {
+        if (spentRecharge && !succeeded) await item.update({ [resource.spentPath]: resource.spent });
+      } finally {
+        this.#reactionBusy.delete(entry.id);
+        this.#renderReactionOverview();
+      }
     }
   }
 
@@ -1686,7 +1752,7 @@ export class WorkspaceBridge {
     const previous = event?.previousSnapshot ?? null;
     const current = event?.snapshot ?? this.#getSnapshot?.();
     const turnChanged = Boolean(previous?.started && current?.started) && (
-      previous.combatId !== current.combatId || previous.round !== current.round || previous.turn !== current.turn
+      previous.combatId !== current.combatId || previous.round !== current.round || previous.activeCombatantId !== current.activeCombatantId
     );
     if (turnChanged) {
       this.#pendingReactionDamage.clear();
@@ -1707,6 +1773,7 @@ export class WorkspaceBridge {
     this.#reactionBusy.clear();
     this.#pendingReactionDamage.clear();
     this.#legendaryBusy.clear();
+    this.#legendaryChoices.clear();
     this.#pendingLegendaryDamage.clear();
     this.#turnGuidance = null;
 
@@ -1719,44 +1786,6 @@ export class WorkspaceBridge {
       this.#clearLaptopSelection();
     }
     this.#turnGuidance = nextGuidance;
-  }
-
-  #restoreReactionAtTurnStart(event) {
-    if (this.#workspaceMode) return;
-    const previous = event?.previousSnapshot ?? null;
-    const current = event?.snapshot ?? this.#getSnapshot?.();
-    if (!shouldRestoreReaction(previous, current)) return;
-
-    this.#setReactionUsed(current.activeCombatantId, false, "turn-start").catch((error) => {
-      this.#logger.error("Reaction reset at turn start failed", error);
-      ui.notifications?.error(`Reaktion konnte zu Zugbeginn nicht zurückgesetzt werden: ${error.message}`);
-    });
-  }
-
-  #restoreLegendaryAtTurnStart(event) {
-    if (this.#workspaceMode) return;
-    const previous = event?.previousSnapshot ?? null;
-    const current = event?.snapshot ?? this.#getSnapshot?.();
-    if (!shouldRestoreReaction(previous, current)) return;
-
-    const actor = current?.context?.actor ?? null;
-    const combat = current?.context?.combat ?? game.combat ?? null;
-    const resource = legendaryResourceState(actor);
-    if (!actor || resource.maximum <= 0 || !combat) return;
-
-    Promise.resolve().then(async () => {
-      if (resource.spent > 0 && typeof actor.update === "function") {
-        await actor.update({ [resource.spentPath]: 0 });
-      }
-      const locks = combat.getFlag(MODULE_ID, LEGENDARY_LOCK_FLAG_KEY) ?? {};
-      if (locks[current.activeCombatantId]) {
-        // Document updates merge objects; omitting an old key would leave its lock stored.
-        await combat.unsetFlag(MODULE_ID, `${LEGENDARY_LOCK_FLAG_KEY}.${current.activeCombatantId}`);
-      }
-    }).catch((error) => {
-      this.#logger.error("Legendary action reset at turn start failed", error);
-      ui.notifications?.error(`Legendäre Aktionen konnten zu Zugbeginn nicht zurückgesetzt werden: ${error.message}`);
-    });
   }
 
   #clearLaptopSelection() {
@@ -2023,10 +2052,11 @@ export class WorkspaceBridge {
       .find(({ id }) => id === legendary.itemId) ?? null;
     const activity = item?.system?.activities?.get?.(legendary.activityId) ?? collectionValues(item?.system?.activities)
       .find(({ id }) => id === legendary.activityId) ?? null;
-    const activityAction = statblockActivityAction(activity);
-    if (!actor || !item || !activity || !activityAction) {
+    if (!actor || !item || typeof activity?.use !== "function") {
       throw new Error("Die zugehörige legendäre D&D5e-Aktivität wurde nicht gefunden.");
     }
+    const plan = legendaryExecutionPlan(actor, item, this.#legendaryChoices.get(key));
+    if (plan.ambiguous) throw new Error("Bitte zuerst die gewünschte Folgeaktion auswählen.");
 
     const resource = legendaryResourceState(actor);
     if (resource.remaining < legendary.cost) {
@@ -2040,39 +2070,35 @@ export class WorkspaceBridge {
     this.#render();
     this.#releaseStaleModifiers();
     try {
-      const useResult = await executeStatblockActivity(activity, activityAction);
-      if (useResult === false || useResult === null) throw new Error(`${item.name} wurde von D&D5e nicht ausgeführt.`);
+      const useResult = await executeStatblockActivity(activity, "use");
+      if (useResult === false || useResult == null) throw new Error(`${item.name} wurde von D&D5e nicht ausgeführt.`);
       if (legendary.locksUntilNextTurn) await this.#setLegendaryActionLocked(enemy.id, legendary.id);
 
-      const plan = legendaryExecutionPlan(actor, item);
       const linkedItem = actor.items?.get?.(plan.linkedItemId) ?? collectionValues(actor.items)
         .find(({ id }) => id === plan.linkedItemId) ?? null;
       const attack = linkedItem?.system?.activities?.get?.(plan.attackActivityId) ?? collectionValues(linkedItem?.system?.activities)
         .find(({ id }) => id === plan.attackActivityId) ?? null;
-      const pending = [];
 
       if (attack && typeof attack.rollAttack === "function") {
         for (let index = 0; index < Math.max(1, plan.attackCount); index += 1) {
           const rollGroupId = foundry.utils.randomID();
           const result = await attack.rollAttack({}, { configure: false }, rollMessageConfig(rollGroupId));
-          if (result === false || result === null) continue;
+          if (Array.isArray(result) ? !result.length : !result) continue;
           if (typeof attack.rollDamage === "function") {
-            pending.push({
+            const damage = {
               id: rollGroupId,
               rollGroupId,
               itemId: linkedItem.id,
               activityId: attack.id,
               label: plan.attackCount > 1 ? `${linkedItem.name} ${index + 1}` : linkedItem.name
-            });
+            };
+            this.#pendingLegendaryDamage.set(key, [...(this.#pendingLegendaryDamage.get(key) ?? []), damage]);
           }
         }
       } else if (plan.save?.ability && plan.save.dc) {
         ui.notifications?.info(`${linkedItem?.name ?? item.name}: ${this.#saveAbilityLabel(plan.save.ability)}-Rettungswurf – SG ${plan.save.dc}`);
       }
 
-      if (pending.length) {
-        this.#pendingLegendaryDamage.set(key, [...(this.#pendingLegendaryDamage.get(key) ?? []), ...pending]);
-      }
     } finally {
       this.#legendaryBusy.delete(key);
       this.#render();
@@ -2098,7 +2124,7 @@ export class WorkspaceBridge {
     this.#legendaryBusy.add(key);
     try {
       const result = await activity.rollDamage({}, { configure: false }, rollMessageConfig(target.rollGroupId));
-      if (result !== false && result !== null) {
+      if (Array.isArray(result) ? result.length > 0 : Boolean(result)) {
         const remaining = pending.filter(({ id }) => id !== pendingId);
         if (remaining.length) this.#pendingLegendaryDamage.set(key, remaining);
         else this.#pendingLegendaryDamage.delete(key);
@@ -2272,17 +2298,24 @@ export class WorkspaceBridge {
                   const resource = legendaryResourceState(actor);
                   const locked = this.#legendaryActionLocked(entry.combatantId, entry.id);
                   const key = this.#legendaryKey(entry.combatantId, entry.id);
+                  const item = actor?.items?.get?.(entry.itemId);
+                  const plan = legendaryExecutionPlan(actor, item, this.#legendaryChoices.get(key));
                   const busy = this.#legendaryBusy.has(key);
                   const insufficient = resource.remaining < entry.cost;
-                  const unavailable = locked || insufficient || busy;
+                  const unavailable = locked || insufficient || busy || Boolean(plan.ambiguous);
                   const reason = locked
                     ? "Bis zum Beginn des nächsten eigenen Zugs gesperrt."
                     : insufficient
                       ? `Nicht genügend legendäre Aktionen: ${resource.remaining}/${resource.maximum} verfügbar.`
-                      : busy ? "Wird gerade ausgeführt." : "";
-                  const save = entry.plan?.save?.ability && entry.plan?.save?.dc
-                    ? `<strong class="gm-workspace-legendary-save">${this.#saveAbilityLabel(entry.plan.save.ability)}-Rettungswurf · SG ${entry.plan.save.dc}</strong>`
+                      : busy ? "Wird gerade ausgeführt." : plan.ambiguous ? "Bitte zuerst eine Folgeaktion auswählen." : "";
+                  const save = plan.save?.ability && plan.save?.dc
+                    ? `<strong class="gm-workspace-legendary-save">${this.#saveAbilityLabel(plan.save.ability)}-Rettungswurf · SG ${plan.save.dc}</strong>`
                     : "";
+                  const choice = plan.options ? `<label class="gm-workspace-legendary-choice">Folgeaktion
+                    <select data-legendary-choice="${key}" ${busy ? "disabled" : ""}>
+                      <option value="">Bitte auswählen …</option>
+                      ${plan.options.map((option) => `<option value="${option.id}" ${option.id === plan.selected ? "selected" : ""}>${escape(option.label)}</option>`).join("")}
+                    </select></label>` : "";
                   const pending = (this.#pendingLegendaryDamage.get(key) ?? []).map((damage) => `
                     <button type="button" class="is-primary gm-workspace-legendary-damage" title="Linksklick: Schaden würfeln · Rechtsklick: Verfehlt bestätigen" data-guidance-action="roll-legendary-damage" data-combatant-id="${entry.combatantId}" data-legendary-key="${key}" data-pending-id="${damage.id}">${escape(damage.label)} – Schaden</button>
                   `).join("");
@@ -2293,6 +2326,7 @@ export class WorkspaceBridge {
                         <h5>${escape(entry.name)}</h5>
                         <p>${escape(entry.description)}</p>
                         ${save}
+                        ${choice}
                         ${reason ? `<em class="gm-workspace-legendary-reason">${escape(reason)}</em>` : ""}
                       </div>
                       <div class="gm-workspace-guidance-card-actions">

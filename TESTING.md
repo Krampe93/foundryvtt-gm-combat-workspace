@@ -1,5 +1,17 @@
 # Manual test checklist
 
+## 0.13.0: Gemeinsamer Teststopp A–D
+
+Auf Tims Wunsch ersetzt dieser Durchlauf die Einzelabnahmen für A, B, C und D. Einmal auf **0.13.0** aktualisieren, Hauptfenster neu laden und Workspace öffnen. Für dieses Paket ist kein weiterer vollständiger Welt-Reload erforderlich.
+
+1. **Recharge:** Bei einem NPC eine Recharge-Fähigkeit verbrauchen, zum Beispiel Breath oder Deflect Missile. In der Reaktionszeile stehen Name, Nutzungsstand und Schwelle. Den eigenen NPC-Zug beginnen: genau ein automatischer nativer W6 je verbrauchter Ressource. Unter der Schwelle bleibt die Nutzung leer, ab der Schwelle ist sie wiederhergestellt. Danach gegebenenfalls den manuellen Recharge-Knopf testen; bereits volle Ressourcen sind deaktiviert. Auch bei Reaktionsstatus „Verwendet“ muss der Knopf nutzbar sein. Aufladen allein ändert diesen Status nicht. Würfe erscheinen mit Recharge-Kennzeichnung und bleiben GM-Würfe.
+2. **Reaktionsregeln und Navigation:** Normale Reaktion verwenden und einen anderen Gegner-/Spielerzug beginnen: sie bleibt verbraucht, bis der eigene Gegnerzug beginnt. Bei einem NPC mit ausdrücklich einer Reaktion pro Zug (z. B. Marilith/Reactive) erfolgt der Reset dagegen bei jedem Zugbeginn. Einen Zug zurück- und wieder vorspringen: keine zusätzlichen Aufladewürfe oder Modul-Ressourcenresets. Workspace erneut öffnen: kein zusätzlicher Aufladewurf. Ein normaler Vorwärtswechsel funktioniert anschließend weiter.
+3. **Legendäre Aktionen:** Commanding Presence und Fiery Rays in beiden Reihenfolgen testen: jede sperrt nur sich selbst, native Kosten genau einmal, drei Strahlen mit einzelnen Schadensbuttons. Beim eigenen Drachenzug Sperren zurückgesetzt. Zweimal Pounce behält beide offenen Schadensbuttons. Schadenswurf abbrechen: Button bleibt erhalten. Falls mehrere passende Items/Aktivitäten vorhanden sind, erscheint „Folgeaktion“; erst nach bewusster Auswahl darf Ausführen Kosten verbrauchen oder würfeln. Optional ein zweites Scorching-Ray-Item anlegen, um diesen Fall gezielt zu prüfen.
+4. **Hort und Minimap:** Bei bereits in Foundry als „Im Hort“ konfiguriertem Drachen muss der Kronenzähler exakt dem nativen Sheet entsprechen; kein doppelter Hort-Bonus. Minimap-Punkt berühren: richtiger Gegnername. Punkt anklicken: passender Statblock und Auswahl im Hauptfenster, ohne Zugwechsel. Auch verborgene Gegner, gleichnamige Gegner, Bewegung, Größenänderung und Szenenwechsel prüfen; die Minimap-Fläche bleibt gleich groß.
+5. **Kurzer Regressionstest:** Angriff und Schaden im eingebetteten Sheet, Gelegenheitsangriff, NAT20 mit einmaligem Maximalbonus sowie Zusatz-W20/optionale 2W6 prüfen. Verlauf bleibt einzeilig, Schadensarten stehen nach der Zahl. Begegnung im selben Combat-Dokument beenden und neu beginnen: neue Runde 1 funktioniert trotz alter Zugmarker.
+
+Lokale Prüfung: 129 automatische Tests; kombinierte Browserprüfung mit simulierten Foundry-Dokumenten für native Abbrüche, Auswahl vor Kosten, Teilfehler, Recharge, normale/Pro-Zug-Reaktionen, Hort-Budget und Rückwärtswechsel; Minimap mit zwei Fenstern und echtem BroadcastChannel; unveränderte native D&D5e-5.3.2-Recharge-Methode für Item/Aktivität, Erfolg/Fehlschlag und Hook-Abbruch; Statblock-, NAT-/Zusatzwurf- und Layoutprüfungen in vier Fenstergrößen erfolgreich. Live-Foundry-Abnahme offen. Die historische Einzelcheckliste 0.12.2 dient bei Bedarf zur Vertiefung, nicht als eigener Teststopp.
+
 ## 0.12.2: Teststopp A – getrennte legendäre Sperren und Rücksetzung
 
 1. Auf 0.12.2 aktualisieren, Hauptfenster neu laden und Workspace neu öffnen. Versionsanzeige kontrollieren. Adult Red Dragon mit Commanding Presence, Fiery Rays, Pounce, Command, Scorching Ray und Rend im Encounter verwenden; für die erste Prüfung am eigenen Drachenzug beginnen, damit das Budget frisch ist.
@@ -9,7 +21,7 @@
 5. Nach einem weiteren Drachenzug Pounce zweimal ausführen, bevor Schaden gewürfelt wird: zweimal genau ein Punkt, je ein Rend-Angriff; beide Schadensbuttons bleiben erhalten und lassen sich einzeln abarbeiten. Keine individuelle Zug-Sperre. Bei leerem Budget kein weiterer Angriff. Legendäre Resistenzen bleiben unverändert.
 6. Bei einem zweiten legendären Gegner eine Aktion sperren. Der Zugbeginn des ersten Drachen darf diese fremde Sperre nicht entfernen. Workspace während eines Spielerzugs schließen und erneut öffnen: vorhandene Sperren und Budget bleiben bestehen; beim nächsten eigenen Drachenzug erfolgt der Reset.
 
-Lokale Prüfung: 109 automatische Tests; Rücksetztest mit zusammengeführten Flag-Updates vor der Korrektur fehlgeschlagen und danach erfolgreich. Browserprüfung mit simulierten Foundry-Dokumenten für beide Reihenfolgen, einzelne Sperren, Budgetgrenzen, drei Strahlen und Schadensbuttons, abgebrochene Ausführung, wiederholtes Pounce, Wiederöffnen, fremde Sperren und legendäre Resistenzen erfolgreich. Der ältere gegenseitige Sperrfehler ließ sich lokal nicht direkt reproduzieren. Live-Foundry-Abnahme offen; danach erst Schritt B.
+Lokale Prüfung: 109 automatische Tests; Rücksetztest mit zusammengeführten Flag-Updates vor der Korrektur fehlgeschlagen und danach erfolgreich. Der ältere gegenseitige Sperrfehler ließ sich lokal nicht direkt reproduzieren. Seit 2026-10-26 Teil des gemeinsamen Tests A–D in 0.13.0; keine getrennte Abnahme erforderlich.
 
 ## 0.12.1: Schnellere Minimap und eindeutige Wurfzeilen
 

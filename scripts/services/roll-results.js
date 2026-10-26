@@ -1,8 +1,8 @@
 import { MODULE_ID } from "../config.js";
 import { keptD20 } from "./combat-roll-rules.js";
 
-const KIND_LABELS = { attack: "Angriff", damage: "Schaden", save: "Rettungswurf", check: "Probe", roll: "Wurf", extra: "Zusatz-W20", extraDice: "Zusatz-2W6" };
-const KIND_ICONS = { attack: "fa-crosshairs", damage: "fa-burst", save: "fa-shield-halved", check: "fa-dice-d20", roll: "fa-dice", extra: "fa-dice-d20", extraDice: "fa-dice" };
+const KIND_LABELS = { attack: "Angriff", damage: "Schaden", save: "Rettungswurf", check: "Probe", roll: "Wurf", extra: "Zusatz-W20", extraDice: "Zusatz-2W6", recharge: "Recharge" };
+const KIND_ICONS = { attack: "fa-crosshairs", damage: "fa-burst", save: "fa-shield-halved", check: "fa-dice-d20", roll: "fa-dice", extra: "fa-dice-d20", extraDice: "fa-dice", recharge: "fa-rotate" };
 const ABILITIES = { str: "Stärke", dex: "Geschicklichkeit", con: "Konstitution", int: "Intelligenz", wis: "Weisheit", cha: "Charisma" };
 
 function escape(value) {
@@ -57,6 +57,7 @@ function rollKind(message, roll) {
   const special = message.flags?.[MODULE_ID]?.kind;
   if (special === "attackExtra") return "extra";
   if (special === "extraDice") return "extraDice";
+  if (special === "recharge") return "recharge";
   // RSReforged combines attack and damage rolls on one attack-flagged message.
   if (roll?.constructor?.name === "DamageRoll" || roll?.class === "DamageRoll") return "damage";
   const type = String(message.flags?.dnd5e?.roll?.type ?? "").toLowerCase();

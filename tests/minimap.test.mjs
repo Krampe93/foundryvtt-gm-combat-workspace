@@ -1,6 +1,48 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createMinimapState, minimapProjection, MinimapSource } from "../scripts/services/minimap.js";
+import { createMinimapState, minimapProjection, minimapHitPoint, MinimapSource, MinimapView } from "../scripts/services/minimap.js";
+
+test("minimap hit testing follows projection and uses a constant screen-space radius", () => {
+  const state = { bounds: { x: 200, y: 100, width: 1000, height: 500 }, points: [
+    { id: "one", x: 350, y: 250 }, { id: "active", x: 350, y: 250, active: true },
+    { id: "outside", x: 190, y: 250 }
+  ] };
+  for (const [width, height] of [[560, 280], [280, 560]]) {
+    const p = minimapProjection(state.bounds, width, height);
+    const x = p.x + 350 * p.scale, y = p.y + 250 * p.scale;
+    assert.equal(minimapHitPoint(state, width, height, x, y).id, "active", "overlapping markers prefer the active NPC");
+    assert.equal(minimapHitPoint(state, width, height, x + 10, y).id, "active");
+    assert.equal(minimapHitPoint(state, width, height, x + 12, y), null);
+  }
+  assert.equal(minimapHitPoint(null, 560, 280, 10, 10), null);
+});
+
+test("minimap pointer interaction exposes names, selects the exact scene token and removes stale handlers", () => {
+  const handlers = new Map();
+  const canvas = { style: {}, getContext: () => null,
+    addEventListener: (name, handler) => handlers.set(name, handler), removeEventListener: (name) => handlers.delete(name) };
+  const host = { querySelector: (selector) => selector === "canvas" ? canvas : {},
+    getBoundingClientRect: () => ({ left: 30, top: 50, width: 560, height: 280 }) };
+  const state = { sceneId: "scene", bounds: { x: 0, y: 0, width: 1000, height: 500 }, points: [
+    { id: "enemy", tokenId: "token", name: "Goblin <2>", x: 500, y: 250 }
+  ] };
+  const selected = [], hovered = [];
+  const view = new MinimapView(host, { onSelect: (...args) => selected.push(args), onHover: (...args) => hovered.push(args) });
+  view.setState(state);
+  const event = { clientX: 310, clientY: 190 };
+  handlers.get("pointermove")(event);
+  assert.equal(canvas.title, "Goblin <2>");
+  assert.equal(canvas.style.cursor, "pointer");
+  handlers.get("click")(event);
+  assert.deepEqual(selected, [[state.points[0], "scene"]]);
+  handlers.get("click")({ clientX: 0, clientY: 0 });
+  assert.equal(selected.length, 1);
+  view.setState(null);
+  assert.equal(canvas.title, "");
+  assert.equal(hovered.at(-1)[0], null);
+  view.stop();
+  assert.equal(handlers.size, 0);
+});
 
 function fixture() {
   const sceneRect = { x: 200, y: 100, width: 1000, height: 500 };
