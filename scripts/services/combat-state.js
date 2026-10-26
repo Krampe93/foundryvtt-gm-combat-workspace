@@ -1,3 +1,5 @@
+import { rechargeResources } from "./recharge-operations.js";
+
 const MONKS_COMBAT_DETAILS_ID = "monks-combat-details";
 const MODULE_ID = "gm-combat-workspace";
 const REACTION_FLAG_KEY = "reactionStates";
@@ -96,6 +98,7 @@ function summarizeCombatant(combatant, scene) {
     legendaryMaximum: Number(legendary.max) || 0,
     legendaryRemaining: Number(legendary.value) || 0,
     legendarySpent: Number(legendary.spent) || 0,
+    recharge: rechargeResources(actor).map(({ id, name, remaining, maximum, threshold }) => ({ id, name, remaining, maximum, threshold })),
     savingThrows
   };
 }

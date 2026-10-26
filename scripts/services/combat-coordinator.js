@@ -15,6 +15,9 @@ const OBSERVED_HOOKS = Object.freeze([
   "updateToken",
   "deleteToken",
   "updateActor",
+  "createItem",
+  "updateItem",
+  "deleteItem",
   "canvasReady"
 ]);
 

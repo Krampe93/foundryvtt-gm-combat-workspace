@@ -3,6 +3,15 @@ import test from "node:test";
 import { RollHistory, renderRollHistory, rollMessageConfig, rollMessageEntry } from "../scripts/services/roll-results.js";
 
 const actor = { type: "npc", name: "Adult Red Dragon" };
+
+test("recharge results have their own result badge and retain the native d6 outcome", () => {
+  const piece = rollMessageEntry({ id: "recharge", flags: { "gm-combat-workspace": { kind: "recharge" } },
+    rolls: [{ total: 5, terms: [{ faces: 6, number: 1, results: [{ result: 5, active: true }] }] }] }, { actor });
+  assert.equal(piece.rows[0].kind, "recharge");
+  assert.equal(piece.rows[0].natural, null);
+  assert.match(html(piece), /is-recharge/);
+  assert.match(html(piece), /Recharge/);
+});
 const die = (faces, ...results) => ({ number: results.length, faces, results: results.map((result) => typeof result === "number" ? { result, active: true } : result) });
 const d20 = (face, bonus = 8) => ({ total: face + bonus, terms: [die(20, face), { operator: "+" }, { number: bonus }] });
 function message(id, rolls, type = "attack", groupId = null) {

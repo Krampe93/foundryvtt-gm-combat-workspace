@@ -76,6 +76,18 @@ export function minimapProjection(bounds, width, height) {
     y: (height - bounds.height * scale) / 2 - bounds.y * scale };
 }
 
+/** Hit distance is measured in screen pixels, independently of map size and display density. */
+export function minimapHitPoint(state, width, height, x, y) {
+  const projection = minimapProjection(state?.bounds, width, height);
+  if (!projection) return null;
+  const { scale, x: left, y: top } = projection;
+  return state.points.filter((point) => point.x >= state.bounds.x && point.y >= state.bounds.y &&
+    point.x <= state.bounds.x + state.bounds.width && point.y <= state.bounds.y + state.bounds.height)
+    .map((point) => ({ point, distance: Math.hypot(left + point.x * scale - x, top + point.y * scale - y) }))
+    .filter(({ distance }) => distance <= 11)
+    .sort((a, b) => a.distance - b.distance || Number(Boolean(b.point.active)) - Number(Boolean(a.point.active)))[0]?.point ?? null;
+}
+
 /** Main-window publisher. Token movement bypasses the combat summary, which excludes coordinates. */
 export class MinimapSource {
   #getState;
@@ -163,12 +175,29 @@ export class MinimapView {
   #backgroundCanvas = null;
   #backgroundKey = null;
   #active = true;
+  #bindings = [];
+  #onSelect;
+  #onHover;
+  #hovered = null;
 
-  constructor(host) {
+  constructor(host, { onSelect = () => {}, onHover = () => {} } = {}) {
     this.#host = host;
     this.#canvas = host.querySelector("canvas");
     this.#context = this.#canvas?.getContext?.("2d");
     this.#status = host.querySelector('[data-role="minimap-status"]');
+    this.#onSelect = onSelect;
+    this.#onHover = onHover;
+    for (const [name, handler] of [
+      ["pointermove", (event) => this.#hover(this.#hit(event))],
+      ["pointerleave", () => this.#hover(null)],
+      ["click", (event) => {
+        const point = this.#hit(event);
+        if (point) this.#onSelect(point, this.#state.sceneId);
+      }]
+    ]) {
+      this.#canvas?.addEventListener?.(name, handler);
+      this.#bindings.push([name, handler]);
+    }
     if (this.#context && globalThis.ResizeObserver) {
       this.#observer = new ResizeObserver(() => this.#schedule());
       this.#observer.observe(host);
@@ -176,6 +205,7 @@ export class MinimapView {
   }
 
   setState(state) {
+    this.#hover(null);
     this.#state = state;
     const src = state?.background?.src ?? null;
     if (src !== this.#src) {
@@ -206,6 +236,21 @@ export class MinimapView {
       }
     }
     this.#schedule();
+  }
+
+  #hit(event) {
+    const rect = this.#host.getBoundingClientRect();
+    return minimapHitPoint(this.#state, rect.width, rect.height, event.clientX - rect.left, event.clientY - rect.top);
+  }
+
+  #hover(point) {
+    if (point?.id === this.#hovered?.id && Boolean(point) === Boolean(this.#hovered)) return;
+    this.#hovered = point;
+    if (this.#canvas) {
+      this.#canvas.title = point?.name ?? "";
+      this.#canvas.style && (this.#canvas.style.cursor = point ? "pointer" : "default");
+    }
+    this.#onHover(point, this.#state?.sceneId ?? null);
   }
 
   #releaseMedia() {
@@ -300,6 +345,9 @@ export class MinimapView {
   }
 
   stop() {
+    this.#hover(null);
+    for (const [name, handler] of this.#bindings) this.#canvas?.removeEventListener?.(name, handler);
+    this.#bindings = [];
     this.#active = false;
     this.#observer?.disconnect();
     this.#backgroundCanvas = null;

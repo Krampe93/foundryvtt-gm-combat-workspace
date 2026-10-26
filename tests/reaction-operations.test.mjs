@@ -250,7 +250,7 @@ test("locks repeat-restricted actions until the actor's next turn", () => {
   assert.equal(actorLegendaryActions(actor)[0].locksUntilNextTurn, true);
 });
 
-test("resolves Scorching Ray once and plans three attack and damage opportunities", () => {
+test("requires an explicit choice between duplicate Scorching Rays before planning attacks", () => {
   const use = activity("use", "utility", "legendary");
   const attack = { ...activity("attack", "attack", "action", "ranged"), rollAttack() {}, rollDamage() {} };
   const fiery = item("fiery", "Fiery Rays", [use], "The dragon casts @spell[Scorching Ray|XPHB].");
@@ -260,13 +260,18 @@ test("resolves Scorching Ray once and plans three attack and damage opportunitie
   rayB.identifier = "scorching-ray";
   const actor = { items: [fiery, rayA, rayB] };
 
-  assert.deepEqual(legendaryExecutionPlan(actor, fiery), {
-    linkedItemId: "ray-a",
+  const ambiguous = legendaryExecutionPlan(actor, fiery);
+  assert.equal(ambiguous.ambiguous, true);
+  assert.equal(ambiguous.attackCount, 0);
+  assert.deepEqual(ambiguous.options.map(({ id }) => id), ["ray-a:attack", "ray-b:attack"]);
+  assert.deepEqual(legendaryExecutionPlan(actor, fiery, "ray-b:attack"), {
+    linkedItemId: "ray-b",
     linkedIdentifier: "scorching-ray",
     linkedName: "Scorching Ray",
     attackActivityId: "attack",
     attackCount: 3,
-    save: null
+    save: null,
+    ambiguous: false, options: ambiguous.options, selected: "ray-b:attack"
   });
 });
 
@@ -291,6 +296,54 @@ test("resolves Pounce to one naturally mentioned Rend attack", () => {
 
   assert.equal(legendaryExecutionPlan(actor, pounce).linkedItemId, "rend");
   assert.equal(legendaryExecutionPlan(actor, pounce).attackCount, 1);
+});
+
+test("a precise item UUID selects only that embedded item despite duplicate names", () => {
+  const attack = activity("hit", "attack", "action");
+  const rendA = item("a", "Rend", [attack]);
+  const rendB = item("b", "Rend", [attack]);
+  rendA.uuid = "Actor.dragon.Item.a";
+  rendB.uuid = "Actor.dragon.Item.b";
+  const pounce = item("pounce", "Pounce", [], "Makes one @UUID[Actor.dragon.Item.b]{Rend} attack.");
+  assert.equal(legendaryExecutionPlan({ items: [pounce, rendA, rendB] }, pounce).linkedItemId, "b");
+});
+
+test("multiple activities require selection and invalid selections never guess an attack", () => {
+  const multi = item("rend", "Rend", [activity("one", "attack", "action"), activity("two", "attack", "action")]);
+  const pounce = item("pounce", "Pounce", [], "The dragon makes one Rend attack.");
+  const actor = { items: [pounce, multi] };
+  assert.equal(legendaryExecutionPlan(actor, pounce).ambiguous, true);
+  assert.equal(legendaryExecutionPlan(actor, pounce, "gone:old").attackCount, 0);
+  assert.equal(legendaryExecutionPlan(actor, pounce, "rend:two").attackActivityId, "two");
+  pounce.system.description.value = "The dragon moves without attacking.";
+  assert.equal(legendaryExecutionPlan(actor, pounce).attackCount, 0);
+  pounce.system.description.value = "The dragon casts @spell[Missing Spell|XPHB] and makes a Rend attack.";
+  assert.equal(legendaryExecutionPlan(actor, pounce).attackCount, 0, "an unresolved explicit reference is not replaced with a guess");
+});
+
+test("compendium UUIDs resolve embedded sources or their explicit labels without choosing a duplicate silently", () => {
+  const reference = "Compendium.dnd5e.monsters.Item.rend";
+  const rendA = item("a", "Rend", [activity("hit", "attack", "action")]);
+  const rendB = item("b", "Rend", [activity("hit", "attack", "action")]);
+  rendA._stats = { compendiumSource: reference };
+  const pounce = item("pounce", "Pounce", [], `Makes one @UUID[${reference}]{Rend} attack.`);
+  const actor = { items: [pounce, rendA, rendB] };
+  assert.equal(legendaryExecutionPlan(actor, pounce).linkedItemId, "a");
+  delete rendA._stats;
+  assert.equal(legendaryExecutionPlan(actor, pounce).ambiguous, true);
+  assert.equal(legendaryExecutionPlan(actor, pounce, "b:hit").linkedItemId, "b");
+});
+
+test("legendary budgets use D&D5e's derived In-Lair maximum exactly once", () => {
+  const actor = { _source: { system: { resources: { legact: { max: 3 } } } }, system: { resources: {
+    legact: { max: 4, spent: 1, value: 3 }, legres: { max: 4, spent: 2, value: 2 }, lair: { value: true, inside: true }
+  } } };
+  assert.equal(legendaryResourceState(actor).maximum, 4);
+  assert.equal(legendaryResourceState(actor).remaining, 3);
+  actor.system.resources.lair.inside = false;
+  actor.system.resources.legact = { max: 3, spent: 1, value: 2 };
+  assert.equal(legendaryResourceState(actor).maximum, 3);
+  assert.equal(actor.system.resources.legres.spent, 2);
 });
 
 test("turn reminders retain the originating item id and full text", () => {

@@ -1598,6 +1598,7 @@ body.gm-combat-workspace-companion > .notifications {
 }
 
 #gm-combat-workspace-shell .gm-workspace-minimap-view p {
+  pointer-events: none;
   bottom: 0.6rem;
   padding: 0.25rem;
   color: var(--gm-combat-muted);
@@ -2202,4 +2203,47 @@ body.gm-combat-workspace-companion > .notifications {
   margin: 0.5rem 0;
   color: #aab3bf;
   font-size: 0.75rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-recharge {
+  width: auto;
+  height: auto;
+  min-height: 26px;
+  margin: 0;
+  padding: 3px 7px;
+  white-space: normal;
+  line-height: 1.2;
+  font-size: 0.7rem;
+  border: 1px solid #6d8c9f;
+  color: #c6e8ff;
+  background: #23333d;
+}
+
+#gm-combat-workspace-shell .gm-workspace-reaction-enemy.is-used:not(.is-busy) .gm-workspace-reaction-abilities .gm-workspace-recharge {
+  pointer-events: auto;
+  text-decoration: none;
+  opacity: 1;
+  cursor: pointer;
+}
+
+#gm-combat-workspace-shell .gm-workspace-recharge:disabled,
+#gm-combat-workspace-shell .gm-workspace-reaction-enemy.is-used .gm-workspace-reaction-abilities .gm-workspace-recharge:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+#gm-combat-workspace-shell .gm-workspace-legendary-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+  margin-top: 7px;
+}
+
+#gm-combat-workspace-shell .gm-workspace-legendary-choice select {
+  flex: 1;
+  min-width: 140px;
+  max-width: 100%;
+  color: #f4ebda;
+  background: #20272f;
 }

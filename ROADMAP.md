@@ -6,14 +6,14 @@ Diese Roadmap ist gleichzeitig Plan, Prüfliste und Abnahmeprotokoll.
 
 ## Vereinbarter Weg zu Version 1.0 – 2026-10-23
 
-Tim hat die vollständige Umsetzung der offenen Punkte beauftragt. Nach jedem sinnvollen Abschnitt wird eine geprüfte, installierbare Testversion veröffentlicht. Tim erhält konkrete Testschritte; der nächste Abschnitt beginnt nach seinem Testergebnis. Gemeldete Fehler werden innerhalb des aktuellen Abschnitts behoben.
+Tim hat die vollständige Umsetzung der offenen Punkte beauftragt. Seit 2026-10-26 werden auf seinen Wunsch mehrere zusammenhängende Schritte in größeren Testpaketen veröffentlicht, damit nicht für jede kleine Änderung drei bis fünf Minuten neu geladen werden muss. A–D werden gemeinsam als 0.13.0 getestet; eine vorherige Einzelabnahme von A ist nicht erforderlich. Nach jedem Paket erhält Tim konkrete Testschritte. Gemeldete Fehler werden innerhalb des aktuellen Pakets behoben.
 
 | Schritt | Umfang | Status |
 |---|---|---|
-| A | Legendäre Aktionssperren getrennt prüfen, alten Commanding-Presence-/Fiery-Rays-Bericht untersuchen und Rücksetzung absichern | 0.12.2 implementiert und lokal geprüft; wartet auf Tims Foundry-Test |
-| B | Recharge-Verfügbarkeit, manuelles/automatisches Aufladen und Reaktionsreset-Sonderfälle | Offen |
-| C | Mehrdeutige legendäre Folgeangriffe und In-Lair-Ressourcen zuverlässig behandeln | Offen |
-| D | Minimap-Namen beim Darüberfahren und Gegnerauswahl per Punktklick | Offen |
+| A | Legendäre Aktionssperren getrennt prüfen, alten Commanding-Presence-/Fiery-Rays-Bericht untersuchen und Rücksetzung absichern | Gemeinsame Abnahme mit B–D in 0.13.0 offen |
+| B | Recharge-Verfügbarkeit, manuelles/automatisches Aufladen und Reaktionsreset-Sonderfälle | In 0.13.0 implementiert und lokal geprüft; gemeinsame Abnahme offen |
+| C | Mehrdeutige legendäre Folgeangriffe und In-Lair-Ressourcen zuverlässig behandeln | In 0.13.0 implementiert und lokal geprüft; gemeinsame Abnahme offen |
+| D | Minimap-Namen beim Darüberfahren und Gegnerauswahl per Punktklick | In 0.13.0 implementiert und lokal geprüft; gemeinsame Abnahme offen |
 | E | Encounter-Vorbereitung, W12-Initiative, Spieler-Platzhalter und In-Lair-Einrichtung | Offen |
 | F | Bewegungspfad und blinkendes Ziel für verborgene Gegner; Empfängerkreis vor Umsetzung mit Tim festlegen | Offen |
 | G | Optionale RSReforged-Abläufe vollständig integrieren und mit/ohne optionale Module prüfen | Offen |
@@ -22,6 +22,15 @@ Tim hat die vollständige Umsetzung der offenen Punkte beauftragt. Nach jedem si
 
 Der Stand aus 0.12.1 bleibt die Ausgangsbasis. Eine lokale Prüfung ersetzt Tims Foundry-Test nicht. Der Gesamtauftrag bleibt zwischen den Teststopps bestehen.
 
+### Gemeinsamer Teststopp A–D – 0.13.0
+
+- Automatische native Recharge-Würfe zum eigenen NPC-Zugbeginn sowie manuelles Aufladen mit Nutzungsstand und Schwelle, unabhängig von verbrauchter Reaktion. Erfolg/Fehlschlag und Aktualisierung gehören D&D5e; Ergebnisse bleiben GM-Würfe.
+- Normale Reaktionen und explizite Pro-Zug-Reaktionen unterscheiden. Persistierter Zugmarker, reine Indexverschiebungen, Rückwärtswechsel, Neuladen und Neustart desselben Combat-Dokuments berücksichtigt. Abgebrochene Reaktionswürfe geben reservierte Recharge-Nutzungen zurück.
+- Mehrdeutige legendäre Folgeaktionen verlangen vor dem Verbrauch eine bewusste Auswahl. Native Abbrüche sperren nichts; abgebrochener Schaden und erfolgreiche Teilangriffe behalten ihre Buttons. Bereits berechnete Hort-Ressourcen werden nicht erneut erhöht.
+- Minimap-Punkt mit Gegnername beim Darüberfahren und Klick auf passenden Statblock/Token; keine Änderung des Zuges.
+- 129 automatische Tests sowie kombinierte Browser-, Zwei-Fenster-Minimap-, native Recharge-, Statblock-, Zusatzwurf- und Layoutprüfungen erfolgreich. Live-Foundry-Abnahme gemäß TESTING.md offen.
+- Nach diesem gemeinsamen Gegencheck folgen die nächsten größeren Pakete aus E–H; Routinekorrekturen erhalten keinen eigenen kleinen Abnahmeschritt. Die Entscheidung zum Empfängerkreis von F bleibt vor dessen Implementierung offen.
+
 ### Teststopp A – 0.12.2
 
 - Nachgewiesener Rücksetzfehler korrigiert: Objektupdates entfernen ausgelassene alte Sperren nicht automatisch. Die Sperren des aktiven Gegners werden jetzt ausdrücklich gelöscht.
@@ -29,9 +38,9 @@ Der Stand aus 0.12.1 bleibt die Ausgangsbasis. Eine lokale Prüfung ersetzt Tims
 - Zusätzlich im Browser nachgewiesenen Folgefehler korrigiert: Wiederholtes Pounce behält die noch offenen Schadensbuttons früherer Treffer.
 - 109 automatische Tests erfolgreich. Browserprüfung mit simulierten Foundry-Dokumenten: Commanding Presence und Fiery Rays in beiden Reihenfolgen, einzelne Sperren, Budget, Folgeangriffe und Schaden, Abbruch, wiederholtes Pounce sowie Rücksetzung geprüft.
 - Der alte Bericht zur gegenseitigen Sperre ließ sich lokal nicht direkt reproduzieren. Live-Gegenprobe einschließlich Drachenzug und umgekehrter Aktionsreihenfolge gemäß TESTING.md offen.
-- Nach Tims erfolgreicher Gegenprobe folgt Schritt B (Recharge und Reaktionsreset). Bei einem Fehler bleibt Schritt A der aktuelle Abschnitt.
+- Seit Tims Wunsch vom 2026-10-26 ist dieser Umfang Teil des gemeinsamen Tests A–D; Schritt B–D dürfen vorher mit umgesetzt werden.
 
-Wir bearbeiten immer nur eine Etappe. Die nächste Etappe beginnt erst, wenn:
+Wir bearbeiten jeweils ein vereinbartes Testpaket. Innerhalb dieses Pakets ist keine Einzelabnahme jeder Etappe erforderlich. Das nächste Paket beginnt, wenn:
 
 1. der Code der aktuellen Etappe vollständig ist,
 2. automatische Prüfungen erfolgreich sind,
@@ -44,7 +53,7 @@ Wir bearbeiten immer nur eine Etappe. Die nächste Etappe beginnt erst, wenn:
 - in die aktuelle Etappe aufgenommen, wenn sie für deren Abnahme notwendig sind, oder
 - unter „Später / Backlog“ notiert, damit der aktuelle Testumfang stabil bleibt.
 
-Jede Etappe erhält einen eigenen Git-Branch und einen eigenen Pull Request. Dadurch kann der Patch vor dem Zusammenführen vollständig angesehen und kommentiert werden.
+Jedes Testpaket erhält einen eigenen Git-Branch und einen eigenen Pull Request. Dadurch kann die gemeinsame Änderung vor dem Zusammenführen vollständig angesehen und kommentiert werden.
 
 ## Unterstützte Umgebung
 
@@ -509,14 +518,14 @@ Die dauerhaft sichtbare Bildschirmaufteilung vor Reaktions-Reset, legendären Ak
 - Fehlende Bilder und leere Szenen verständlich darstellen; Beobachter und Hooks beim Schließen entfernen.
 - 106 automatische Tests sowie lokale Browserprüfung mit zwei Fenstern und erneute Layoutprüfung erfolgreich. Live-Foundry-Abnahme offen.
 - Erste Version nutzt Szenen-/Ebenenhintergründe, ohne zusätzliche Tiles, Zeichnungen, Licht oder Sichtbereiche; Videohintergründe liefern eine statische Vorschau.
-- Als Nächstes: Namen beim Darüberfahren und Auswahl des Gegners per Punktklick ergänzen.
+- Mit 0.13.0 Namen beim Darüberfahren und Auswahl des Gegners per Punktklick ergänzt; Zwei-Fenster-Browserprüfung erfolgreich, gemeinsame Foundry-Abnahme offen.
 - Basis-Minimap von Tim am 2026-10-23 positiv bestätigt. Mit 0.12.1 laufende Tokenpositionen/Ziehvorschauen übertragen, Frame-Wartezeit entfernt und Kartenbild zwischengespeichert; 108 Tests und lokale Browserprüfung erfolgreich. Abnahme der Beschleunigung offen.
 
 ---
 
 ## Etappe 7 – Reaktions-Reset
 
-**Status:** `[~]` – normaler Reset und Recharge-Verbrauch in Version 0.8.11 umgesetzt; Sonderregeln und automatische Recharge-Würfe folgen
+**Status:** `[~]` – normale und explizite Pro-Zug-Regeln sowie automatische/manuelle Recharge-Würfe in 0.13.0 implementiert und lokal geprüft; gemeinsame Foundry-Abnahme offen
 
 ### Ziel
 
@@ -551,7 +560,7 @@ Verwendete Reaktionen entsprechend ihrer tatsächlichen Regel automatisch zurüc
 
 ## Etappe 8 – Legendary Actions und Ressourcen
 
-**Status:** `[~]` – Budget, Kostenprüfung, Aktionssperren, Dashboard-Zähler und Zugreset in Version 0.9.1 umgesetzt; In-Lair-Sonderwerte bleiben im Foundry-Test
+**Status:** `[~]` – Budget, Kostenprüfung, Aktionssperren und Zugreset sowie abgeleitete Hort-Werte in 0.13.0 lokal geprüft; gemeinsame Foundry-Abnahme offen
 
 ### Ziel
 
@@ -603,7 +612,7 @@ Ressourcen werden erst verändert, wenn die Aktivität tatsächlich verwendet wu
 
 ## Etappe 9 – Legendary Follow-up Attacks
 
-**Status:** `[~]` – eindeutige eingebettete Angriffe, getrennte Schadensbuttons und Spieler-SG-Anzeige in Version 0.9.1 umgesetzt; uneindeutige Auswahlsituationen bleiben offen
+**Status:** `[~]` – eindeutige und bewusst ausgewählte mehrdeutige Folgeaktionen, getrennte Schadensbuttons und Spieler-SG-Anzeige in 0.13.0 implementiert; gemeinsame Foundry-Abnahme offen. Weitere externe RSReforged-Abläufe bleiben bei G.
 
 ### Ziel
 
@@ -864,6 +873,7 @@ Diese Punkte sind ausdrücklich nicht Teil der ersten stabilen Version, sofern s
 
 | Datum | Änderung | Entscheidung |
 |---|---|---|
+| 2026-10-26 | Auf Tims Wunsch größere Testpakete; A–D als 0.13.0 zusammengeführt und lokal geprüft | Gemeinsame Foundry-Abnahme offen |
 | 2026-10-23 | Vollständigen Weg zu 1.0 mit Teststopps A–I festgehalten; A als 0.12.2 implementiert und lokal geprüft | Wartet auf Tims Foundry-Test |
 | 2026-08-01 | Etappe 1 in Foundry 14.360 / D&D5e 5.3.2 geprüft | Freigegeben |
 | 2026-07-30 | Etappe 1 implementiert | Wartet auf Foundry-Abnahme |

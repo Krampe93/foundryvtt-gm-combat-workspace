@@ -1,3 +1,14 @@
+## 0.13.0 – 2026-10-26
+
+- Auf Tims Wunsch die bisher getrennten Teststopps A–D in eine gemeinsame Testversion gebündelt. Keine zusätzliche Abnahme von 0.12.2 vor diesem Paket erforderlich; bisherige Live-Gegenproben bleiben Teil des gemeinsamen Tests.
+- Recharge-Fähigkeiten aus nativen Item- und Aktivitätsressourcen lesen, verbleibende/maximale Nutzungen und Schwelle anzeigen. Verbrauchte Nutzungen zu Beginn des eigenen NPC-Zugs automatisch mit D&D5es nativer Recharge-API würfeln; zusätzlich manueller Knopf, auch bei bereits verbrauchter Reaktion. Erfolgreiches Aufladen stellt die Fähigkeit, nicht die Reaktion, wieder her. Auch teilweise verbrauchte Ressourcen können aufladen. Ergebnisse erhalten eine eigene Recharge-Kennzeichnung und werden als GM-Würfe erstellt.
+- Normale Reaktionen zum eigenen Zugbeginn, ausdrücklich pro Zug verfügbare Reaktionen bei jedem neuen Zugbeginn zurücksetzen. Englische Reactive- und entsprechende deutsche Formulierungen erkennen; Reset-Regel im Status-Tooltip anzeigen. Abgebrochene Reaktionswürfe geben zuvor reservierte Recharge-Nutzungen zurück.
+- Rücksetzungen und automatische Aufladewürfe im Hauptfenster des aktiven GMs serialisieren. Gespeicherter Zugmarker verhindert Wiederholung bei Neuladen, Rückwärtssprüngen und erneutem Vorwärtsgehen über bereits bearbeitete Züge. Reine Indexänderungen desselben aktiven Gegners erzeugen keinen neuen Zug; ein neu gestarteter Kampf im selben Dokument kann wieder bei Runde 1 beginnen.
+- Mehrdeutige legendäre Folgeaktionen vor dem Ressourcenverbrauch bewusst auswählen. Exakte eingebettete Item-UUIDs berücksichtigen; fehlende ausdrückliche Referenzen nicht durch andere Angriffe ersetzen. Legendäre Aktivitäten über native Verwendung ausführen, damit deren Kosten verarbeitet werden. Native Abbrüche ohne Ergebnis erzeugen keine Sperre; abgebrochener Schaden behält seinen Button. Bereits erfolgreiche Teilangriffe behalten ihren Schaden auch bei einem späteren Fehler.
+- Hort-Budget aus dem bereits berechneten D&D5e-Maximum übernehmen und mit Hort-Symbol kennzeichnen; keinen zweiten Bonus aufschlagen oder Resistenzen verändern.
+- Minimap-Namen beim Darüberfahren und Gegnerauswahl per Klick ergänzt. Der passende native Statblock öffnet sich, der Hauptfenster-Token wird ausgewählt und der Kampfzug bleibt unverändert. Trefferprüfung unabhängig von Kartengröße und Pixeldichte; alte Namen und Ereignisbeobachter beim Wechsel/Schließen bereinigen.
+- 129 automatische Tests erfolgreich. Lokale Browserprüfungen für das Gesamtpaket, zwei Minimap-Fenster mit echtem BroadcastChannel, native D&D5e-5.3.2-Recharge-Berechnung, Statblock-Klicks, Zusatzwürfe und vier Layoutgrößen erfolgreich. Gemeinsame Live-Foundry-Abnahme offen.
+
 ## 0.12.2 – 2026-10-23
 
 - Erster Teststopp auf dem vereinbarten Weg zu 1.0: legendäre Aktionssperren und Rücksetzung zum eigenen Zugbeginn.
