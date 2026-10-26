@@ -1,3 +1,10 @@
+## 0.13.2 – 2026-10-26
+
+- Rettungswürfe zeigen bei gewürfelter 1 und 20 wieder die vollständige Rechnung und das native Gesamtergebnis, ohne NAT-Kennzeichnung oder Sonderfarbe. NAT-Anzeige ausschließlich für Angriffe und Ability-/Fertigkeitsproben; die Hausregeln für Zusatzwürfe und Krit-Schaden bleiben auf Angriffe beschränkt.
+- Gegner- und Reaktionsliste nach aktuellen Initiativewerten sortiert, auch solange Foundrys zwischengespeicherte Zugliste noch eine alte Reihenfolge enthält. Native Gruppeninitiative für jedes Gruppenmitglied übernommen; bei gleicher Initiative bleibt Foundrys Zugreihenfolge maßgeblich. Gruppenänderungen synchronisieren die Listen. Keine Änderung an aktivem Zug, Combat-Dokument oder Gegnerfarben durch die Sortierung.
+- Tims Rückmeldung festgehalten: übrige Recovery-, Reaktions-, Recharge- und legendäre Tests aus 0.13.0/0.13.1 noch nicht durchgeführt; vollständig in den nächsten gemeinsamen Test übernommen. Minimap bleibt abgenommen.
+- 141 automatische Tests erfolgreich. Kombinierte Browserprüfung zeigt Rettungswürfe `1 + 6 = 7` und `20 + 6 = 26`, erhaltene Ability-NAT-Anzeige, beide Listen mit Gruppeninitiative und veraltetem Zuglisten-Cache, Live-Gruppenänderung, native Gleichstände, stabile Farben und unveränderten aktiven Zug. Recovery-/Recharge-/Legendär-Paket und Angriffs-Zusatzwürfe erneut erfolgreich geprüft. Live-Foundry-Abnahme offen.
+
 ## 0.13.1 – 2026-10-26
 
 - Tims Foundry-Gegenprobe aufgenommen: Minimap bestätigt; legendäre Aktionen ansonsten passend, ihre Rücksetzung jedoch am Zugende; Stone-Giant-Reaktionsstatus blieb verwendet; Listen entsprachen nicht der Initiative.

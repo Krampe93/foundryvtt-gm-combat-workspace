@@ -93,14 +93,14 @@ test("RSReforged mixed messages keep attack and damage classification separate",
   assert.deepEqual(rollMessageEntry(mixed, { actor }).rows, piece.rows, "serialized RSR rolls are a fallback for older cards");
 });
 
-test("saving throws show their ability and use the same natural display", () => {
+test("saving throws show their ability without duplicating their roll type", () => {
   const save = message("save", [d20(12, 6)], "save");
   save.flags.dnd5e.roll.abilityId = "dex";
   const piece = rollMessageEntry(save, { actor });
   assert.equal(piece.rows[0].label, "Rettungswurf · Geschicklichkeit");
   assert.equal(piece.rows[0].total, 18);
   save.rolls = [d20(1, 6)];
-  assert.equal(rollMessageEntry(save, { actor }).rows[0].natural, 1);
+  assert.equal(rollMessageEntry(save, { actor }).rows[0].natural, null);
   save.flavor = "Dexterity Saving Throw";
   const output = html(rollMessageEntry(save, { actor }));
   assert.equal((output.match(/Rettungswurf/g) ?? []).length, 1, "roll type appears only on the final-number badge");
@@ -108,6 +108,34 @@ test("saving throws show their ability and use the same natural display", () => 
   assert.doesNotMatch(output, /Dexterity Saving Throw|Würfelergebnis/);
   const itemSave = html(rollMessageEntry(save, { actor, item: { name: "Drachenodem" } }));
   assert.match(itemSave, /Drachenodem/, "the actual ability/item name still provides useful context");
+});
+
+test("saving throws retain all modifiers and the native total on 1 and 20", () => {
+  for (const type of ["save", "savingthrow", "death"]) {
+    for (const face of [1, 20]) {
+      const roll = { total: face + 9, terms: [die(20, { result: face === 20 ? 1 : 20, active: false }, face),
+        { operator: "+" }, { number: 6 }, { operator: "+" }, die(4, 3)] };
+      const piece = entry(`${type}-${face}`, [roll], type);
+      const output = html(piece);
+      assert.equal(piece.rows[0].natural, null);
+      assert.equal(piece.rows[0].total, face + 9);
+      assert.match(output, new RegExp(`<strong>${face + 9}</strong>`));
+      assert.match(output, /\+ 6 \+ 1W4 \[<b>3<\/b>\]/);
+      assert.doesNotMatch(output, /NAT|is-natural-/);
+      assert.equal(roll.total, face + 9, "the native roll is unchanged");
+    }
+  }
+});
+
+test("ability checks retain NAT markers while saving throws never receive them", () => {
+  for (const type of ["ability", "check", "skill", "tool"]) {
+    for (const face of [1, 20]) {
+      const piece = entry(`${type}-${face}`, [d20(face)], type);
+      assert.equal(piece.rows[0].natural, face);
+      assert.equal(piece.rows[0].total, face);
+      assert.match(html(piece), new RegExp(`NAT ${face}`));
+    }
+  }
 });
 
 test("nested dice and bonus dice retain their separate results", () => {
