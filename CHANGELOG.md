@@ -1,3 +1,10 @@
+## 0.16.1 – 2026-10-30
+
+- Drei wirkungslose Schalter ausgeblendet: Statblock beim Gegnerzug öffnen, vorherigen Gegner-Statblock schließen und verborgene Bewegung verfolgen. Bestehende gespeicherte Werte bleiben registriert. Statblock-Verwaltung und Bewegungsmakro bleiben wie vereinbart.
+- „Aktiven Gegner auswählen“ und „Kamera zum aktiven Gegner bewegen“ mit dem Zugwechsel verbunden. Beide funktionieren unabhängig im GM-Hauptfenster, auch bei Zugsteuerung aus dem Companion. Standard: Auswahl an, Kamera aus; gespeicherte Präferenzen bleiben erhalten. Änderungen gelten ab dem nächsten Gegnerzug ohne Reload.
+- Kamera verwendet die Tokenmitte und behält den Zoom. Keine Auswahl/Kamerabewegung bei Spieler-/Platzhalterzügen, bloßen Werteänderungen, doppelten Ereignissen, reiner Indexverschiebung, Fensteröffnung oder Reload. Keine Token-Sichtbarkeitsänderung; manuelle Auswahl und angepinnter Statblock bleiben nutzbar. Aufräumen bei Modulende.
+- 183 automatische Tests sowie Zwei-Fenster-Browserprüfung mit produktivem Modulstart und simulierten Foundry-Dokumenten erfolgreich: alle vier Schalterkombinationen, Companion-Zugsteuerung, manuelle Auswahl, Pin, Reload, gespeicherte Präferenzen, Zoom, verborgene Token und Cleanup. Encounter-Vorbereitung und bisherige Zustands-/Kampfregressionen ebenfalls lokal erfolgreich. Gemeinsame Live-Abnahme auf Tims Wunsch verschoben, bis ein Gegenpart zum Mittesten verfügbar ist.
+
 ## 0.16.0 – 2026-10-30
 
 - Encounter-Vorbereitung im Hauptfenster und über den Würfelknopf oben rechts im Workspace. Ein gemeinsames Fenster enthält Spieler-Initiativen und Hort-Auswahl. Alle NPCs der aktuellen Hauptfenster-Map werden berücksichtigt, einschließlich verborgener und nicht ausgewählter Token.

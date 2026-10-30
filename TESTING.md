@@ -1,5 +1,19 @@
 # Manual test checklist
 
+**Termin offen:** Tim führt die gemeinsame Abnahme bei Gelegenheit mit einem Gegenpart durch. Alle manuellen Gegenproben bleiben bis dahin offen; diese Liste dient der späteren gemeinsamen Prüfung, einschließlich mehrerer Runden, Reload und Update.
+
+## 0.16.1: Einstellungen – für die spätere gemeinsame Gegenprobe
+
+Nach dem Update einmal Hauptfenster neu laden und Workspace neu öffnen. Dieser Abschnitt verlangt keine sofortige gemeinsame Testrunde; Tims Terminwunsch bleibt maßgeblich.
+
+1. In den Moduleinstellungen sind nur **Entwicklungsmodus**, **Aktiven Gegner auswählen** und **Kamera zum aktiven Gegner bewegen** sichtbar. Die beiden Statblock-Schalter und der Bewegungsschalter fehlen. Vorher gespeicherte Auswahl-/Kamerawerte bleiben erhalten; ohne gespeicherte Werte ist Auswahl an und Kamera aus.
+2. Alle vier Kombinationen prüfen: beides aus → Auswahl und Kamera bleiben unverändert; nur Auswahl an → aktiver NPC wird ausgewählt, Kamera bleibt stehen; nur Kamera an → Karte zentriert sich, bestehende Auswahl bleibt erhalten; beides an → beide Funktionen. Änderungen gelten ab dem nächsten Gegnerzug, ohne erneutes Laden. Auch über „End Turn“ im Companion prüfen.
+3. Zoom und verborgene Token bleiben erhalten. Spieler-/Platzhalterzug, TP-Änderung und reine Indexverschiebung desselben aktiven Teilnehmers erzeugen keinen zusätzlichen Fokus. Fenster öffnen/neu laden führt ebenfalls zu keinem neuen Fokus. Der nächste tatsächliche Gegnerzug funktioniert wieder.
+4. Bei abgeschalteter Automatik weiterhin Gegner manuell auswählen. Einen Statblock anpinnen und mit aktiver Automatik den Zug wechseln: angepinnter Statblock bleibt stehen, Token/Kamera folgen den gewählten Optionen. Bewegung bleibt beim Makro.
+5. Bisherige offenen Prüfungen aus 0.13.2–0.16.0 bleiben vollständig erhalten und werden bei der späteren gemeinsamen Abnahme mitgenommen. RSReforged-Vervollständigung bleibt ein separater offener Punkt; keine Live-Abnahme wird mit diesem Release vorweggenommen.
+
+Lokale Prüfung: 183 automatische Tests, Syntax/Manifest und Paketbau sowie Browserprüfungen mit produktivem Modulstart, simulierten Foundry-Dokumenten und zwei Fenstern erfolgreich. Alle Kombinationen, Hauptfenster/Companion, manuelle Auswahl, Pin, gespeicherte Werte nach Reload, Zoom, verborgene Token und Aufräumen geprüft. Encounter-Vorbereitung und bisherige Zustands-/Recovery-/Recharge-/Initiative-/Rettungswurfabläufe ebenfalls lokal erfolgreich.
+
 ## 0.16.0: Gemeinsame Encounter-Vorbereitung und bisherige offene Prüfungen
 
 Workspace auf **0.16.0** aktualisieren, Hauptfenster einmal neu laden und Workspace neu öffnen. Combat Wall 1.1.0 aus dem vorherigen Paket weiterverwenden; dafür gibt es hier kein neues Update. Bisherige Testarena nutzen. Die Minimap bleibt abgenommen, die anderen unten aufgeführten Gegenproben bleiben offen.

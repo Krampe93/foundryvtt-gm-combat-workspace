@@ -2,11 +2,23 @@
 
 GM Combat Workspace is a Foundry VTT module for running D&D 5e encounters from a compact GM-facing workspace while keeping the map visible and usable.
 
-Version `0.16.0` is a development release with scene-wide encounter preparation, a two-window combat workspace, native NPC sheets, roll history, reactions, legendary actions, linked player/enemy conditions and an interactive GM minimap. Work towards 1.0 continues in larger test packages.
+Version `0.16.1` is a development release with scene-wide encounter preparation, working map convenience settings, a two-window combat workspace, native NPC sheets, roll history, reactions, legendary actions, linked player/enemy conditions and an interactive GM minimap. Work towards 1.0 continues in larger test packages.
 
 The implementation order, manual Foundry test cases, and acceptance gates are maintained in [ROADMAP.md](ROADMAP.md). Related changes are bundled into one installable version before Tim's Foundry test, reducing repeated reloads.
 
 The current manual acceptance checklist is maintained in [TESTING.md](TESTING.md).
+
+## Settings
+
+The module settings contain three working client switches:
+
+- **Development mode**: additional diagnostics, disabled by default.
+- **Select the active enemy**: selects the NPC token in the main GM window when its turn begins, enabled by default.
+- **Pan to the active enemy**: centers the main GM map on the NPC without changing zoom, disabled by default. This works independently of token selection.
+
+Selection and panning preferences take effect on the next enemy turn; no reload is required after changing them. Saved preferences are retained. Opening/reloading the workspace, changing HP and other actor data, or reindexing the same active participant does not refocus the map. Player/placeholder turns do not select or pan, and hidden tokens remain hidden. Manual enemy selection and pinned statblocks retain their existing behavior.
+
+The old automatic statblock open/close and hidden-movement switches are hidden. Their saved values remain registered for compatibility. The workspace continues to manage its embedded statblock, and movement remains with the separate macro.
 
 ## Encounter preparation
 

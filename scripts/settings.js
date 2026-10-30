@@ -11,13 +11,15 @@ const CLIENT_BOOLEAN_SETTINGS = [
     key: SETTING_KEYS.openNpcSheetOnTurn,
     name: "GMCOMBAT.Settings.OpenNpcSheet.Name",
     hint: "GMCOMBAT.Settings.OpenNpcSheet.Hint",
-    default: true
+    default: true,
+    config: false
   },
   {
     key: SETTING_KEYS.closePreviousNpcSheet,
     name: "GMCOMBAT.Settings.ClosePreviousNpcSheet.Name",
     hint: "GMCOMBAT.Settings.ClosePreviousNpcSheet.Hint",
-    default: true
+    default: true,
+    config: false
   },
   {
     key: SETTING_KEYS.selectActiveNpcToken,
@@ -35,7 +37,8 @@ const CLIENT_BOOLEAN_SETTINGS = [
     key: SETTING_KEYS.hiddenMovementTracker,
     name: "GMCOMBAT.Settings.HiddenMovement.Name",
     hint: "GMCOMBAT.Settings.HiddenMovement.Hint",
-    default: true
+    default: true,
+    config: false
   }
 ];
 
@@ -48,7 +51,7 @@ export function registerSettings() {
       name: setting.name,
       hint: setting.hint,
       scope: "client",
-      config: true,
+      config: setting.config ?? true,
       type: Boolean,
       default: setting.default
     });

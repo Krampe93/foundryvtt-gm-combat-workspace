@@ -12,6 +12,7 @@ import { conditionParticipants, conditionRelations, conditionSourceChoices, part
 import { ConditionMenu } from "./condition-menu.js";
 import { EncounterPreparation } from "./encounter-preparation.js";
 import { EncounterPreparationDialog } from "./encounter-preparation-dialog.js";
+import { NpcTurnFocus } from "./npc-turn-focus.js";
 import {
   LEGACY_REACTION_FLAG_KEY,
   LEGACY_REACTION_MODULE_ID,
@@ -208,6 +209,7 @@ export class WorkspaceBridge {
   #preparationDialog = null;
   #preparationRequests = new Map();
   #prepareLauncher = null;
+  #turnFocus = null;
 
   constructor({ eventBus, getSnapshot, rollRules = null, logger = createLogger("WorkspaceBridge") }) {
     this.#eventBus = eventBus;
@@ -224,6 +226,10 @@ export class WorkspaceBridge {
   }
 
   start() {
+    if (!this.#workspaceMode) {
+      this.#turnFocus = new NpcTurnFocus();
+      this.#turnFocus.initialize(this.#getSnapshot?.());
+    }
     this.#preparation = new EncounterPreparation();
     this.#preparationDialog = new EncounterPreparationDialog({
       preview: () => this.#requestPreparation("preview"),
@@ -244,6 +250,10 @@ export class WorkspaceBridge {
       } else this.#recoverNativeTurn(snapshot, game.user?.id, encounter);
     })]);
     this.#unsubscribe = this.#eventBus.on("combatStateChanged", (event) => {
+      this.#turnFocus?.handle(event).catch((error) => {
+        this.#logger.error("NPC turn focus failed", error);
+        ui.notifications?.warn(`Automatische Gegnerauswahl/Kamera: ${error.message}`);
+      });
       this.#rollHistory.advance(event.previousSnapshot, event.snapshot);
       this.#handleEncounterTransition(event);
       if (!this.#workspaceMode) this.#turnRecovery.handle(event).catch((error) => {
@@ -318,6 +328,8 @@ export class WorkspaceBridge {
   }
 
   stop() {
+    this.#turnFocus?.stop();
+    this.#turnFocus = null;
     this.#preparationDialog?.stop();
     this.#preparationDialog = null;
     for (const { reject, timer } of this.#preparationRequests.values()) {
