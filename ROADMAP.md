@@ -17,10 +17,19 @@ Tim hat die vollständige Umsetzung der offenen Punkte beauftragt. Seit 2026-10-
 | E | Encounter-Vorbereitung, W12-Initiative, Spieler-Platzhalter und In-Lair-Einrichtung | In 0.16.0 implementiert und lokal geprüft; gemeinsame Foundry-Abnahme offen |
 | F | Bewegungspfad und blinkendes Ziel für verborgene Gegner auf der Spieler-Map mit physischen Minis | Am 2026-10-30 auf Tims Wunsch vorerst beim Makro belassen; nicht Teil von 0.16.0 |
 | G | Optionale RSReforged-Abläufe vollständig integrieren und mit/ohne optionale Module prüfen | Offen |
-| H | Sichtbare Einstellungen mit Funktionen verbinden, Bedienung und Dokumentation bereinigen | Offen |
-| I | Gemeinsamer Langzeittest, Berechtigungen, Neuinstallation und Upgrade; anschließend Release 1.0 | Offen |
+| H | Sichtbare Einstellungen mit Funktionen verbinden, Bedienung und Dokumentation bereinigen | Schalter in 0.16.1 bereinigt, Hinweise/Dokumentation angepasst und lokal geprüft; gemeinsame Live-Gegenprobe später |
+| I | Gemeinsamer Langzeittest, Berechtigungen, Neuinstallation und Upgrade; anschließend Release 1.0 | Auf Tims Wunsch verschoben, bis ein Gegenpart zum Mittesten verfügbar ist |
 
 Der Stand aus 0.12.1 bleibt die Ausgangsbasis. Eine lokale Prüfung ersetzt Tims Foundry-Test nicht. Der Gesamtauftrag bleibt zwischen den Teststopps bestehen.
+
+**Testtermin, Rückmeldung vom 2026-10-30:** Tim führt die gemeinsame Abnahme und den Testkampf über mehrere Runden einschließlich Reload/Update bei Gelegenheit durch, sobald ein Gegenpart zum Mittesten verfügbar ist. Bis dahin bleiben die manuellen Gegenproben offen; im aktuellen Arbeitsblock wird keine gemeinsame Testrunde vorausgesetzt.
+
+### Einstellungen auf Tims Wunsch bereinigt – 0.16.1
+
+- Tim bestätigt: automatische Statblock-Öffnen-/Schließen-Schalter und den Bewegungsschalter ausblenden. Tokenauswahl und Kamerabewegung als funktionierende Komfortoptionen behalten.
+- Sichtbar bleiben Entwicklungsmodus, aktiven Gegner auswählen und Kamera zum aktiven Gegner bewegen. Alte Werte werden erhalten. Tokenauswahl und Kamera wirken unabhängig beim Gegnerzug im GM-Hauptfenster; Standard Auswahl an, Kamera aus. Hinweise erklären Wirkung und Gültigkeit ab dem nächsten Gegnerzug.
+- Companion führt keine zweite Auswahl oder Kamerabewegung aus. Kein Fokus durch bloßes Öffnen, Reload, Werteänderungen oder reine Indexverschiebung. Manuelle Auswahl, Pin, Zoom und verborgene Token bleiben erhalten. Bewegung weiter beim Makro; optionale RSReforged-Vervollständigung bleibt offen.
+- 183 automatische Tests und produktiver Modulstart mit simulierten Dokumenten in zwei Browserfenstern erfolgreich. Alle vier Kombinationen, Companion-Steuerung, Wiederöffnung/Reload und Aufräumen geprüft. Encounter-Vorbereitung und bestehende Kampf-/Zustandsabläufe lokal erneut erfolgreich. Die gemeinsame Foundry-Abnahme wird entsprechend Tims Terminwunsch später durchgeführt; bisherige offene Prüfungen bleiben offen.
 
 ### Präzisierung und Encounter-Vorbereitung – 0.16.0
 
