@@ -1,3 +1,10 @@
+## 0.14.0 – 2026-10-30
+
+- Rechtsklick auf eine Gegnerzeile öffnet ein kompaktes Zustandsmenü. Nativen Foundry-Zustand auswählen, optional den verursachenden Spielercharakter zuordnen und speichern. Spieler aus dem Encounter stehen vor weiteren Charakteren aus der Welt. Auch per Umschalt+F10 bedienbar; Escape, Außenklick und Größenänderung schließen das Menü.
+- Verknüpfung gilt für den einzelnen Zustand, z. B. „Verängstigt durch Zane“. Kompakte Anzeige beim Gegner; Quelle ändern oder „Ohne Spielerquelle“ wählen, ohne den Zustand zu entfernen. „Entfernen“ entfernt den nativen Zustand samt Zuordnung. Quelle am ActiveEffect gespeichert; Neuladen und Workspace-Wiederöffnung behalten sie. Native Herkunft, Änderungen und Dauer werden nicht ersetzt. Keine zusätzlichen eigenen Würfelmodifikatoren.
+- Änderungen vom Companion an das zugehörige GM-Hauptfenster übergeben, nach Gegner serialisiert und mit Erfolg/Fehler quittiert. Native Zustands-API erhält Token-/Sheet-Symbole und Systemverhalten; ActiveEffect-Hooks aktualisieren die Listen auch bei externen Änderungen. Nicht verknüpfte Gegner-Token bleiben unabhängig. Schreibfehler und abgelehnte Änderungen erzeugen keine vorgetäuschte erfolgreiche Zuordnung.
+- 153 automatische Tests erfolgreich. Browserprüfung des Rechtsklick-Menüs, Spielerquellen, echter BroadcastChannel-Übergabe zwischen Haupt-/Companion-Bridge, Änderung/Löschung, Workspace-Wiederöffnung, externen Effektänderungen, Token-Unabhängigkeit, Tastatur, Randposition und Fehleranzeige erfolgreich. Bestehende Recovery-/Recharge-/Legendär-Abläufe, Rettungswürfe und Initiativsortierung erneut lokal geprüft. Tims noch offene Abnahmen aus 0.13.2 bleiben offen und sind in den nächsten gemeinsamen Test übernommen.
+
 ## 0.13.2 – 2026-10-26
 
 - Rettungswürfe zeigen bei gewürfelter 1 und 20 wieder die vollständige Rechnung und das native Gesamtergebnis, ohne NAT-Kennzeichnung oder Sonderfarbe. NAT-Anzeige ausschließlich für Angriffe und Ability-/Fertigkeitsproben; die Hausregeln für Zusatzwürfe und Krit-Schaden bleiben auf Angriffe beschränkt.

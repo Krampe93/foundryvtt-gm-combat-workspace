@@ -10,8 +10,8 @@ Tim hat die vollständige Umsetzung der offenen Punkte beauftragt. Seit 2026-10-
 
 | Schritt | Umfang | Status |
 |---|---|---|
-| A | Legendäre Aktionssperren getrennt prüfen, alten Commanding-Presence-/Fiery-Rays-Bericht untersuchen und Rücksetzung absichern | Aktionen von Tim positiv geprüft; Recovery-Korrektur aus 0.13.1 noch nicht getestet und in Gegenprobe 0.13.2 übernommen |
-| B | Recharge-Verfügbarkeit, manuelles/automatisches Aufladen und Reaktionsreset-Sonderfälle | Stone-Giant-Reset aus 0.13.1 noch nicht getestet; gemeinsame Gegenprobe in 0.13.2 offen |
+| A | Legendäre Aktionssperren getrennt prüfen, alten Commanding-Presence-/Fiery-Rays-Bericht untersuchen und Rücksetzung absichern | Aktionen von Tim positiv geprüft; Recovery-Korrektur aus 0.13.1 noch nicht getestet und in Gegenprobe 0.14.0 übernommen |
+| B | Recharge-Verfügbarkeit, manuelles/automatisches Aufladen und Reaktionsreset-Sonderfälle | Stone-Giant-Reset aus 0.13.1 noch nicht getestet; gemeinsame Gegenprobe in 0.14.0 offen |
 | C | Mehrdeutige legendäre Folgeangriffe und In-Lair-Ressourcen zuverlässig behandeln | In 0.13.0 implementiert und lokal geprüft; gemeinsame Abnahme offen |
 | D | Minimap-Namen beim Darüberfahren und Gegnerauswahl per Punktklick | Von Tim am 2026-10-26 bestätigt |
 | E | Encounter-Vorbereitung, W12-Initiative, Spieler-Platzhalter und In-Lair-Einrichtung | Offen |
@@ -21,6 +21,12 @@ Tim hat die vollständige Umsetzung der offenen Punkte beauftragt. Seit 2026-10-
 | I | Gemeinsamer Langzeittest, Berechtigungen, Neuinstallation und Upgrade; anschließend Release 1.0 | Offen |
 
 Der Stand aus 0.12.1 bleibt die Ausgangsbasis. Eine lokale Prüfung ersetzt Tims Foundry-Test nicht. Der Gesamtauftrag bleibt zwischen den Teststopps bestehen.
+
+### Ergänzung auf Tims Wunsch – Zustand mit Spielerquelle, 0.14.0
+
+- Tim ergänzt am 2026-10-30 ausdrücklich das aktuelle Paket: Rechtsklick in der Gegnerübersicht soll einen Zustand setzen und eine Spielerauswahl anbieten. Bestätigte Bedeutung: „Gegner ist von Spieler X verängstigt“; die Verknüpfung gehört zum jeweiligen Zustand, nicht zu einer allgemeinen Gegnerzuordnung.
+- Native Foundry-Zustände mit optionaler Spielerquelle am ActiveEffect umgesetzt. Quelle beim Gegner sichtbar, nachträglich änderbar oder separat löschbar; Zustand selbst über „Entfernen“ entfernen. Native Effektdaten bleiben erhalten. Spieler im Encounter und weitere Welt-Charaktere verfügbar; unverbundene NPC-Token bleiben unabhängig.
+- 153 automatische Tests und kombinierte Browserprüfung erfolgreich. Live-Foundry-Test offen. Alle noch offenen Prüfungen aus 0.13.2 ausdrücklich nach 0.14.0 übernommen; keine neue Abnahme von Recovery, Recharge, Stone Giant, legendären Sonderfällen, Rettungswürfen oder Initiative behauptet. Die Minimap bleibt abgenommen.
 
 ### Weitere Rückmeldung und gemeinsamer nächster Test – 0.13.2
 

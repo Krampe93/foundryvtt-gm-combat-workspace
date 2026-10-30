@@ -1,5 +1,19 @@
 # Manual test checklist
 
+## 0.14.0: Zustände mit Spielerquelle und bisherige offene Prüfungen
+
+Einmal auf **0.14.0** aktualisieren, Hauptfenster neu laden und Workspace öffnen. Bestehende Testarena verwenden. Die nachfolgenden Prüfungen für 0.13.2 ebenfalls mit 0.14.0 durchführen; dafür ist kein weiterer Reload nötig. Sie bleiben bis zu Tims Rückmeldung offen, die Minimap ist weiterhin abgenommen.
+
+1. **Zustand setzen:** Oben rechts auf die Zeile eines Skeleton rechtsklicken. Zustand **Verängstigt**, „Verursacht durch“ **Zane** wählen und speichern. In der Zeile steht „Verängstigt durch Zane“. Foundrys entsprechendes Symbol erscheint auch am Token bzw. im Sheet. Initiative und aktiver Zug bleiben unverändert.
+2. **Quelle bearbeiten:** Wieder rechtsklicken; Zustand und Zane sind vorbelegt. Quelle auf Orsik ändern. Es bleibt ein Verängstigt-Effekt, die Anzeige wechselt zu Orsik. „Ohne Spielerquelle“ speichern: Verängstigt bleibt aktiv, die Spielerzuordnung verschwindet.
+3. **Mehrere Zustände und Entfernen:** Zusätzlich Vergiftet mit anderer Quelle setzen. Beide Zuordnungen bleiben getrennt. Verängstigt auswählen und „Entfernen“: Zustand und Zuordnung verschwinden; Vergiftet bleibt bestehen. Einen bestehenden, zuvor im nativen Sheet gesetzten Zustand mit Quelle versehen: kein doppelter Effekt.
+4. **Speicherung und Aktualisierung:** Mit gesetztem Zustand samt Quelle Workspace schließen/öffnen und später neu laden: Zuordnung bleibt. Zustand im Hauptfenster/Sheet entfernen oder deaktivieren: Workspace aktualisiert sich und zeigt keine alte Quelle. Spieler umbenennen: Anzeige verwendet den aktuellen Namen. Gelöschte Spieler bleiben als aufgezeichnete Quelle erkennbar und können durch „Ohne Spielerquelle“ oder eine neue Quelle ersetzt werden.
+5. **Spielerauswahl und Token:** Spielercharaktere im Encounter stehen zuerst; weitere Welt-Charaktere lassen sich ebenfalls wählen. Zwei gleichartige, nicht verknüpfte NPC-Token prüfen: Zustand/Quelle betrifft nur den gewählten Gegner. Bei verknüpften Token gilt wie in Foundry der gemeinsame Actor.
+6. **Bedienung:** Rechtsklick auch auf einer unteren oder randnahen Gegnerzeile prüfen: Menü bleibt im Fenster und verändert die Flächengrößen nicht. Escape/Außenklick schließt es, Umschalt+F10 auf dem fokussierten Gegner öffnet es. Normale Linksklicks, TP, Rettungswürfe und Rechtsklick auf einen Schadensbutton funktionieren weiterhin.
+7. **Bisher offen:** Rettungswurf-Anzeige bei 1/20, Einzel-/Gruppeninitiative, legendäre Recovery zum eigenen Zugbeginn, Stone-Giant-Reaktionsreset, automatischer/manueller Recharge, Marilith/Reactive, Navigation ohne doppelte Resets, legendäre Sperren/Folgeaktionen und Hort-Budget nach der vollständigen Liste im Abschnitt 0.13.2 prüfen. Diese Punkte sind mitgenommen, nicht als bestanden markiert.
+
+Lokale Prüfung: 153 automatische Tests; Zustands-API, Quellenänderung/-entfernung, mehrere Zustände, bestehende Effekte, persistierte Metadaten, umbenannte/gelöschte Charaktere, Berechtigungen, native Hook-Abbrüche und Rücknahme bei Schreibfehlern geprüft. Kombinierte Browserprüfung mit Menü, beiden Bridge-Rollen und echtem BroadcastChannel, sieben NPCs, Spielerwahl, unverbundenen Token, Wiederöffnung, externen Änderungen, Tastatur, Randposition und Fehleranzeige erfolgreich. Native Token-/Sheet-Darstellung und echte Server-Synchronisierung bleiben Teil von Tims Foundry-Abnahme.
+
 ## 0.13.2: Rettungswürfe, Initiative und alle noch offenen Prüfungen
 
 Einmal auf **0.13.2** aktualisieren, Hauptfenster neu laden und Workspace öffnen; Versionsanzeige links kontrollieren. Bestehende Testarena weiterverwenden. Tim konnte die übrigen Punkte aus 0.13.1 noch nicht prüfen; sie sind hier ausdrücklich mit übernommen. Die Minimap ist bereits abgenommen.
