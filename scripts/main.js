@@ -47,6 +47,7 @@ Hooks.once("ready", () => {
       getCombatSnapshot: () => combatCoordinator?.snapshot ?? null,
       getConditionRelations: () => game.user?.isGM ? conditionRelations(combatCoordinator?.snapshot?.context?.combat) : [],
       openWorkspace: () => workspaceBridge?.openWorkspace() ?? false,
+      prepareEncounter: () => workspaceBridge?.prepareEncounter() ?? false,
       isWorkspaceWindow: workspaceBridge.workspaceMode
     });
   }

@@ -10,6 +10,8 @@ import { createCombatSnapshot } from "./combat-state.js";
 import { applyLegendaryRecoveryTiming } from "./native-turn-recovery.js";
 import { conditionParticipants, conditionRelations, conditionSourceChoices, participantConditionTexts, setActorCondition } from "./condition-operations.js";
 import { ConditionMenu } from "./condition-menu.js";
+import { EncounterPreparation } from "./encounter-preparation.js";
+import { EncounterPreparationDialog } from "./encounter-preparation-dialog.js";
 import {
   LEGACY_REACTION_FLAG_KEY,
   LEGACY_REACTION_MODULE_ID,
@@ -202,6 +204,10 @@ export class WorkspaceBridge {
   #conditionRequests = new Map();
   #conditionQueues = new Map();
   #conditionViews = new Map();
+  #preparation = null;
+  #preparationDialog = null;
+  #preparationRequests = new Map();
+  #prepareLauncher = null;
 
   constructor({ eventBus, getSnapshot, rollRules = null, logger = createLogger("WorkspaceBridge") }) {
     this.#eventBus = eventBus;
@@ -218,6 +224,12 @@ export class WorkspaceBridge {
   }
 
   start() {
+    this.#preparation = new EncounterPreparation();
+    this.#preparationDialog = new EncounterPreparationDialog({
+      preview: () => this.#requestPreparation("preview"),
+      prepare: (id, submission) => this.#requestPreparation("prepare", { id, submission }),
+      host: () => this.#workspaceMode ? this.#root : document.body
+    });
     this.#channel = new BroadcastChannel(CHANNEL_NAME);
     this.#channel.addEventListener("message", (event) => this.#receive(event.data));
     this.#nativeRecoveryHooks.push(["dnd5e.combatRecovery", Hooks.on("dnd5e.combatRecovery", applyLegendaryRecoveryTiming)]);
@@ -306,6 +318,15 @@ export class WorkspaceBridge {
   }
 
   stop() {
+    this.#preparationDialog?.stop();
+    this.#preparationDialog = null;
+    for (const { reject, timer } of this.#preparationRequests.values()) {
+      clearTimeout(timer);
+      reject(new Error("Workspace wurde geschlossen."));
+    }
+    this.#preparationRequests.clear();
+    this.#prepareLauncher?.remove();
+    this.#prepareLauncher = null;
     this.#conditionMenu?.close();
     this.#conditionMenu = null;
     for (const { reject, timer } of this.#conditionRequests.values()) {
@@ -417,6 +438,26 @@ export class WorkspaceBridge {
     return true;
   }
 
+  async prepareEncounter() {
+    if (!game.user?.isGM) return false;
+    try { await this.#preparationDialog?.open(); return true; }
+    catch (error) { ui.notifications?.error(error.message); return false; }
+  }
+
+  #requestPreparation(operation, payload = {}) {
+    if (!this.#workspaceMode) return Promise.resolve().then(() => operation === "preview"
+      ? this.#preparation.preview() : this.#preparation.prepare(payload.id, payload.submission));
+    const requestId = foundry.utils.randomID();
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.#preparationRequests.delete(requestId);
+        reject(new Error("Keine Antwort vom Foundry-Hauptfenster. Bitte dort den Kampftracker prüfen und die Vorbereitung erneut öffnen."));
+      }, operation === "preview" ? 12000 : 60000);
+      this.#preparationRequests.set(requestId, { resolve, reject, timer });
+      this.#channel?.postMessage({ type: "encounterPreparation", requestId, originUserId: game.user?.id, operation, ...payload });
+    });
+  }
+
   #renderLauncher() {
     const button = document.createElement("button");
     button.id = "gm-combat-workspace-launcher";
@@ -425,6 +466,13 @@ export class WorkspaceBridge {
     button.addEventListener("click", () => this.openWorkspace());
     document.body.append(button);
     this.#root = button;
+    const prepare = document.createElement("button");
+    prepare.id = "gm-combat-workspace-prepare";
+    prepare.type = "button";
+    prepare.innerHTML = '<i class="fa-solid fa-dice" aria-hidden="true"></i><span>Encounter vorbereiten</span>';
+    prepare.addEventListener("click", () => this.prepareEncounter());
+    document.body.append(prepare);
+    this.#prepareLauncher = prepare;
   }
 
   #renderWorkspace() {
@@ -495,6 +543,7 @@ export class WorkspaceBridge {
                 <strong data-field="current-turn-name">Kein laufender Kampf</strong>
               </div>
               <div class="gm-workspace-dashboard-actions">
+                <button type="button" data-action="prepare-encounter" title="Encounter vorbereiten" aria-label="Encounter vorbereiten"><i class="fa-solid fa-dice" aria-hidden="true"></i></button>
                 <span class="gm-workspace-enemy-count" data-field="enemy-count">0 Gegner</span>
                 <span class="gm-workspace-status">Verbunden</span>
                 <details class="gm-workspace-tools-menu">
@@ -565,6 +614,7 @@ export class WorkspaceBridge {
 
     root.querySelector('[data-action="toggle-pin"]')
       .addEventListener("click", () => this.#togglePin());
+    root.querySelector('[data-action="prepare-encounter"]').addEventListener("click", () => this.prepareEncounter());
     root.querySelector('[data-action="show-turn-guidance"]')
       .addEventListener("click", () => this.#showStoredTurnGuidance());
     root.querySelector('[data-role="sheet-host"]')
@@ -1097,6 +1147,29 @@ export class WorkspaceBridge {
 
   #receive(message) {
     if (!message || typeof message !== "object") return;
+
+    if (message.type === "encounterPreparation" && !this.#workspaceMode) {
+      if (!game.user?.isGM || message.originUserId !== game.user.id || !["preview", "prepare"].includes(message.operation)) return;
+      Promise.resolve().then(() => message.operation === "preview" ? this.#preparation.preview()
+        : this.#preparation.prepare(message.id, message.submission)).then(result => {
+        this.#channel?.postMessage({ type: "encounterPreparationResult", requestId: message.requestId,
+          originUserId: message.originUserId, result });
+      }, error => {
+        this.#logger.error("Encounter preparation failed", error);
+        this.#channel?.postMessage({ type: "encounterPreparationResult", requestId: message.requestId,
+          originUserId: message.originUserId, error: error.message });
+      });
+      return;
+    }
+    if (message.type === "encounterPreparationResult" && this.#workspaceMode && message.originUserId === game.user?.id) {
+      const pending = this.#preparationRequests.get(message.requestId);
+      if (!pending) return;
+      clearTimeout(pending.timer);
+      this.#preparationRequests.delete(message.requestId);
+      if (message.error) pending.reject(new Error(message.error));
+      else pending.resolve(message.result);
+      return;
+    }
 
     if (message.type === "setCondition" && !this.#workspaceMode) {
       if (!game.user?.isGM || message.originUserId !== game.user.id) return;
