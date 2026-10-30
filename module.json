@@ -2,7 +2,7 @@
   "id": "gm-combat-workspace",
   "title": "GM Combat Workspace",
   "description": "A focused Foundry VTT combat workspace for enemy management, reactions, legendary actions, statblocks, and hidden movement tracking.",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "authors": [
     {
       "name": "Tim"
@@ -32,6 +32,12 @@
         "id": "monks-combat-details",
         "type": "module",
         "reason": "Optional compatibility with the existing player initiative placeholder workflow."
+      },
+      {
+        "id": "combat-wall",
+        "type": "module",
+        "compatibility": { "minimum": "1.1.0" },
+        "reason": "Optional public display of linked player and enemy conditions."
       }
     ]
   },
@@ -54,7 +60,7 @@
     }
   ],
   "manifest": "https://raw.githubusercontent.com/Krampe93/foundryvtt-gm-combat-workspace/main/module.json",
-  "download": "https://github.com/Krampe93/foundryvtt-gm-combat-workspace/releases/download/v0.14.0/gm-combat-workspace.zip",
+  "download": "https://github.com/Krampe93/foundryvtt-gm-combat-workspace/releases/download/v0.15.0/gm-combat-workspace.zip",
   "license": "LICENSE",
   "readme": "README.md"
 }

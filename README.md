@@ -2,7 +2,7 @@
 
 GM Combat Workspace is a Foundry VTT module for running D&D 5e encounters from a compact GM-facing workspace while keeping the map visible and usable.
 
-Version `0.14.0` is a development release with a working two-window combat workspace, native NPC sheets, roll history, reactions, legendary actions, conditions with player sources and an interactive GM minimap. Work towards 1.0 continues in larger test packages.
+Version `0.15.0` is a development release with a working two-window combat workspace, native NPC sheets, roll history, reactions, legendary actions, linked player/enemy conditions and an interactive GM minimap. Work towards 1.0 continues in larger test packages.
 
 The implementation order, manual Foundry test cases, and acceptance gates are maintained in [ROADMAP.md](ROADMAP.md). Related changes are bundled into one installable version before Tim's Foundry test, reducing repeated reloads.
 
@@ -35,6 +35,20 @@ Version `0.12.1` updates minimap markers from rendered token movement and drag p
 Version `0.12.2` explicitly deletes the active NPC's stored legendary action locks at turn start, preserving other NPCs' locks. Each action writes only its own lock. Repeated legendary attacks such as Pounce keep each outstanding damage button. This is the first test checkpoint on the agreed path to 1.0; the next section starts after Tim's Foundry test. The older Commanding Presence/Fiery Rays report still requires that live check; local tests cover both execution orders, resource guards and reset behavior.
 
 ## Development
+
+Version `0.15.0` adds a compact player list below reactions. Click a player to set a native condition; the source picker now includes both players and individual enemy tokens. One link automatically supplies both displays: `Gepackt von Goblin` on Zane and `Packt gerade Zane` on the Goblin. Changing or clearing the link updates both ends together. Other native effects, duration and origin are retained. Reactions receive space priority; surplus player rows scroll internally and the minimap keeps its size. Encounter players follow initiative, and remaining world characters are included without duplicating their linked world actor.
+
+Combat Wall **1.1.0** consumes these links and displays both ends in initiative, the active focus and linked enemy side cards. Update both modules before reloading once. It reads the workspace API when available, with a fallback to stored native effect flags, and filters hidden endpoints from the public display. The existing recovery/recharge/legendary acceptance checks remain open.
+
+GM-side consumers can read live, directed relations with:
+
+```js
+game.modules.get("gm-combat-workspace").api.getConditionRelations();
+// [{ statusId, label, source: { uuid, actorUuid, tokenUuid, combatantId, ... },
+//    target: { actorUuid, tokenUuid, combatantId, ... }, incomingText, outgoingText, text }]
+```
+
+Native condition attribution remains at `effect.flags["gm-combat-workspace"].conditionSources[statusId]`. Existing `{uuid, name}` player links remain readable; new links add actor/token/combat identity. A token UUID distinguishes same-name or linked enemy tokens. The source-side display is derived from the same effect, so removal cannot leave a stale second record.
 
 Version `0.14.0` adds a right-click condition editor to enemy rows (also Shift+F10). Choose a native Foundry condition and optionally the character who caused it, e.g. `Verängstigt durch Zane`. Encounter characters come first, followed by other world characters. The source belongs to that condition's ActiveEffect, persists across reloads, and appears below the enemy name; it can be changed or cleared without removing the condition. Removing the effect also removes its attribution. Native effect origin, changes and duration remain intact; no additional custom roll modifiers are introduced. Unlinked NPC tokens retain independent conditions.
 
