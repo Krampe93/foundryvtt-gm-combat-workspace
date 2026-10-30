@@ -1,5 +1,20 @@
 # Manual test checklist
 
+## 0.15.0 + Combat Wall 1.1.0: Spieler und automatisch verknüpfte Gegenanzeige
+
+**Beide Module aktualisieren**, anschließend einmal das Foundry-Hauptfenster neu laden und Workspace sowie Combat Wall neu öffnen. Die bisherige Testarena weiterverwenden. Frühere offene Punkte bleiben unten vollständig erhalten.
+
+1. Unter den Reaktionen stehen Spielercharaktere mit ihren Zuständen. Encounter-Spieler folgen der Initiative; weitere Welt-Charaktere stehen ebenfalls zur Verfügung. Spieler anklicken: gleiches Zustandsmenü wie bei Gegnern.
+2. Zane anklicken → **Gepackt** → als Verursacher einen konkreten Goblin wählen → speichern. **Ein einziger Vorgang** zeigt bei Zane „Gepackt von Goblin …“ und beim gewählten Goblin automatisch „Packt gerade Zane“. Auch in der Combat Wall beide Seiten prüfen: Spielerfokus/Initiative sowie Gegnerkachel bzw. dessen Fokus. Kein zusätzlicher Zustand muss von Hand am Goblin gesetzt werden.
+3. Den Verursacher auf den zweiten Goblin wechseln: Gegenanzeige verschwindet beim ersten und erscheint nur beim zweiten. Gleiche Namen, mehrere Token und ein verknüpfter Actor müssen über die konkrete Tokenauswahl unterscheidbar bleiben.
+4. Zanes Zustand entfernen: beide Anzeigen verschwinden gemeinsam, ohne Zugwechsel und ohne Welt-Reload. Nur „Ohne Quelle“ speichern: Gepackt bleibt auf Zane, die Verknüpfung und Gegenanzeige verschwinden. Umgekehrt beim Goblin „Gepackt“ mit Zane als Quelle setzen: Goblin „Gepackt von Zane“, Spieler „Packt gerade Goblin …“.
+5. Workspace/Combat Wall schließen und neu öffnen; gegebenenfalls neu laden: Zuordnung und beide Anzeigen bleiben korrekt. Zustand im nativen Sheet entfernen/deaktivieren: beide Anzeigen aktualisieren sich. Quellenwechsel darf keinen zweiten nativen Effekt erzeugen; andere Zustände und deren Dauer bleiben erhalten.
+6. Einen weiteren Welt-Charakter außerhalb des Encounters im Workspace bearbeiten. Zustand und Quelle speichern/ändern/entfernen; Anzeige aktualisiert sich. Für die öffentliche Combat Wall müssen beide Endpunkte im sichtbaren Encounter auflösbar sein. Verborgene Gegner dürfen durch eine Beziehung nicht namentlich auf der Wall erscheinen.
+7. Große und kleine Fenster prüfen: Reaktionen erhalten möglichst ihre volle Höhe, zusätzliche Spielerzeilen scrollen intern. Ohne Spieler bleibt kein leerer Bereich reserviert. Minimap bleibt gleich groß. Linksklick auf Spieler und Rechtsklick auf Gegner beeinflussen keinen Zug und keinen Angriff.
+8. **Weiterhin offen:** Die vollständigen Recovery-, Stone-Giant-, Recharge-, Marilith-, legendären Sperr-/Folgeaktions-, Hort-, Navigations-, Rettungswurf- und Initiativeprüfungen aus den Abschnitten 0.13.2/0.14.0 mit diesem gemeinsamen Update durchführen. Sie sind mitgenommen und nicht automatisch abgenommen.
+
+Lokale Prüfung: 163 automatische Workspace-Tests, kombinierter Workspace-Browserlauf, vier Layoutgrößen und Angriffs-Zusatzwürfe erfolgreich. Combat Wall: zehn gezielte Beziehungstests, Regressionen für Zustände/Bloodied/Besiegt und echter Zwei-Seiten-Browserlauf mit produktivem Workspace-Service, Wall-Serializer und Wall-Dashboard erfolgreich. Tims Test auf dem echten Foundry-Server bleibt offen.
+
 ## 0.14.0: Zustände mit Spielerquelle und bisherige offene Prüfungen
 
 Einmal auf **0.14.0** aktualisieren, Hauptfenster neu laden und Workspace öffnen. Bestehende Testarena verwenden. Die nachfolgenden Prüfungen für 0.13.2 ebenfalls mit 0.14.0 durchführen; dafür ist kein weiterer Reload nötig. Sie bleiben bis zu Tims Rückmeldung offen, die Minimap ist weiterhin abgenommen.

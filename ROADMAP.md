@@ -10,8 +10,8 @@ Tim hat die vollständige Umsetzung der offenen Punkte beauftragt. Seit 2026-10-
 
 | Schritt | Umfang | Status |
 |---|---|---|
-| A | Legendäre Aktionssperren getrennt prüfen, alten Commanding-Presence-/Fiery-Rays-Bericht untersuchen und Rücksetzung absichern | Aktionen von Tim positiv geprüft; Recovery-Korrektur aus 0.13.1 noch nicht getestet und in Gegenprobe 0.14.0 übernommen |
-| B | Recharge-Verfügbarkeit, manuelles/automatisches Aufladen und Reaktionsreset-Sonderfälle | Stone-Giant-Reset aus 0.13.1 noch nicht getestet; gemeinsame Gegenprobe in 0.14.0 offen |
+| A | Legendäre Aktionssperren getrennt prüfen, alten Commanding-Presence-/Fiery-Rays-Bericht untersuchen und Rücksetzung absichern | Aktionen von Tim positiv geprüft; Recovery-Korrektur aus 0.13.1 noch nicht getestet und in Gegenprobe 0.15.0 übernommen |
+| B | Recharge-Verfügbarkeit, manuelles/automatisches Aufladen und Reaktionsreset-Sonderfälle | Stone-Giant-Reset aus 0.13.1 noch nicht getestet; gemeinsame Gegenprobe in 0.15.0 offen |
 | C | Mehrdeutige legendäre Folgeangriffe und In-Lair-Ressourcen zuverlässig behandeln | In 0.13.0 implementiert und lokal geprüft; gemeinsame Abnahme offen |
 | D | Minimap-Namen beim Darüberfahren und Gegnerauswahl per Punktklick | Von Tim am 2026-10-26 bestätigt |
 | E | Encounter-Vorbereitung, W12-Initiative, Spieler-Platzhalter und In-Lair-Einrichtung | Offen |
@@ -21,6 +21,13 @@ Tim hat die vollständige Umsetzung der offenen Punkte beauftragt. Seit 2026-10-
 | I | Gemeinsamer Langzeittest, Berechtigungen, Neuinstallation und Upgrade; anschließend Release 1.0 | Offen |
 
 Der Stand aus 0.12.1 bleibt die Ausgangsbasis. Eine lokale Prüfung ersetzt Tims Foundry-Test nicht. Der Gesamtauftrag bleibt zwischen den Teststopps bestehen.
+
+### Erweiterung auf Tims Wunsch – Spieler und beide Beziehungsseiten, 0.15.0
+
+- Tim ergänzt am 2026-10-30 eine kleine Spieleranzeige unter den Reaktionen und präzisiert die Verknüpfung: Einmal bei A einen Zustand mit B als Verursacher setzen soll automatisch „Gepackt von B“ auf A und „Packt gerade A“ auf B anzeigen. Bei Änderung/Entfernung aktualisieren sich beide Seiten gemeinsam.
+- Spielerübersicht, Zustandsbearbeitung für Charaktere, Spieler/Gegner als Quellen, token-eindeutige Identität und gerichtete Auslese-API umgesetzt. Reaktionen haben Platzpriorität; Minimap unverändert.
+- Die ausdrücklich gewünschte Combat-Wall-Anbindung ist für diese Zustandsbeziehungen aus dem Backlog in das aktuelle Paket aufgenommen: Workspace 0.15.0 zusammen mit Combat Wall 1.1.0. Beide Module gemeinsam aktualisieren, dann einmal neu laden. Die übrige TV-Client-Synchronisierung bleibt separat.
+- 163 automatische Workspace-Tests sowie Browserprüfungen und ein echter Zwei-Fenster-Test mit Combat Wall erfolgreich. Alle noch offenen manuellen Prüfungen aus 0.13.2/0.14.0 nach 0.15.0 übernommen; Minimap bleibt abgenommen. Keine neue Live-Abnahme behauptet.
 
 ### Ergänzung auf Tims Wunsch – Zustand mit Spielerquelle, 0.14.0
 

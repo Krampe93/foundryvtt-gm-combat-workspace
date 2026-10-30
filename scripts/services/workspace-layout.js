@@ -18,6 +18,18 @@ export function workspacePanelSizes({ height, gap, utilityGap, enemyContentHeigh
   };
 }
 
+/** Reactions keep their content height where possible; excess player rows scroll first. */
+export function workspacePlayerHeight({ available, reactions, players, minimum = 66, gap = 8 }) {
+  const maximum = Math.max(0, available - gap);
+  return Math.min(players, maximum, Math.max(Math.min(minimum, maximum),
+    Math.min(maximum * 0.35, maximum - reactions)));
+}
+
+function listContentHeight(list) {
+  const bounds = [...list.children].map(row => row.getBoundingClientRect());
+  return bounds.length ? Math.max(...bounds.map(bound => bound.bottom)) - Math.min(...bounds.map(bound => bound.top)) : 0;
+}
+
 /** Enemy rows take their required height; spare height goes to rolls above a fixed minimap. */
 export class WorkspaceLayout {
   #context;
@@ -25,6 +37,11 @@ export class WorkspaceLayout {
   #header;
   #list;
   #utility;
+  #reactionColumn;
+  #reactionPanel;
+  #reactionList;
+  #players;
+  #playerList;
   #resizeObserver = null;
   #mutationObserver = null;
   #frame = null;
@@ -35,6 +52,11 @@ export class WorkspaceLayout {
     this.#header = root.querySelector(".gm-workspace-enemy-header");
     this.#list = root.querySelector('[data-role="enemy-list"]');
     this.#utility = root.querySelector(".gm-workspace-utility-column");
+    this.#reactionColumn = root.querySelector(".gm-workspace-reaction-column");
+    this.#reactionPanel = root.querySelector('[data-role="reaction-panel"]');
+    this.#reactionList = root.querySelector('[data-role="reaction-list"]');
+    this.#players = root.querySelector(".gm-workspace-players");
+    this.#playerList = root.querySelector('[data-role="player-list"]');
   }
 
   start() {
@@ -46,6 +68,8 @@ export class WorkspaceLayout {
       this.#schedule();
     });
     this.#mutationObserver.observe(this.#list, { childList: true, subtree: true, characterData: true });
+    this.#mutationObserver.observe(this.#reactionList, { childList: true, subtree: true, characterData: true });
+    this.#mutationObserver.observe(this.#playerList, { childList: true, subtree: true, characterData: true });
     this.#schedule();
   }
 
@@ -58,7 +82,8 @@ export class WorkspaceLayout {
 
   #observeRows() {
     this.#resizeObserver.disconnect();
-    for (const element of [this.#context, this.#header, ...this.#list.children]) {
+    for (const element of [this.#context, this.#header, ...this.#list.children,
+      ...this.#reactionList.children, ...this.#playerList.children]) {
       this.#resizeObserver.observe(element);
     }
   }
@@ -89,5 +114,11 @@ export class WorkspaceLayout {
     });
     this.#context.style.setProperty("--gm-workspace-context-rows", `minmax(0, ${sizes.enemyHeight}px) minmax(0, 1fr)`);
     this.#context.style.setProperty("--gm-workspace-utility-rows", `minmax(0, 1fr) minmax(0, ${sizes.minimapHeight}px)`);
+    const panelHeight = (panel, list) => panel.hidden ? 0 : verticalChrome(getComputedStyle(panel)) +
+      panel.querySelector("header").getBoundingClientRect().height + pixels(getComputedStyle(list), "marginTop") +
+      listContentHeight(list);
+    const playerHeight = workspacePlayerHeight({ available: this.#reactionColumn.getBoundingClientRect().height,
+      reactions: panelHeight(this.#reactionPanel, this.#reactionList), players: panelHeight(this.#players, this.#playerList) });
+    this.#reactionColumn.style.setProperty("--gm-workspace-player-height", `${Math.ceil(playerHeight)}px`);
   }
 }

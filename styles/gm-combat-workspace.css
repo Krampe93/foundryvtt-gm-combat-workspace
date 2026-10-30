@@ -2353,3 +2353,83 @@ body.gm-combat-workspace-companion > .notifications {
   color: #ffb5a8;
   white-space: normal;
 }
+/* Compact player conditions below reactions; reactions retain the available height first. */
+#gm-combat-workspace-shell .gm-workspace-reaction-column {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+}
+
+#gm-combat-workspace-shell .gm-workspace-reaction-column.has-players {
+  grid-template-rows: minmax(0, 1fr) minmax(0, var(--gm-workspace-player-height, 112px));
+}
+
+#gm-combat-workspace-shell .gm-workspace-players[hidden] { display: none; }
+
+#gm-combat-workspace-shell .gm-workspace-reaction-column > section {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--gm-combat-panel);
+  border: 1px solid var(--gm-combat-border);
+  border-radius: 5px;
+}
+
+#gm-combat-workspace-shell .gm-workspace-players {
+  padding: 0.4rem 0.55rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-players > header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 23px;
+  border-bottom: 1px solid var(--gm-combat-border);
+}
+
+#gm-combat-workspace-shell .gm-workspace-players h2 {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+#gm-combat-workspace-shell .gm-workspace-player-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: minmax(28px, max-content);
+  align-content: start;
+  flex: 1 1 auto;
+  min-height: 0;
+  gap: 3px;
+  margin-top: 4px;
+  overflow: auto;
+}
+
+#gm-combat-workspace-shell .gm-workspace-player {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  min-height: 28px;
+  height: auto;
+  margin: 0;
+  padding: 2px 5px;
+  text-align: left;
+  line-height: 1.1;
+}
+
+#gm-combat-workspace-shell .gm-workspace-player strong,
+#gm-combat-workspace-shell .gm-workspace-player span {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#gm-combat-workspace-shell .gm-workspace-player strong { font-size: 0.72rem; }
+#gm-combat-workspace-shell .gm-workspace-player span { color: #f3dba9; font-size: 0.62rem; }
+#gm-combat-workspace-shell .gm-workspace-player-empty { grid-column: 1 / -1; margin: 0; font-size: 0.72rem; }

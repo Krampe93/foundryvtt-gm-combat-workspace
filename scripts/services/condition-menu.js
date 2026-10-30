@@ -10,7 +10,7 @@ function escape(value) {
 export class ConditionMenu {
   #root;
   #getTarget;
-  #getPlayers;
+  #getSources;
   #apply;
   #element = null;
   #targetId = null;
@@ -19,10 +19,10 @@ export class ConditionMenu {
   #key = null;
   #resize = null;
 
-  constructor({ root, getTarget, getPlayers, apply }) {
+  constructor({ root, getTarget, getSources, apply }) {
     this.#root = root;
     this.#getTarget = getTarget;
-    this.#getPlayers = getPlayers;
+    this.#getSources = getSources;
     this.#apply = apply;
   }
 
@@ -34,7 +34,7 @@ export class ConditionMenu {
     if (!options.length) return;
     this.#targetId = id;
     const active = actorConditions(target.actor);
-    const players = this.#getPlayers();
+    const sources = this.#getSources();
     const element = document.createElement("section");
     element.className = "gm-workspace-condition-menu";
     element.setAttribute("role", "dialog");
@@ -46,8 +46,12 @@ export class ConditionMenu {
           `<button type="button" data-condition-existing="${escape(condition.id)}" title="${escape(condition.text)}">${escape(condition.text)}</button>`).join("")}</div>` : ""}
         <label>Zustand<select name="statusId">${options.map(option =>
           `<option value="${escape(option.id)}">${active.some(({ id }) => id === option.id) ? "✓ " : ""}${escape(option.label)}</option>`).join("")}</select></label>
-        <label>Verursacht durch<select name="sourceUuid"><option value="">Ohne Spielerquelle</option>
-          ${players.map(player => `<option value="${escape(player.uuid)}">${escape(player.name)}${player.inCombat ? "" : " (außerhalb des Encounters)"}</option>`).join("")}</select></label>
+        <label>Verursacht durch<select name="sourceUuid"><option value="">Ohne Quelle</option>
+          ${[["character", "Spieler"], ["npc", "Gegner"]].map(([type, label]) => {
+            const entries = sources.filter(entry => entry.type === type);
+            return entries.length ? `<optgroup label="${label}">${entries.map(entry =>
+              `<option value="${escape(entry.uuid)}">${escape(entry.name)}${entry.inCombat ? "" : " (außerhalb des Encounters)"}</option>`).join("")}</optgroup>` : "";
+          }).join("")}</select></label>
         <div class="gm-workspace-condition-actions"><button type="submit" data-condition-save>Zustand setzen</button>
           <button type="button" data-condition-remove>Entfernen</button></div>
       </fieldset><p class="gm-workspace-condition-error" role="alert" hidden></p></form>`;
@@ -140,6 +144,7 @@ export class ConditionMenu {
     this.#element?.remove();
     this.#element = this.#targetId = this.#dismiss = this.#key = this.#resize = null;
     this.#busy = false;
-    if (restoreFocus && id) this.#root.querySelector(`.gm-workspace-enemy[data-combatant-id="${CSS.escape(id)}"] [data-action="select-enemy"]`)?.focus();
+    if (restoreFocus && id) (this.#root.querySelector(`[data-player-target="${CSS.escape(id)}"]`) ??
+      this.#root.querySelector(`.gm-workspace-enemy[data-combatant-id="${CSS.escape(id)}"] [data-action="select-enemy"]`))?.focus();
   }
 }

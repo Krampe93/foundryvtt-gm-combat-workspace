@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { workspacePanelSizes } from "../scripts/services/workspace-layout.js";
+import { workspacePanelSizes, workspacePlayerHeight } from "../scripts/services/workspace-layout.js";
 
 test("fewer enemies free space for results without changing the baseline minimap size", () => {
   const base = { height: 930, gap: 8, utilityGap: 8 };
@@ -23,4 +23,14 @@ test("panel limits follow viewport resizing and remain valid in a cramped window
     assert.equal(sizes.minimapHeight, ((height - 8) * 0.53 - 8) * 0.7);
   }
   assert.equal(workspacePanelSizes({ height: 0, gap: 8, utilityGap: 8, enemyContentHeight: 0 }).minimapHeight, 0);
+});
+
+test("compact players leave enough room for reactions and scroll their overflow first", () => {
+  const full = workspacePlayerHeight({ available: 600, reactions: 400, players: 160 });
+  assert.equal(full, 160);
+  const tight = workspacePlayerHeight({ available: 500, reactions: 400, players: 160 });
+  assert.equal(tight, 92);
+  assert.ok(500 - 8 - tight >= 400);
+  assert.equal(workspacePlayerHeight({ available: 500, reactions: 0, players: 1000 }), 492 * 0.35);
+  assert.equal(workspacePlayerHeight({ available: 0, reactions: 400, players: 160 }), 0);
 });

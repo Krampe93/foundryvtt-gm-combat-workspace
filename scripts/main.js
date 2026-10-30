@@ -5,6 +5,7 @@ import { CombatCoordinator } from "./services/combat-coordinator.js";
 import { WorkspaceBridge } from "./services/workspace-bridge.js";
 import { CombatRollRules } from "./services/combat-roll-rules.js";
 import { registerSettings } from "./settings.js";
+import { conditionRelations } from "./services/condition-operations.js";
 
 const eventBus = new EventBus();
 let combatCoordinator = null;
@@ -44,6 +45,7 @@ Hooks.once("ready", () => {
     module.api = Object.freeze({
       events: eventBus,
       getCombatSnapshot: () => combatCoordinator?.snapshot ?? null,
+      getConditionRelations: () => game.user?.isGM ? conditionRelations(combatCoordinator?.snapshot?.context?.combat) : [],
       openWorkspace: () => workspaceBridge?.openWorkspace() ?? false,
       isWorkspaceWindow: workspaceBridge.workspaceMode
     });

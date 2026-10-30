@@ -1,3 +1,11 @@
+## 0.15.0 – 2026-10-30
+
+- Kompakte Spielerliste unter den Reaktionen. Spieler anklicken oder rechtsklicken, um native Zustände und Verursacher zu bearbeiten. Encounter-Spieler in Initiative-Reihenfolge, weitere Welt-Charaktere anschließend; nicht verbundene Spieler-Token verwenden ihren tatsächlichen Actor.
+- Spieler und einzelne Gegner als Verursacher auswählbar. Eine Verknüpfung erzeugt automatisch beide Anzeigen: „Gepackt von Goblin“ beim Betroffenen und „Packt gerade Zane“ beim Verursacher. Änderung oder Entfernung aktualisiert beide Seiten gemeinsam; Gegenanzeigen werden aus derselben gespeicherten Beziehung abgeleitet.
+- Eindeutige Token-, Actor- und Combat-Identität für gleichnamige Gegner. Bestehende Quellen aus 0.14.0 bleiben lesbar. GM-API `getConditionRelations()` mit Quelle, Ziel und beiden Anzeigetexten ergänzt. Optional integriertes Combat Wall 1.1.0 liest diese Daten und zeigt beide Seiten an.
+- Reaktionen behalten Platzpriorität, zusätzliche Spielerzeilen scrollen bei Platzmangel zuerst. Ohne Spieler wird kein Platz reserviert. Minimap und bisherige Größenlimits bleiben erhalten. Zustandsänderungen an Welt-Charakteren außerhalb des Encounters aktualisieren ebenfalls die Übersicht.
+- 163 automatische Workspace-Tests erfolgreich. Browserprüfungen für Spieler-/Gegner-Zustände, automatische Gegenanzeige, gemeinsamen Abbau, Verursacherwechsel, Token-Unterscheidung, erneutes Öffnen und öffentliche GM-API erfolgreich. Zusätzlich echter Zwei-Seiten-BroadcastChannel-Test mit dem produktiven Combat-Wall-Serializer und Dashboard: beide Anzeigen, Live-Änderung, gemeinsame Entfernung, umgekehrte Richtung, kleinere Fenster und ausgeblendete Quellen geprüft. Bisherige offenen Foundry-Abnahmen bleiben offen.
+
 ## 0.14.0 – 2026-10-30
 
 - Rechtsklick auf eine Gegnerzeile öffnet ein kompaktes Zustandsmenü. Nativen Foundry-Zustand auswählen, optional den verursachenden Spielercharakter zuordnen und speichern. Spieler aus dem Encounter stehen vor weiteren Charakteren aus der Welt. Auch per Umschalt+F10 bedienbar; Escape, Außenklick und Größenänderung schließen das Menü.
