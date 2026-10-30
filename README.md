@@ -2,11 +2,27 @@
 
 GM Combat Workspace is a Foundry VTT module for running D&D 5e encounters from a compact GM-facing workspace while keeping the map visible and usable.
 
-Version `0.15.0` is a development release with a working two-window combat workspace, native NPC sheets, roll history, reactions, legendary actions, linked player/enemy conditions and an interactive GM minimap. Work towards 1.0 continues in larger test packages.
+Version `0.16.0` is a development release with scene-wide encounter preparation, a two-window combat workspace, native NPC sheets, roll history, reactions, legendary actions, linked player/enemy conditions and an interactive GM minimap. Work towards 1.0 continues in larger test packages.
 
 The implementation order, manual Foundry test cases, and acceptance gates are maintained in [ROADMAP.md](ROADMAP.md). Related changes are bundled into one installable version before Tim's Foundry test, reducing repeated reloads.
 
 The current manual acceptance checklist is maintained in [TESTING.md](TESTING.md).
+
+## Encounter preparation
+
+Click **Encounter vorbereiten** in the main Foundry window, or the dice button beside the enemy count in the workspace. One popup contains manual player initiatives and the **Im Hort** checkboxes. Confirming adds every NPC token on the main window's current map, including hidden and unselected tokens, and rolls **W12 + native initiative bonuses**. Every confirmed run rerolls all these NPCs, reuses existing combatants and retains existing initiative groups. Native advantage/disadvantage uses two W12s. Other initiative rolls in the world keep their usual formula. No initiative chat messages or separate roll dialogs are created.
+
+Scene player tokens, assigned user characters, existing player/Monk placeholders and saved party entries are suggested. Tick the participants and enter their initiatives; additional name-only players can be added in the same popup. The roster is saved per world, while existing encounter initiative values are prefilled. Unticking a participant leaves an existing combatant untouched. Native player tokens are reused; characters without tokens use actor-linked entries and custom names use module placeholders. Monk's Combat Details is optional.
+
+The native D&D5e `system.resources.lair.inside` field is changed only on confirmation. D&D5e derives legendary maxima itself; no extra bonus or resource refill is applied. Tokens keep their visibility. Preparation creates or activates the scene encounter without starting it, and preserves a running encounter's round and active participant. Cancel changes nothing; stale scene/encounter data requires reopening the popup. Write failures attempt to restore the previous state and report any incomplete rollback.
+
+An optional script macro can open the same popup:
+
+```js
+game.modules.get("gm-combat-workspace").api.prepareEncounter();
+```
+
+Movement paths and arrival blinking remain a separate macro task; they are not part of this release.
 
 ## Installation
 

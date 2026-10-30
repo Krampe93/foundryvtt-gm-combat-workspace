@@ -1,3 +1,11 @@
+## 0.16.0 – 2026-10-30
+
+- Encounter-Vorbereitung im Hauptfenster und über den Würfelknopf oben rechts im Workspace. Ein gemeinsames Fenster enthält Spieler-Initiativen und Hort-Auswahl. Alle NPCs der aktuellen Hauptfenster-Map werden berücksichtigt, einschließlich verborgener und nicht ausgewählter Token.
+- Jeder bestätigte Aufruf würfelt alle Karten-NPCs mit W12 plus nativen D&D5e-Initiativeboni neu. Vorhandene Initiativgruppen bleiben gemeinsam; native Vor-/Nachteile verwenden W12. Die allgemeine Initiativeformel bleibt erhalten, keine zusätzlichen Würfel-Dialoge oder Chatnachrichten.
+- Szenen-Encounter und Kampfteilnehmer werden wiederverwendet. Spielerfiguren, zugewiesene Charaktere und vorhandene Monk-Platzhalter werden erkannt; zusätzliche Spieler lassen sich im selben Fenster ergänzen. Spielerwerte sind vorbelegt, Teilnehmerauswahl und eigene Namen werden pro Welt gespeichert. Native und eigene Platzhalter funktionieren ohne Pflichtmodule.
+- Hort-Auswahl schreibt ausschließlich den nativen Im-Hort-Status des jeweiligen Actors; keine erneute Addition auf bereits abgeleitete Maxima und kein Ressourcenreset. Abbruch schreibt nichts. Veraltete Szenen-/Encounterdaten werden zurückgewiesen, doppelte Bestätigung abgefangen und Schreibfehler mit Rücknahme behandelt.
+- 176 automatische Tests und Zwei-Fenster-Browserprüfung mit produktivem Modulstart erfolgreich. Bestehende Zustands-, Recovery-, Recharge-, Rettungswurf-, Initiative- und Layoutprüfungen ebenfalls erfolgreich. Tims noch offene Live-Foundry-Abnahmen bleiben offen. Bewegungspfeile/Blinken gemäß Wunsch vorerst beim Makro; Token-Sichtbarkeit wird durch die Vorbereitung nicht geändert.
+
 ## 0.15.0 – 2026-10-30
 
 - Kompakte Spielerliste unter den Reaktionen. Spieler anklicken oder rechtsklicken, um native Zustände und Verursacher zu bearbeiten. Encounter-Spieler in Initiative-Reihenfolge, weitere Welt-Charaktere anschließend; nicht verbundene Spieler-Token verwenden ihren tatsächlichen Actor.

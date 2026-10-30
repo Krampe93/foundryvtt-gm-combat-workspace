@@ -18,7 +18,8 @@
   opacity: 0.55;
 }
 
-#gm-combat-workspace-launcher {
+#gm-combat-workspace-launcher,
+#gm-combat-workspace-prepare {
   position: fixed;
   z-index: 100000;
   left: 155px;
@@ -33,6 +34,42 @@
   border-radius: 5px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
 }
+
+#gm-combat-workspace-prepare { bottom: 132px; }
+
+.gm-workspace-preparation-dialog {
+  box-sizing: border-box;
+  width: min(600px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  margin: auto;
+  padding: 20px;
+  overflow: auto;
+  color: #ececec;
+  background: #24272b;
+  border: 1px solid #d17b28;
+  border-radius: 8px;
+  box-shadow: 0 8px 40px #000a;
+  font: 15px/1.4 sans-serif;
+}
+.gm-workspace-preparation-dialog::backdrop { background: #000a; }
+.gm-workspace-preparation-dialog form { display: flex; flex-direction: column; gap: 14px; }
+.gm-workspace-preparation-dialog header h2 { margin: 0; font-size: 22px; color: #ffcf91; }
+.gm-workspace-preparation-dialog h3 { margin: 0 0 6px; font-size: 17px; border: 0; }
+.gm-workspace-preparation-dialog p { margin: 0; }
+.gm-workspace-preparation-dialog section { border-top: 1px solid #555a60; padding-top: 12px; }
+.gm-workspace-preparation-dialog .gm-preparation-hint { font-size: 13px; color: #b9bec4; margin-bottom: 8px; }
+.gm-workspace-preparation-dialog .gm-preparation-player { display: grid; grid-template-columns: 22px 1fr 105px; gap: 8px; align-items: center; margin-bottom: 6px; }
+.gm-workspace-preparation-dialog input[type="text"] { width: 100%; height: 32px; padding: 4px 7px; color: #ececec; background: #17191c; border: 1px solid #72777d; border-radius: 3px; }
+.gm-workspace-preparation-dialog input[type="checkbox"] { margin: 0; accent-color: #d17b28; }
+.gm-workspace-preparation-dialog input[readonly] { border-color: transparent; background: transparent; }
+.gm-workspace-preparation-dialog .is-inactive { opacity: .55; }
+.gm-workspace-preparation-dialog button { width: auto; min-height: 32px; padding: 5px 10px; color: #ececec; background: #34383d; border: 1px solid #9d7951; border-radius: 4px; cursor: pointer; }
+.gm-workspace-preparation-dialog button:disabled { opacity: .6; cursor: wait; }
+.gm-workspace-preparation-dialog .gm-preparation-confirm { background: #a64d2c; font-weight: bold; }
+.gm-workspace-preparation-dialog footer { display: flex; justify-content: flex-end; gap: 10px; }
+.gm-workspace-preparation-dialog .gm-preparation-lair { display: flex; gap: 10px; align-items: center; margin: 8px 0; }
+.gm-workspace-preparation-dialog small { display: block; color: #b9bec4; }
+.gm-workspace-preparation-dialog .gm-preparation-error { color: #ffb6a8; padding: 8px; border: 1px solid #a83232; border-radius: 4px; }
 
 body.gm-combat-workspace-companion > :not(#gm-combat-workspace-shell):not(#notifications):not(.notifications) {
   display: none !important;

@@ -7,7 +7,8 @@ export const SETTING_KEYS = Object.freeze({
   closePreviousNpcSheet: "closePreviousNpcSheet",
   selectActiveNpcToken: "selectActiveNpcToken",
   panToActiveNpc: "panToActiveNpc",
-  hiddenMovementTracker: "hiddenMovementTracker"
+  hiddenMovementTracker: "hiddenMovementTracker",
+  encounterPlayers: "encounterPlayers"
 });
 
 export const OPTIONAL_MODULES = Object.freeze({

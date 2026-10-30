@@ -40,6 +40,9 @@ const CLIENT_BOOLEAN_SETTINGS = [
 ];
 
 export function registerSettings() {
+  game.settings.register(MODULE_ID, SETTING_KEYS.encounterPlayers, {
+    scope: "world", config: false, type: Array, default: []
+  });
   for (const setting of CLIENT_BOOLEAN_SETTINGS) {
     game.settings.register(MODULE_ID, setting.key, {
       name: setting.name,

@@ -14,13 +14,20 @@ Tim hat die vollständige Umsetzung der offenen Punkte beauftragt. Seit 2026-10-
 | B | Recharge-Verfügbarkeit, manuelles/automatisches Aufladen und Reaktionsreset-Sonderfälle | Stone-Giant-Reset aus 0.13.1 noch nicht getestet; gemeinsame Gegenprobe in 0.15.0 offen |
 | C | Mehrdeutige legendäre Folgeangriffe und In-Lair-Ressourcen zuverlässig behandeln | In 0.13.0 implementiert und lokal geprüft; gemeinsame Abnahme offen |
 | D | Minimap-Namen beim Darüberfahren und Gegnerauswahl per Punktklick | Von Tim am 2026-10-26 bestätigt |
-| E | Encounter-Vorbereitung, W12-Initiative, Spieler-Platzhalter und In-Lair-Einrichtung | Offen |
-| F | Bewegungspfad und blinkendes Ziel für verborgene Gegner; Empfängerkreis vor Umsetzung mit Tim festlegen | Offen |
+| E | Encounter-Vorbereitung, W12-Initiative, Spieler-Platzhalter und In-Lair-Einrichtung | In 0.16.0 implementiert und lokal geprüft; gemeinsame Foundry-Abnahme offen |
+| F | Bewegungspfad und blinkendes Ziel für verborgene Gegner auf der Spieler-Map mit physischen Minis | Am 2026-10-30 auf Tims Wunsch vorerst beim Makro belassen; nicht Teil von 0.16.0 |
 | G | Optionale RSReforged-Abläufe vollständig integrieren und mit/ohne optionale Module prüfen | Offen |
 | H | Sichtbare Einstellungen mit Funktionen verbinden, Bedienung und Dokumentation bereinigen | Offen |
 | I | Gemeinsamer Langzeittest, Berechtigungen, Neuinstallation und Upgrade; anschließend Release 1.0 | Offen |
 
 Der Stand aus 0.12.1 bleibt die Ausgangsbasis. Eine lokale Prüfung ersetzt Tims Foundry-Test nicht. Der Gesamtauftrag bleibt zwischen den Teststopps bestehen.
+
+### Präzisierung und Encounter-Vorbereitung – 0.16.0
+
+- Tim bestätigt am 2026-10-30: immer alle auf der aktuellen Map vorhandenen Gegner würfeln, ein einziges Popup für Spieler-Initiativen und Hort-Auswahl. Diese Vorgabe ersetzt „ausgewählte NPCs“ und „nur fehlende Initiative“. W12 gilt nur innerhalb dieser Vorbereitung.
+- Ein Aufruf im Hauptfenster oder Workspace erfasst alle Karten-NPCs einschließlich verborgener Token. Szenen-Encounter, bestehende Spieler/Monk-Platzhalter und Initiativgruppen werden wiederverwendet; Spielerroster pro Welt gespeichert. Bestätigung würfelt alle Karten-NPCs neu, native Im-Hort-Einstellung wird bewusst gesetzt. Kein automatischer Kampfbeginn und keine Sichtbarkeitsänderung.
+- Bewegung: Alle Gegner bleiben für die Spieler-Map verborgen, da physische Minis verwendet werden. Pfadpfeile und Ankunftsblinken sind gewünscht; auf Tims Wunsch vorerst im Makro, nicht als Dashboard-Bewegungsfunktion umsetzen. Jetzt ausdrücklich nur Encounter-Vorbereitung implementieren.
+- 176 automatische Tests, produktiver Modulstart mit Zwei-Fenster-Übertragung, Formular-, W12-, Abbruch-, Wiederholungs-, Hort-, Szenenwechsel- und Größenprüfungen erfolgreich. Bisherige Zustands-, Recovery-, Recharge-, Initiative-, Rettungswurf- und Layoutprüfungen ebenfalls grün. Alle noch offenen manuellen Gegenproben aus 0.13.2–0.15.0 bleiben in TESTING.md mitgenommen; Minimap bleibt abgenommen.
 
 ### Erweiterung auf Tims Wunsch – Spieler und beide Beziehungsseiten, 0.15.0
 
@@ -729,7 +736,7 @@ Diese Entscheidung beeinflusst die technische Umsetzung erheblich und wird nicht
 
 ## Etappe 11 – Encounter vorbereiten und W12-Initiative
 
-**Status:** `[ ]`
+**Status:** `[~]` – mit 0.16.0 implementiert und lokal geprüft; Foundry-Abnahme offen
 
 ### Ziel
 
@@ -738,29 +745,30 @@ Die vorhandene Encounter-Vorbereitung in das Modul integrieren und konfigurierba
 ### Umfang
 
 - Encounter der aktuellen Szene erstellen oder aktivieren
-- ausgewählte NPC-Tokens hinzufügen
+- alle NPC-Tokens der aktuellen Hauptfenster-Map hinzufügen, auch verborgene und nicht ausgewählte
 - NPC-Initiative mit `1d12 + Initiative-Modifikator`
 - keine unnötigen Chatnachrichten
 - Spieler-Placeholders konfigurierbar machen
 - vorhandene Monk's-Combat-Details-Placeholders erkennen
 - ohne Monk's Combat Details eigene Placeholder-Daten verwenden
-- bestehende Initiativewerte erhalten
+- alle Karten-NPCs bei jedem bestätigten Aufruf neu würfeln; Spielerwerte vorbefüllen und manuell übernehmen
 - In-Lair-Kandidaten erkennen
 - In-Lair-Status bewusst abfragen und speichern
 - doppelte Combatants vermeiden
 
-### Entscheidungsbedarf vor Beginn
+### Festlegungen vom 2026-10-30
 
-- Spielerfiguren dauerhaft in Moduleinstellungen verwalten oder pro Welt konfigurieren?
-- Sollen die bisherigen fünf Namen als Migrationsvorschlag übernommen werden?
-- Soll W12-Initiative ausschließlich über diese Funktion oder optional als allgemeine Initiativeformel gelten?
+- Spielerroster pro Welt speichern; vorhandene Spieler, Szene, zugewiesene Charaktere und Monk-Platzhalter erkennen. Zusätzliche Namen direkt im gemeinsamen Popup ergänzen.
+- Vorhandene Weltdaten verwenden; keine fest einprogrammierten Partynamen.
+- W12-Initiative ausschließlich über diese Funktion, ohne globale Formeländerung.
+- Ein gemeinsames Popup mit Spieler-Initiativen und Hort-Abfrage; keine weiteren Initiative-Dialoge.
 
 ### Foundry-Test
 
 - kein Encounter vorhanden
 - bestehender Encounter
 - fehlende und vorhandene Spielerinitiative
-- ein und mehrere ausgewählte NPCs
+- keine oder beliebige Auswahl; immer sämtliche NPCs der aktuellen Map
 - NPC bereits im Encounter
 - verknüpfte und unverknüpfte Tokens
 - Monster mit und ohne Lair-/Legendary-Daten
@@ -769,8 +777,8 @@ Die vorhandene Encounter-Vorbereitung in das Modul integrieren und konfigurierba
 ### Abnahme
 
 - Kein Combatant wird doppelt angelegt.
-- Vorhandene Initiative bleibt erhalten.
-- Nur fehlende NPC-Initiativen werden gewürfelt.
+- Spieler-Initiativen sind vorbelegt und werden manuell übernommen.
+- Sämtliche NPC-Initiativen der aktuellen Map werden jedes Mal neu gewürfelt.
 - Lair-Status wird nur nach bewusster Bestätigung geändert.
 
 ---
