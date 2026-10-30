@@ -8,6 +8,8 @@ import { RechargeRolls, rechargeResources } from "./recharge-operations.js";
 import { TurnRecovery } from "./turn-recovery.js";
 import { createCombatSnapshot } from "./combat-state.js";
 import { applyLegendaryRecoveryTiming } from "./native-turn-recovery.js";
+import { actorConditions, conditionPlayers, setActorCondition } from "./condition-operations.js";
+import { ConditionMenu } from "./condition-menu.js";
 import {
   LEGACY_REACTION_FLAG_KEY,
   LEGACY_REACTION_MODULE_ID,
@@ -196,6 +198,9 @@ export class WorkspaceBridge {
   #legendaryChoices = new Map();
   #itemRenderHooks = [];
   #nativeRecoveryHooks = [];
+  #conditionMenu = null;
+  #conditionRequests = new Map();
+  #conditionQueues = new Map();
 
   constructor({ eventBus, getSnapshot, rollRules = null, logger = createLogger("WorkspaceBridge") }) {
     this.#eventBus = eventBus;
@@ -298,6 +303,13 @@ export class WorkspaceBridge {
   }
 
   stop() {
+    this.#conditionMenu?.close();
+    this.#conditionMenu = null;
+    for (const { reject, timer } of this.#conditionRequests.values()) {
+      clearTimeout(timer);
+      reject(new Error("Workspace wurde geschlossen."));
+    }
+    this.#conditionRequests.clear();
     this.#turnRecovery.stop();
     for (const [name, id] of this.#nativeRecoveryHooks) Hooks.off(name, id);
     this.#nativeRecoveryHooks = [];
@@ -564,6 +576,14 @@ export class WorkspaceBridge {
     root.querySelector('[data-role="enemy-list"]')
       .addEventListener("keydown", (event) => this.#onHpInput(event));
     root.querySelector('[data-role="enemy-list"]')
+      .addEventListener("contextmenu", (event) => this.#openConditionMenu(event));
+    root.querySelector('[data-role="enemy-list"]')
+      .addEventListener("keydown", (event) => {
+        if (event.key === "ContextMenu" || (event.key === "F10" && event.shiftKey)) this.#openConditionMenu(event);
+      });
+    root.querySelector('[data-role="enemy-list"]')
+      .addEventListener("scroll", () => this.#conditionMenu?.close());
+    root.querySelector('[data-role="enemy-list"]')
       .addEventListener("focusin", (event) => this.#selectHpInput(event));
     root.querySelector('.gm-workspace-bulk-tools')
       .addEventListener("click", (event) => this.#onBulkAction(event));
@@ -574,6 +594,15 @@ export class WorkspaceBridge {
     root.querySelector('[data-role="reaction-panel"]')
       .addEventListener("click", (event) => this.#onReactionClick(event));
     root.addEventListener("contextmenu", (event) => this.#onPendingDamageMiss(event));
+    this.#conditionMenu = new ConditionMenu({ root,
+      getTarget: (id) => {
+        const entry = this.#enemyEntries().find(entry => entry.id === id);
+        const actor = entry && this.#actorForEntry(entry);
+        return actor ? { actor, name: entry.displayName } : null;
+      },
+      getPlayers: () => conditionPlayers(this.#getSnapshot?.()?.context?.combat),
+      apply: (id, operation) => this.#requestCondition(id, operation)
+    });
     root.querySelector('[data-action="clear-roll-history"]').addEventListener("click", () => {
       this.#rollHistory.clear();
       this.#renderRollResults();
@@ -1055,6 +1084,21 @@ export class WorkspaceBridge {
   #receive(message) {
     if (!message || typeof message !== "object") return;
 
+    if (message.type === "setCondition" && !this.#workspaceMode) {
+      if (!game.user?.isGM || message.originUserId !== game.user.id) return;
+      this.#applyCondition(message);
+      return;
+    }
+    if (message.type === "conditionResult" && this.#workspaceMode && message.originUserId === game.user?.id) {
+      const pending = this.#conditionRequests.get(message.requestId);
+      if (!pending) return;
+      clearTimeout(pending.timer);
+      this.#conditionRequests.delete(message.requestId);
+      if (message.error) pending.reject(new Error(message.error));
+      else { this.#renderEnemyList(); pending.resolve(); }
+      return;
+    }
+
     if (message.type === "nativeTurnStart" && !this.#workspaceMode) {
       if (!message.originUserId || message.originUserId !== game.user?.id) return;
       const combat = game.combats?.get?.(message.combatId) ?? this.#getSnapshot?.()?.context?.combat;
@@ -1121,6 +1165,61 @@ export class WorkspaceBridge {
       this.#logger.error("Native turn-start recovery failed", error);
       ui.notifications?.error(`Rücksetzung zu Zugbeginn fehlgeschlagen: ${error.message}`);
     });
+  }
+
+  #openConditionMenu(event) {
+    const row = event.target.closest?.(".gm-workspace-enemy[data-combatant-id]");
+    if (!row) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const bounds = row.getBoundingClientRect();
+    const pointer = event.type === "contextmenu";
+    this.#conditionMenu?.open(row.dataset.combatantId, pointer ? event.clientX : bounds.left + 24,
+      pointer ? event.clientY : bounds.bottom);
+  }
+
+  #requestCondition(combatantId, operation) {
+    const requestId = foundry.utils.randomID();
+    const combatId = this.#getSnapshot?.()?.combatId;
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.#conditionRequests.delete(requestId);
+        reject(new Error("Keine Antwort vom Foundry-Hauptfenster. Bitte das Hauptfenster öffnen und erneut versuchen."));
+      }, 12000);
+      this.#conditionRequests.set(requestId, { resolve, reject, timer });
+      this.#channel?.postMessage({ type: "setCondition", requestId, combatId, combatantId,
+        originUserId: game.user?.id, operation });
+    });
+  }
+
+  #applyCondition(message) {
+    const combat = game.combats?.get?.(message.combatId) ?? this.#getSnapshot?.()?.context?.combat;
+    const actor = combat?.combatants?.get?.(message.combatantId)?.actor;
+    const key = actor?.uuid ?? message.combatantId;
+    const previous = this.#conditionQueues.get(key) ?? Promise.resolve();
+    const operation = previous.catch(() => {}).then(async () => {
+      const current = this.#getSnapshot?.();
+      if (!combat?.started || current?.combatId !== message.combatId || combat?.id !== message.combatId ||
+        combat.combatants.get(message.combatantId)?.actor !== actor || actor?.type !== "npc") {
+        throw new Error("Dieser Gegner ist nicht mehr im aktiven Encounter.");
+      }
+      await setActorCondition(actor, message.operation ?? {}, conditionPlayers(combat));
+    });
+    this.#conditionQueues.set(key, operation);
+    operation.then(() => {
+      this.#channel?.postMessage({ type: "conditionResult", requestId: message.requestId, originUserId: message.originUserId });
+    }, error => {
+      this.#logger.error("Condition update failed", error);
+      this.#channel?.postMessage({ type: "conditionResult", requestId: message.requestId,
+        originUserId: message.originUserId, error: error.message });
+    }).finally(() => { if (this.#conditionQueues.get(key) === operation) this.#conditionQueues.delete(key); });
+  }
+
+  #conditionBadges(entry) {
+    const conditions = actorConditions(this.#actorForEntry(entry));
+    const text = conditions.map(condition => condition.text).join(" · ");
+    const escape = (value) => foundry.utils.escapeHTML(value).replaceAll('"', "&quot;");
+    return text ? `<span class="gm-workspace-enemy-conditions" title="${escape(text)}">${escape(text)}</span>` : "";
   }
 
   #enemyEntries() {
@@ -1297,6 +1396,7 @@ export class WorkspaceBridge {
     const list = this.#root?.querySelector('[data-role="enemy-list"]');
     if (!list) return;
     const entries = this.#enemyEntries();
+    this.#conditionMenu?.refresh();
     const validIds = new Set(entries.map(({ id }) => id));
     this.#bulkSelection = new Set([...this.#bulkSelection].filter((id) => validIds.has(id)));
     this.#set("bulk-count", this.#bulkSelection.size, "0");
@@ -1325,9 +1425,10 @@ export class WorkspaceBridge {
         data-token-id="${entry.tokenId ?? ""}"
         data-scene-id="${entry.sceneId ?? ""}">
         <input type="checkbox" class="gm-workspace-enemy-check" data-action="bulk-select" ${this.#bulkSelection.has(entry.id) ? "checked" : ""} aria-label="Für Mehrfachaktion auswählen">
-        <button type="button" class="gm-workspace-enemy-open" data-action="select-enemy">
+        <button type="button" class="gm-workspace-enemy-open" data-action="select-enemy" aria-haspopup="dialog" title="Statblock öffnen · Rechtsklick: Zustand und Spielerquelle">
           <span class="gm-workspace-enemy-name">${foundry.utils.escapeHTML(entry.displayName ?? "Unbenannter Gegner")}</span>
           ${this.#legendaryResourceBadge(entry)}
+          ${this.#conditionBadges(entry)}
         </button>
         <span class="gm-workspace-enemy-indicators">
           ${entry.active ? '<span class="gm-workspace-turn-badge"><i class="fa-solid fa-swords" aria-hidden="true"></i> Am Zug</span>' : ""}

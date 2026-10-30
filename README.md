@@ -2,7 +2,7 @@
 
 GM Combat Workspace is a Foundry VTT module for running D&D 5e encounters from a compact GM-facing workspace while keeping the map visible and usable.
 
-Version `0.13.2` is a development release with a working two-window combat workspace, native NPC sheets, roll history, reactions, legendary actions and an interactive GM minimap. Work towards 1.0 continues in larger test packages.
+Version `0.14.0` is a development release with a working two-window combat workspace, native NPC sheets, roll history, reactions, legendary actions, conditions with player sources and an interactive GM minimap. Work towards 1.0 continues in larger test packages.
 
 The implementation order, manual Foundry test cases, and acceptance gates are maintained in [ROADMAP.md](ROADMAP.md). Related changes are bundled into one installable version before Tim's Foundry test, reducing repeated reloads.
 
@@ -35,6 +35,10 @@ Version `0.12.1` updates minimap markers from rendered token movement and drag p
 Version `0.12.2` explicitly deletes the active NPC's stored legendary action locks at turn start, preserving other NPCs' locks. Each action writes only its own lock. Repeated legendary attacks such as Pounce keep each outstanding damage button. This is the first test checkpoint on the agreed path to 1.0; the next section starts after Tim's Foundry test. The older Commanding Presence/Fiery Rays report still requires that live check; local tests cover both execution orders, resource guards and reset behavior.
 
 ## Development
+
+Version `0.14.0` adds a right-click condition editor to enemy rows (also Shift+F10). Choose a native Foundry condition and optionally the character who caused it, e.g. `Verängstigt durch Zane`. Encounter characters come first, followed by other world characters. The source belongs to that condition's ActiveEffect, persists across reloads, and appears below the enemy name; it can be changed or cleared without removing the condition. Removing the effect also removes its attribution. Native effect origin, changes and duration remain intact; no additional custom roll modifiers are introduced. Unlinked NPC tokens retain independent conditions.
+
+The companion sends condition edits to its own GM's main window, avoiding the companion's automatic-status guards. Native ActiveEffect hooks keep the lists current when conditions change outside the workspace. The editor reports write failures and keeps its controls available; failed attribution rolls back a newly created condition. Previous recovery/recharge/legendary acceptance checks remain open and are carried into the combined 0.14.0 test.
 
 Version `0.13.2` keeps the full native total and all modifiers for saving throws, including a rolled 1 or 20. NAT display remains limited to attacks and ability/check rolls; attack-only extra dice and critical damage rules are unchanged. Both enemy and reaction lists sort by live initiative, using native group initiative for group members and Foundry's turn order for ties. This also works before the cached turn list is rebuilt; native group changes refresh the workspace. Tim's pending recovery, recharge and legendary-action checks from 0.13.0/0.13.1 are explicitly carried forward in TESTING.md, not marked accepted.
 

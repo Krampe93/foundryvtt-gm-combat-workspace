@@ -1,4 +1,5 @@
 import { rechargeResources } from "./recharge-operations.js";
+import { actorConditions } from "./condition-operations.js";
 
 const MONKS_COMBAT_DETAILS_ID = "monks-combat-details";
 const MODULE_ID = "gm-combat-workspace";
@@ -99,6 +100,7 @@ function summarizeCombatant(combatant, scene) {
     legendaryRemaining: Number(legendary.value) || 0,
     legendarySpent: Number(legendary.spent) || 0,
     recharge: rechargeResources(actor).map(({ id, name, remaining, maximum, threshold }) => ({ id, name, remaining, maximum, threshold })),
+    conditions: actorConditions(actor),
     savingThrows
   };
 }

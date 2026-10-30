@@ -21,6 +21,9 @@ const OBSERVED_HOOKS = Object.freeze([
   "createItem",
   "updateItem",
   "deleteItem",
+  "createActiveEffect",
+  "updateActiveEffect",
+  "deleteActiveEffect",
   "renderCombatTracker",
   "canvasReady"
 ]);
