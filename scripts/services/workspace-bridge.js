@@ -597,8 +597,8 @@ export class WorkspaceBridge {
               <div class="gm-workspace-reaction-list" data-role="reaction-list"></div>
             </section>
             <section class="gm-workspace-players" aria-label="Spielerzustände">
-              <header><h2><i class="fa-solid fa-users" aria-hidden="true"></i> Spieler</h2><span data-field="player-count">0</span></header>
-              <div class="gm-workspace-player-list" data-role="player-list"></div>
+              <header><h2><i class="fa-solid fa-users" aria-hidden="true"></i> Spieler &amp; Placeholder · Zustände</h2><span data-field="player-count">0</span></header>
+              <p class="gm-workspace-player-hint">Klicken: Zustand und Quelle bearbeiten. Placeholder ohne Actor speichern ihren Status am Kampfeintrag.</p><div class="gm-workspace-player-list" data-role="player-list"></div>
             </section>
             </div>
             <div class="gm-workspace-utility-column">
@@ -1344,7 +1344,7 @@ export class WorkspaceBridge {
       const text = (this.#conditionViews.get(entry.key) ?? []).join(" · ");
       return `<button type="button" class="gm-workspace-player" data-player-target="${escape(entry.key)}" aria-haspopup="dialog"
         title="${escape(`${entry.name}${text ? ` · ${text}` : ""} · Klicken: Zustände bearbeiten`)}">
-        <strong>${escape(entry.name)}</strong><span>${escape(text || "Keine Zustände")}</span></button>`;
+        <strong>${escape(entry.name)}</strong><span>${escape(`${entry.inCombat ? "Im Encounter" : "Außerhalb des Encounters"}${entry.placeholder ? " · Placeholder" : ""} · ${text || "Keine Zustände"}`)}</span></button>`;
     }).join("") : '<p class="gm-workspace-player-empty">Keine Spielercharaktere vorhanden.</p>';
   }
 

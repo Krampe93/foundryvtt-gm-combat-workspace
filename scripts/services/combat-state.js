@@ -35,7 +35,7 @@ export function classifyCombatant(combatant) {
     readFlag(combatant, MONKS_COMBAT_DETAILS_ID, "placeholder") === true ||
     Boolean(readFlag(combatant, MONKS_COMBAT_DETAILS_ID, "playerPlaceholder"));
 
-  if (!actor || isMonksPlaceholder) return "placeholder";
+  if (!actor || isMonksPlaceholder || readFlag(combatant, MODULE_ID, "playerPlaceholder") || ["player", "placeholder"].includes(readFlag(combatant, "combat-wall", "entryType"))) return "placeholder";
   if (actor.type === "npc") return "npc";
   if (actor.type === "character") return "player";
 

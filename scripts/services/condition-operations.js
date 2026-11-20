@@ -45,16 +45,31 @@ export function conditionPlayers(combat) {
   return [...players.values()].sort((a, b) => Number(b.inCombat) - Number(a.inCombat) || a.name.localeCompare(b.name, "de"));
 }
 
-/** Real combat actors plus world characters; unlinked actors retain their token-specific identity. */
+/** Encounter participants include actorless placeholders; NPC tokens keep their individual identity. */
 export function conditionParticipants(combat) {
   const participants = [];
   const characters = new Set();
   const represented = new Set();
   const sceneId = combat?.scene?.id ?? combat?.sceneId ?? null;
   for (const entry of orderedCombatants(combat)) {
+    const placeholder = !entry.actor || entry.getFlag?.(MODULE_ID, "playerPlaceholder") ||
+      entry.getFlag?.("monks-combat-details", "placeholder") || entry.getFlag?.("monks-combat-details", "playerPlaceholder") ||
+      ["player", "placeholder"].includes(entry.getFlag?.("combat-wall", "entryType"));
+    if (placeholder) {
+      const linkedId = entry.getFlag?.(MODULE_ID, "playerPlaceholder")?.actorId ?? entry.actorId;
+      const linked = globalThis.game?.actors?.get?.(linkedId);
+      const matches = values(globalThis.game?.actors).filter(a => a.type === "character" &&
+        String(a.name).trim().toLocaleLowerCase() === String(entry.name).trim().toLocaleLowerCase());
+      const actor = linked?.type === "character" ? linked : matches.length === 1 ? matches[0] : null;
+      if (actor) represented.add(actor.uuid);
+      participants.push({ key: entry.id, actor: actor ?? entry, actorUuid: actor?.uuid ?? null,
+        sourceUuid: entry.uuid ?? ('Combat.' + combat.id + '.Combatant.' + entry.id), combatantId: entry.id,
+        combatId: combat.id, tokenUuid: null, sceneId, type: "character", placeholder: true,
+        name: entry.name || actor?.name || "Spieler-Placeholder", inCombat: true });
+      continue;
+    }
     const actor = entry.actor;
     if (!["npc", "character"].includes(actor?.type) || !actor.uuid) continue;
-    if (entry.getFlag?.("monks-combat-details", "placeholder") || entry.getFlag?.("monks-combat-details", "playerPlaceholder")) continue;
     if (actor.type === "character") {
       represented.add(entry.token?.baseActor?.uuid ?? globalThis.game?.actors?.get?.(entry.actorId)?.uuid ?? actor.uuid);
       if (characters.has(actor.uuid)) continue;
@@ -141,6 +156,11 @@ export function conditionRelations(combat) {
 
 /** Only applied effects supply links; disabling or removing an effect also hides its attribution. */
 export function actorConditions(actor) {
+  const stored = actor?.getFlag?.(MODULE_ID, "placeholderConditions");
+  if (stored) return conditionOptions().filter(({ id }) => stored[id]).map(option => {
+    const source = liveSource(stored[option.id].source);
+    return { ...option, source, text: source ? conditionRelationshipText(option.id, option.label, source.name, "").incomingText : option.label };
+  });
   const effects = values(actor?.appliedEffects ?? actor?.effects).filter(effect => !effect.disabled && !effect.isSuppressed);
   const active = new Set([...values(actor?.statuses), ...effects.flatMap(effect => values(effect.statuses))]);
   return conditionOptions().filter(({ id }) => active.has(id)).map(option => {
@@ -153,6 +173,15 @@ export function actorConditions(actor) {
 /** Apply the native condition, annotating its effect without replacing origin, changes, or duration. */
 export async function setActorCondition(actor, { statusId, active, sourceUuid = "" }, candidates = []) {
   if (!globalThis.game?.user?.isGM) throw new Error("Nur ein GM kann Zustände ändern.");
+    if (actor?.documentName === "Combatant" || (!actor?.type && actor?.parent?.documentName === "Combat")) {
+    if (!conditionOptions().some(({ id }) => id === statusId) || typeof active !== "boolean") throw new Error("Unbekannter Zustand.");
+    const source = active && sourceUuid ? candidates.find(entry => entry.uuid === sourceUuid) : null;
+    if (active && sourceUuid && !source) throw new Error("Verursacher nicht mehr verfügbar. Bitte neu auswählen.");
+    const stored = { ...(actor.getFlag(MODULE_ID, "placeholderConditions") ?? {}) };
+    if (active) stored[statusId] = { source }; else stored[statusId] = null;
+    await actor.setFlag(MODULE_ID, "placeholderConditions", stored);
+    return;
+  }
   if (!["npc", "character"].includes(actor?.type) || typeof actor.toggleStatusEffect !== "function") throw new Error("Teilnehmer nicht mehr verfügbar.");
   if (!conditionOptions().some(({ id }) => id === statusId) || typeof active !== "boolean") throw new Error("Unbekannter Zustand.");
   const source = active && sourceUuid ? candidates.find(({ uuid }) => uuid === sourceUuid) : null;
@@ -175,7 +204,7 @@ export async function setActorCondition(actor, { statusId, active, sourceUuid = 
   }
   try {
     const saved = source ? { uuid: source.uuid, name: source.name } : null;
-    if (saved && (source.actorUuid || sources(effect)[statusId]?.actorUuid)) for (const key of ["actorUuid", "combatantId", "combatId", "tokenUuid", "sceneId", "type"]) {
+    if (saved && (source.actorUuid || source.combatantId || sources(effect)[statusId]?.actorUuid)) for (const key of ["actorUuid", "combatantId", "combatId", "tokenUuid", "sceneId", "type"]) {
       saved[key] = source[key] ?? (key === "actorUuid" && source.uuid.startsWith("Actor.") ? source.uuid : null);
     }
     await effect.setFlag(MODULE_ID, `${SOURCE_FLAG}.${statusId}`, saved);

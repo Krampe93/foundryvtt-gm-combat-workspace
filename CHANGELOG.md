@@ -1,3 +1,10 @@
+## 0.16.2 – 2026-11-20
+
+- Spieler-Placeholder ohne regulären PC-Actor als Zustandsquellen aufgenommen; Encounter-Zugehörigkeit über die Combatant-ID statt allein über Actor-Typen ermittelt.
+- Verknüpfte Spieler-Actors über ID oder eindeutigen Namen erkannt; doppelte Anzeige außerhalb des Encounters verhindert. Actorlose Placeholder speichern reine Anzeigezustände am Kampfeintrag.
+- Spielerfenster als „Spieler & Placeholder · Zustände“ beschriftet, mit Bedienhinweis, Encounter-Zugehörigkeit und Placeholder-Kennzeichnung.
+- Gemeinsamer Test mit Combat Wall 1.1.3: Quellen auswählen, Zustand setzen, live anzeigen und entfernen. 184 automatische Workspace-Tests und Modulvalidierung erfolgreich; Live-Abnahme in Foundry weiterhin offen.
+
 ## 0.16.1 – 2026-10-30
 
 - Drei wirkungslose Schalter ausgeblendet: Statblock beim Gegnerzug öffnen, vorherigen Gegner-Statblock schließen und verborgene Bewegung verfolgen. Bestehende gespeicherte Werte bleiben registriert. Statblock-Verwaltung und Bewegungsmakro bleiben wie vereinbart.

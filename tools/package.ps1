@@ -19,6 +19,7 @@ $files = @(
   '.gitignore',
   'CHANGELOG.md',
   'LICENSE',
+  'PLACEHOLDER-PATCH.md',
   'README.md',
   'ROADMAP.md',
   'TESTING.md',
