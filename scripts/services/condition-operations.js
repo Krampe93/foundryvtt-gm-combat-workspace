@@ -1,13 +1,8 @@
 import { MODULE_ID } from "../config.js";
 import { orderedCombatants } from "./combat-order.js";
+import { germanConditionLabel } from "./condition-labels.js";
 
 const SOURCE_FLAG = "conditionSources";
-const GERMAN_NAMES = {
-  blinded: "Blind", charmed: "Bezaubert", deafened: "Taub", frightened: "Verängstigt",
-  grappled: "Gepackt", incapacitated: "Kampfunfähig", invisible: "Unsichtbar", paralyzed: "Gelähmt",
-  petrified: "Versteinert", poisoned: "Vergiftet", prone: "Liegend", restrained: "Festgesetzt",
-  stunned: "Betäubt", unconscious: "Bewusstlos", exhaustion: "Erschöpft", dead: "Tot"
-};
 
 function values(collection) {
   return Array.from(collection?.values?.() ?? collection ?? []);
@@ -25,7 +20,7 @@ function hasStatus(effect, id) {
 export function conditionOptions() {
   return values(globalThis.CONFIG?.statusEffects).filter(({ id, hud }) => id && hud !== false)
     .map(({ id, name, label, img, icon }) => ({ id, img: img ?? icon ?? "",
-      label: GERMAN_NAMES[id] ?? globalThis.game?.i18n?.localize?.(name ?? label ?? id) ?? name ?? label ?? id }))
+      label: germanConditionLabel({ id, name, label }) }))
     .sort((a, b) => a.label.localeCompare(b.label, "de"));
 }
 

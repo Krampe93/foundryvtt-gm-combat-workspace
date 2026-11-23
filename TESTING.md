@@ -1,3 +1,11 @@
+# Deutsche Zustände und Markerfarben – 0.16.5
+
+1. Mit Combat Wall 1.1.7 aktualisieren und Hauptfenster sowie Dashboards neu öffnen. Zustandsauswahl muss auch Fallend, Halbe Deckung, Versteckt, Schwebend und die weiteren Systemstatus deutsch anzeigen. IDs und Quellenzuordnung bleiben gleich.
+2. Mehrere Gegnergruppen verwenden und für denselben Token die Farbe auf Minimap und Combat-Wall-Kachel vergleichen. Zugwechsel, Gruppenänderungen und Hinzufügen/Entfernen prüfen. Auch nach Szenen-/Encounterwechsel keine alte Farbe übernehmen.
+3. Native Actor-/Aktionsnamen bleiben Weltdaten. Modulbedienelemente wie Zug beenden, Werteblock und Aufladen sind deutsch; Rettungswürfe verwenden ST, GE, KO, INT, WE und CHA.
+
+Automatisch: 206 Tests, Modulvalidierung und gemeinsamer Browser-Pixelvergleich erfolgreich. Direkte Foundry-Gegenprobe offen.
+
 # Vollständige Spielergruppe – 0.16.4
 
 1. Mit leerem Encounter oder nur einem vorhandenen Orsik die Encounter-Vorbereitung öffnen. Orsik, Nova Schaltkreis, Ray, Lichtwölkchen, Zane und Pyro müssen direkt vorgewählt erscheinen. Für alle teilnehmenden Spieler Initiative eintragen; Abbrechen darf nichts verändern.

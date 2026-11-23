@@ -1,3 +1,9 @@
+## 0.16.5 – 2026-11-23
+
+- Vollständige deutsche Anzeigenamen für native D&D5e-Zustände und zusätzliche Systemstatus; interne IDs und Wirkungen bleiben erhalten. Bedienbeschriftungen einschließlich Zug beenden, Werteblock, Aufladen und Rettungswurf-Kürzel übersetzt.
+- Combat Wall 1.1.7 liefert die gemeinsame Farbzuordnung je Kampfteilnehmer. Minimap, Gegnerzeilen und Kartenmarkierungen übernehmen dieselben Farben; Hauptfenster und Companion werden live synchronisiert. Veraltete Encounter-/Szenenfarben werden verworfen, optionale Nutzung ohne Wall bleibt möglich.
+- 206 Tests und Modulvalidierung erfolgreich. Gemeinsamer Browsertest prüft deutsche Statusanzeigen, Bildverhalten und echte Minimap-Pixelfarben gegen die Wall-Marker; Live-Gegenprobe in Foundry offen.
+
 ## 0.16.4 – 2026-11-23
 
 - Die komplette Spielergruppe steht sofort in der Encounter-Vorbereitung: Orsik, Nova Schaltkreis, Ray, Lichtwölkchen, Zane und Pyro. Fehlende Spieler werden als vorgewählte actorlose Placeholder vorgeschlagen; Initiativewerte werden weiterhin manuell eingegeben.

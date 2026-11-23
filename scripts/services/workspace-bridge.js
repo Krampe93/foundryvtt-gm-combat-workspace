@@ -13,6 +13,7 @@ import { ConditionMenu } from "./condition-menu.js";
 import { EncounterPreparation } from "./encounter-preparation.js";
 import { EncounterPreparationDialog } from "./encounter-preparation-dialog.js";
 import { NpcTurnFocus } from "./npc-turn-focus.js";
+import { combatWallMarkerColor, readCombatWallMarkerColors, scopedEnemyColors } from "./marker-colors.js";
 import {
   LEGACY_REACTION_FLAG_KEY,
   LEGACY_REACTION_MODULE_ID,
@@ -45,8 +46,8 @@ const CHANNEL_NAME = `${MODULE_ID}.workspace`;
 const WORKSPACE_PARAMETER = "gmCombatWorkspace";
 const WORKSPACE_TARGET = `${MODULE_ID}-companion`;
 const SAVE_ABILITIES = Object.freeze([
-  ["str", "STR"], ["dex", "DEX"], ["con", "CON"],
-  ["int", "INT"], ["wis", "WIS"], ["cha", "CHA"]
+  ["str", "ST"], ["dex", "GE"], ["con", "KO"],
+  ["int", "INT"], ["wis", "WE"], ["cha", "CHA"]
 ]);
 
 function formatModifier(value) {
@@ -151,6 +152,7 @@ export class WorkspaceBridge {
   #unsubscribe = null;
   #controlTokenHook = null;
   #canvasReadyHook = null;
+  #wallMarkerHook = null;
   #systemStatusGuardHook = null;
   #systemStatusDeleteGuardHook = null;
   #rollAttackHook = null;
@@ -188,6 +190,7 @@ export class WorkspaceBridge {
   #colorCombatId = null;
   #nextColorIndex = 0;
   #remoteEnemyColors = [];
+  #wallMarkerState = null;
   #bulkSelection = new Set();
   #openReactionChoices = new Set();
   #reactionBusy = new Set();
@@ -275,6 +278,12 @@ export class WorkspaceBridge {
       this.#clearTokenColors();
       this.#syncTokenColors();
     });
+    this.#wallMarkerHook = Hooks.on("combatWallMarkersUpdated", () => {
+      if (this.#workspaceMode) return;
+      this.#broadcastWallMarkerColors();
+      this.#syncTokenColors();
+      this.#minimapSource?.refresh();
+    });
 
     if (this.#workspaceMode) {
       this.#systemStatusGuardHook = Hooks.on("preCreateActiveEffect", (effect, data) => {
@@ -315,7 +324,8 @@ export class WorkspaceBridge {
         getState: ({ previews }) => createMinimapState({
           canvas, snapshot: this.#getSnapshot?.(), baseUrl: window.location.href, previews,
           enemies: this.#enemyEntries().map((enemy) => ({ ...enemy,
-            color: this.#remoteEnemyColors.find((entry) => entry.sceneId === enemy.sceneId && entry.tokenId === enemy.tokenId)?.color ?? enemy.color
+            color: enemy.colorSource === "combat-wall" ? enemy.color :
+              this.#remoteEnemyColors.find((entry) => entry.sceneId === enemy.sceneId && entry.tokenId === enemy.tokenId)?.color ?? enemy.color
           }))
         }),
         publish: (state) => this.#channel?.postMessage({ type: "minimapState", state })
@@ -334,7 +344,7 @@ export class WorkspaceBridge {
     this.#preparationDialog = null;
     for (const { reject, timer } of this.#preparationRequests.values()) {
       clearTimeout(timer);
-      reject(new Error("Workspace wurde geschlossen."));
+      reject(new Error("Arbeitsbereich wurde geschlossen."));
     }
     this.#preparationRequests.clear();
     this.#prepareLauncher?.remove();
@@ -343,7 +353,7 @@ export class WorkspaceBridge {
     this.#conditionMenu = null;
     for (const { reject, timer } of this.#conditionRequests.values()) {
       clearTimeout(timer);
-      reject(new Error("Workspace wurde geschlossen."));
+      reject(new Error("Arbeitsbereich wurde geschlossen."));
     }
     this.#conditionRequests.clear();
     this.#turnRecovery.stop();
@@ -368,6 +378,10 @@ export class WorkspaceBridge {
     if (this.#canvasReadyHook !== null) {
       Hooks.off("canvasReady", this.#canvasReadyHook);
       this.#canvasReadyHook = null;
+    }
+    if (this.#wallMarkerHook !== null) {
+      Hooks.off("combatWallMarkersUpdated", this.#wallMarkerHook);
+      this.#wallMarkerHook = null;
     }
 
     if (this.#systemStatusGuardHook !== null) {
@@ -495,15 +509,15 @@ export class WorkspaceBridge {
     root.className = "gm-combat-workspace";
     root.innerHTML = `
       <section class="gm-workspace-columns">
-        <section class="gm-workspace-statblock-panel" aria-label="Statblock">
+        <section class="gm-workspace-statblock-panel" aria-label="Werteblock">
           <header class="gm-workspace-left-header">
             <div class="gm-workspace-brand-row">
               <h1>GM Combat Workspace</h1>
-              <p>Statblock und Gegnerübersicht · Version ${game.modules.get(MODULE_ID)?.version ?? "–"}</p>
+              <p>Werteblock und Gegnerübersicht · Version ${game.modules.get(MODULE_ID)?.version ?? "–"}</p>
             </div>
             <div class="gm-workspace-statblock-row">
               <div>
-                <span class="gm-workspace-eyebrow">Statblock</span>
+                <span class="gm-workspace-eyebrow">Werteblock</span>
                 <h2 data-field="displayed-name">Kein Gegner ausgewählt</h2>
               </div>
               <div class="gm-workspace-statblock-actions">
@@ -534,7 +548,7 @@ export class WorkspaceBridge {
             </button>
             <button type="button" class="gm-workspace-end-turn" data-combat-action="end-turn">
               <i class="fa-solid fa-check" aria-hidden="true"></i>
-              <span>End Turn</span>
+              <span>Zug beenden</span>
             </button>
             <button type="button" data-combat-action="next-turn" title="Nächster Zug" aria-label="Nächster Zug">
               <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
@@ -567,9 +581,9 @@ export class WorkspaceBridge {
                       <pre data-role="roll-debug">Noch kein Item im Workspace benutzt.</pre>
                     </section>
                     <section>
-                      <h2>Statblock-Diagnose</h2>
+                      <h2>Werteblock-Diagnose</h2>
                       <p>Render-, Actor-Update-, Close- und Container-Ereignisse.</p>
-                      <pre data-role="sheet-debug">Noch kein Statblock-Ereignis aufgezeichnet.</pre>
+                      <pre data-role="sheet-debug">Noch kein Werteblock-Ereignis aufgezeichnet.</pre>
                     </section>
                   </div>
                 </details>
@@ -597,8 +611,8 @@ export class WorkspaceBridge {
               <div class="gm-workspace-reaction-list" data-role="reaction-list"></div>
             </section>
             <section class="gm-workspace-players" aria-label="Spielerzustände">
-              <header><h2><i class="fa-solid fa-users" aria-hidden="true"></i> Spieler &amp; Placeholder · Zustände</h2><span data-field="player-count">0</span></header>
-              <p class="gm-workspace-player-hint">Klicken: Zustand und Quelle bearbeiten. Placeholder ohne Actor speichern ihren Status am Kampfeintrag.</p><div class="gm-workspace-player-list" data-role="player-list"></div>
+              <header><h2><i class="fa-solid fa-users" aria-hidden="true"></i> Spieler &amp; Platzhalter · Zustände</h2><span data-field="player-count">0</span></header>
+              <p class="gm-workspace-player-hint">Klicken: Zustand und Quelle bearbeiten. Platzhalter ohne Charakter speichern ihren Status am Kampfeintrag.</p><div class="gm-workspace-player-list" data-role="player-list"></div>
             </section>
             </div>
             <div class="gm-workspace-utility-column">
@@ -1037,7 +1051,7 @@ export class WorkspaceBridge {
 
     this.#rollDebug = {
       status: activity
-        ? "Statblock-Aktivität wird direkt ausgeführt …"
+        ? "Werteblock-Aktivität wird direkt ausgeführt …"
         : "Item-Klick erfasst; warte auf D&D5e-Auswertung …",
       click: {
         item: item.name,
@@ -1215,6 +1229,12 @@ export class WorkspaceBridge {
       return;
     }
 
+    if (message.type === "combatWallMarkerColors" && this.#workspaceMode) {
+      this.#wallMarkerState = message.state ?? null;
+      this.#render();
+      return;
+    }
+
     if (message.type === "minimapState" && this.#workspaceMode) {
       this.#minimapView?.setState(message.state ?? null);
       return;
@@ -1253,7 +1273,7 @@ export class WorkspaceBridge {
     }
 
     if (message.type === "enemyColors" && !this.#workspaceMode) {
-      this.#remoteEnemyColors = Array.isArray(message.entries) ? message.entries : [];
+      this.#remoteEnemyColors = scopedEnemyColors(message, this.#getSnapshot?.());
       this.#syncTokenColors();
       this.#minimapSource?.refresh();
     }
@@ -1344,7 +1364,7 @@ export class WorkspaceBridge {
       const text = (this.#conditionViews.get(entry.key) ?? []).join(" · ");
       return `<button type="button" class="gm-workspace-player" data-player-target="${escape(entry.key)}" aria-haspopup="dialog"
         title="${escape(`${entry.name}${text ? ` · ${text}` : ""} · Klicken: Zustände bearbeiten`)}">
-        <strong>${escape(entry.name)}</strong><span>${escape(`${entry.inCombat ? "Im Encounter" : "Außerhalb des Encounters"}${entry.placeholder ? " · Placeholder" : ""} · ${text || "Keine Zustände"}`)}</span></button>`;
+        <strong>${escape(entry.name)}</strong><span>${escape(`${entry.inCombat ? "Im Encounter" : "Außerhalb des Encounters"}${entry.placeholder ? " · Platzhalter" : ""} · ${text || "Keine Zustände"}`)}</span></button>`;
     }).join("") : '<p class="gm-workspace-player-empty">Keine Spielercharaktere vorhanden.</p>';
   }
 
@@ -1357,6 +1377,7 @@ export class WorkspaceBridge {
       this.#nextColorIndex = 0;
     }
     const allEnemies = snapshot.combatants.filter((combatant) => combatant.type === "npc");
+    const wallMarkers = this.#workspaceMode ? this.#wallMarkerState : readCombatWallMarkerColors();
     const totals = new Map();
     for (const enemy of allEnemies) totals.set(enemy.name, (totals.get(enemy.name) ?? 0) + 1);
     const occurrences = new Map();
@@ -1368,13 +1389,15 @@ export class WorkspaceBridge {
       }
       const occurrence = (occurrences.get(combatant.name) ?? 0) + 1;
       occurrences.set(combatant.name, occurrence);
+      const wallColor = combatWallMarkerColor(wallMarkers, snapshot, combatant);
       return {
         ...combatant,
         displayName: totals.get(combatant.name) > 1 ? `${combatant.name} ${occurrence}` : combatant.name,
         sceneId: snapshot.sceneId,
         active: combatant.id === snapshot.activeCombatantId,
         onCurrentScene: snapshot.sceneId === canvas?.scene?.id && combatant.tokenPresent,
-        color: this.#combatantColors.get(combatant.id)
+        color: wallColor ?? this.#combatantColors.get(combatant.id),
+        colorSource: wallColor ? "combat-wall" : "workspace"
       };
     }).filter((combatant) => !combatant.defeated);
   }
@@ -1447,7 +1470,7 @@ export class WorkspaceBridge {
           [reaction.condition, reaction.description].filter(Boolean).join(" — ") || "Keine Beschreibung hinterlegt."
         ).replaceAll('"', "&quot;");
         return reaction.executable
-          ? `<button type="button" class="gm-workspace-reaction-action" data-action="execute-reaction" data-item-id="${reaction.itemId}" data-activity-id="${reaction.activityId}" data-tooltip="${tooltip}" title="${tooltip}${!resource.available ? " — Recharge zuerst aufladen." : ""}" aria-disabled="${unavailable}">${foundry.utils.escapeHTML(reaction.name)}</button>`
+          ? `<button type="button" class="gm-workspace-reaction-action" data-action="execute-reaction" data-item-id="${reaction.itemId}" data-activity-id="${reaction.activityId}" data-tooltip="${tooltip}" title="${tooltip}${!resource.available ? " — Zuerst wieder aufladen." : ""}" aria-disabled="${unavailable}">${foundry.utils.escapeHTML(reaction.name)}</button>`
           : `<button type="button" class="gm-workspace-reaction-action" data-action="show-reaction-actor" data-tooltip="${tooltip}" title="${tooltip}">${foundry.utils.escapeHTML(reaction.name)}</button>`;
       }).join("");
 
@@ -1513,8 +1536,8 @@ export class WorkspaceBridge {
       const threshold = resource.threshold === 6 ? "6" : `${resource.threshold ?? "?"}–6`;
       return `<button type="button" class="gm-workspace-recharge" data-action="roll-recharge" data-recharge-id="${resource.id}"
         ${resource.spent <= 0 || busy || !resource.threshold ? "disabled" : ""}
-        title="${escape(resource.spent <= 0 ? "Bereits aufgeladen." : "Recharge jetzt mit dem nativen W6 würfeln. Automatisch zu Beginn des eigenen Zugs.")}">
-        <i class="fa-solid fa-rotate" aria-hidden="true"></i> ${escape(resource.name)} · ${resource.remaining}/${resource.maximum} · ${busy ? "Würfelt …" : resource.spent <= 0 ? "Bereit" : `Recharge ${threshold}`}</button>`;
+        title="${escape(resource.spent <= 0 ? "Bereits aufgeladen." : "Aufladen jetzt mit dem nativen W6 würfeln. Automatisch zu Beginn des eigenen Zugs.")}">
+        <i class="fa-solid fa-rotate" aria-hidden="true"></i> ${escape(resource.name)} · ${resource.remaining}/${resource.maximum} · ${busy ? "Würfelt …" : resource.spent <= 0 ? "Bereit" : `Aufladen ${threshold}`}</button>`;
     }).join("");
   }
 
@@ -1531,6 +1554,7 @@ export class WorkspaceBridge {
       ?.classList.toggle("has-bulk-selection", this.#bulkSelection.size > 0);
     this.#channel?.postMessage({
       type: "enemyColors",
+      combatId: this.#getSnapshot?.()?.combatId ?? null,
       entries: entries.map(({ tokenId, sceneId, color, active }) => ({ tokenId, sceneId, color, active }))
     });
     this.#set("enemy-count", `${entries.length} ${entries.length === 1 ? "Gegner" : "Gegner"}`);
@@ -1552,7 +1576,7 @@ export class WorkspaceBridge {
         data-token-id="${entry.tokenId ?? ""}"
         data-scene-id="${entry.sceneId ?? ""}">
         <input type="checkbox" class="gm-workspace-enemy-check" data-action="bulk-select" ${this.#bulkSelection.has(entry.id) ? "checked" : ""} aria-label="Für Mehrfachaktion auswählen">
-        <button type="button" class="gm-workspace-enemy-open" data-action="select-enemy" aria-haspopup="dialog" title="Statblock öffnen · Rechtsklick: Zustand und Spielerquelle">
+        <button type="button" class="gm-workspace-enemy-open" data-action="select-enemy" aria-haspopup="dialog" title="Werteblock öffnen · Rechtsklick: Zustand und Spielerquelle">
           <span class="gm-workspace-enemy-name">${foundry.utils.escapeHTML(entry.displayName ?? "Unbenannter Gegner")}</span>
           ${this.#legendaryResourceBadge(entry)}
           ${this.#conditionBadges(entry)}
@@ -1703,11 +1727,11 @@ export class WorkspaceBridge {
     const plan = reactionExecutionPlan(item, activity);
     if (!plan.executable) {
       this.#selectEnemyEntry(entry);
-      throw new Error("Für diese Reaktion wurde kein Schaden und keine Verringerungsformel gefunden. Der Statblock wurde geöffnet.");
+      throw new Error("Für diese Reaktion wurde kein Schaden und keine Verringerungsformel gefunden. Der Werteblock wurde geöffnet.");
     }
     const resource = reactionResourceState(item, activity);
     if (resource.recharge && !resource.available) {
-      throw new Error(`${item.name} ist nicht verfügbar. Die Recharge-Ressource muss zuerst wiederhergestellt werden.`);
+      throw new Error(`${item.name} ist nicht verfügbar. Die Auflade-Ressource muss zuerst wiederhergestellt werden.`);
     }
     this.#reactionBusy.add(entry.id);
     this.#renderReactionOverview();
@@ -1717,7 +1741,7 @@ export class WorkspaceBridge {
     try {
       if (resource.recharge) {
         if (!resource.spentPath || typeof item.update !== "function") {
-          throw new Error(`Die Recharge-Ressource von ${item.name} konnte nicht aktualisiert werden.`);
+          throw new Error(`Die Auflade-Ressource von ${item.name} konnte nicht aktualisiert werden.`);
         }
         await item.update({ [resource.spentPath]: resource.spent + 1 });
         spentRecharge = true;
@@ -2030,6 +2054,9 @@ export class WorkspaceBridge {
     this.#colorCombatId = null;
     this.#nextColorIndex = 0;
     this.#remoteEnemyColors = [];
+    if (this.#wallMarkerState?.combatId !== current?.combatId || this.#wallMarkerState?.sceneId !== current?.sceneId) {
+      this.#wallMarkerState = null;
+    }
     this.#openReactionChoices.clear();
     this.#reactionBusy.clear();
     this.#pendingReactionDamage.clear();
@@ -2070,9 +2097,13 @@ export class WorkspaceBridge {
 
   #syncTokenColors() {
     if (this.#workspaceMode || !canvas?.ready) return;
+    const enemies = this.#enemyEntries();
     const desired = new Map(this.#remoteEnemyColors
       .filter(({ tokenId, sceneId }) => tokenId && sceneId === canvas.scene?.id)
-      .map((entry) => [entry.tokenId, entry]));
+      .flatMap((entry) => {
+        const enemy = enemies.find((enemy) => enemy.tokenId === entry.tokenId);
+        return enemy ? [[entry.tokenId, enemy.colorSource === "combat-wall" ? { ...entry, color: enemy.color } : entry]] : [];
+      }));
 
     for (const [tokenId, overlay] of this.#tokenColorOverlays) {
       if (desired.has(tokenId)) continue;
@@ -2121,6 +2152,7 @@ export class WorkspaceBridge {
 
   #broadcastState() {
     if (this.#workspaceMode) return;
+    this.#broadcastWallMarkerColors();
     const snapshot = this.#getSnapshot?.();
     this.#channel?.postMessage({
       type: "combatState",
@@ -2128,6 +2160,11 @@ export class WorkspaceBridge {
       round: snapshot?.round ?? null,
       turn: snapshot?.turn ?? null
     });
+  }
+
+  #broadcastWallMarkerColors() {
+    if (this.#workspaceMode) return;
+    this.#channel?.postMessage({ type: "combatWallMarkerColors", state: readCombatWallMarkerColors() });
   }
 
   #activeSelection() {
@@ -2479,7 +2516,7 @@ export class WorkspaceBridge {
     this.#set("selection-source", source);
     this.#set("selection-source-detail", source);
     const eyebrow = this.#root.querySelector(".gm-workspace-statblock-row .gm-workspace-eyebrow");
-    if (eyebrow) eyebrow.textContent = "Statblock";
+    if (eyebrow) eyebrow.textContent = "Werteblock";
 
     const pinButton = this.#root.querySelector('[data-action="toggle-pin"]');
     pinButton.disabled = !actor;
@@ -2516,7 +2553,7 @@ export class WorkspaceBridge {
       ? `Zurück zu ${this.#pinnedSelection.actor.name}`
       : this.#getSnapshot?.()?.activeType === "npc" && active
         ? `Weiter zu ${active.name}`
-        : "Statblock anzeigen";
+        : "Werteblock anzeigen";
 
     const eyebrow = this.#root.querySelector(".gm-workspace-statblock-row .gm-workspace-eyebrow");
     if (eyebrow) eyebrow.textContent = "Zughinweise";
@@ -2546,7 +2583,7 @@ export class WorkspaceBridge {
                       <h5>${escape(entry.name)}</h5>
                       <p>${escape(entry.description)}</p>
                     </div>
-                    <button type="button" data-guidance-action="show-actor" data-combatant-id="${entry.combatantId}">Statblock</button>
+                    <button type="button" data-guidance-action="show-actor" data-combatant-id="${entry.combatantId}">Werteblock</button>
                   </article>
                 `).join("")}
               </div>
@@ -2592,7 +2629,7 @@ export class WorkspaceBridge {
                         ${reason ? `<em class="gm-workspace-legendary-reason">${escape(reason)}</em>` : ""}
                       </div>
                       <div class="gm-workspace-guidance-card-actions">
-                        <button type="button" data-guidance-action="show-actor" data-combatant-id="${entry.combatantId}">Statblock</button>
+                        <button type="button" data-guidance-action="show-actor" data-combatant-id="${entry.combatantId}">Werteblock</button>
                         ${pending}
                         ${entry.activityId ? `<button type="button" class="is-primary" data-guidance-action="execute-legendary" data-combatant-id="${entry.combatantId}" data-legendary-id="${entry.id}" aria-disabled="${unavailable}" title="${escape(reason)}">${locked ? "Gesperrt" : "Ausführen"}</button>` : ""}
                       </div>
@@ -2747,7 +2784,7 @@ export class WorkspaceBridge {
     host.innerHTML = `
       <div class="gm-workspace-empty">
         <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
-        <strong>Statblock für ${name} wird geladen …</strong>
+        <strong>Werteblock für ${name} wird geladen …</strong>
       </div>
     `;
   }
@@ -2759,7 +2796,7 @@ export class WorkspaceBridge {
     host.innerHTML = `
       <div class="gm-workspace-empty gm-workspace-error">
         <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
-        <strong>Der native Statblock konnte nicht eingebettet werden.</strong>
+        <strong>Der native Werteblock konnte nicht eingebettet werden.</strong>
         <span>Details stehen in der F12-Konsole.</span>
       </div>
     `;
