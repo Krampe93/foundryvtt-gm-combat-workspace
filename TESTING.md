@@ -1,3 +1,12 @@
+# Vollständige Spielergruppe – 0.16.4
+
+1. Mit leerem Encounter oder nur einem vorhandenen Orsik die Encounter-Vorbereitung öffnen. Orsik, Nova Schaltkreis, Ray, Lichtwölkchen, Zane und Pyro müssen direkt vorgewählt erscheinen. Für alle teilnehmenden Spieler Initiative eintragen; Abbrechen darf nichts verändern.
+2. Bestätigen und erneut öffnen: jeder Spieler steht einmal da und behält seine Initiative. Fehlende Actors sind kein Hindernis; neue Spieler verwenden actorlose Placeholder und sind als Zustandsquellen auswählbar.
+3. Bereits gespeicherte manuelle Namen aus älteren Versionen verwenden, insbesondere Nova und Ziggs. Keine zusätzliche Nova-Schaltkreis-/Ray-Zeile erzeugen; vorhandene Kampfeinträge und deren Flags erhalten. Individuelle weitere Spieler bleiben verfügbar.
+4. Einen Spieler ausdrücklich abwählen und bestätigen. Diese Auswahl muss beim erneuten Öffnen erhalten bleiben. Bestehende Teilnehmer werden wie bisher durch Abwahl nicht automatisch aus dem Encounter gelöscht.
+
+Automatisch: 193 Tests mit `node --test` und erfolgreiche Modulvalidierung mit `node tools/validate.mjs`.
+
 # Pyro-Placeholder – 0.16.3
 
 1. Encounter-Vorbereitung mit den bisherigen Spielern öffnen. Pyro muss zusätzlich vorgewählt erscheinen, auch wenn kein Pyro-Actor oder Token existiert. Initiative für Pyro eingeben; alternativ seine Teilnahme abwählen.

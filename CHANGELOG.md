@@ -1,3 +1,10 @@
+## 0.16.4 – 2026-11-23
+
+- Die komplette Spielergruppe steht sofort in der Encounter-Vorbereitung: Orsik, Nova Schaltkreis, Ray, Lichtwölkchen, Zane und Pyro. Fehlende Spieler werden als vorgewählte actorlose Placeholder vorgeschlagen; Initiativewerte werden weiterhin manuell eingegeben.
+- Vorhandene Actors, Token, Kampfeinträge und gespeicherte Namen werden wiederverwendet. Bekannte Namen wie Nova/Nova Schaltkreis, Ziggs/Ray, Lichtwoelkchen/Lichtwölkchen und Flab/Orsik erzeugen keine zusätzlichen Vorschlagszeilen. Bestehende Dokumente werden dabei nicht umbenannt oder gelöscht.
+- Gespeicherte Abwahl, Initiative und Placeholder-Flags bleiben erhalten. Vorschau und Abbruch ändern den Encounter nicht.
+- 193 Tests und Modulvalidierung erfolgreich. Neue Fälle prüfen die vollständige Gruppe ohne Actors, nur einen vorhandenen Orsik, gespeicherte manuelle Namen und Aliase, Zustandsquellen sowie Wiederverwendung aller sechs Placeholder.
+
 ## 0.16.3 – 2026-11-23
 
 - Pyro als voreingestellten Spieler-Placeholder in der Encounter-Vorbereitung ergänzt, auch ohne Actor oder Token. Die Initiative wird manuell eingegeben; erst beim Bestätigen wird der Kampfeintrag angelegt.

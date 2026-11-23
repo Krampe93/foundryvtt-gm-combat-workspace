@@ -5,6 +5,17 @@ import { combatantInitiative } from "./combat-order.js";
 const values = (collection) => Array.from(collection?.values?.() ?? collection ?? []);
 const flag = (document, module, key) => document?.getFlag?.(module, key) ?? document?.flags?.[module]?.[key];
 const normalized = (name) => String(name ?? "").trim().toLocaleLowerCase();
+const PARTY = Object.freeze([
+  { key: "orsik", name: "Orsik", aliases: ["orsik", "flab"] },
+  { key: "nova", name: "Nova Schaltkreis", aliases: ["nova", "nova schaltkreis"] },
+  { key: "ray", name: "Ray", aliases: ["ray", "ziggs"] },
+  { key: "lichtwoelkchen", name: "Lichtwölkchen", aliases: ["lichtwölkchen", "lichtwoelkchen", "lichtwolkchen"] },
+  { key: "zane", name: "Zane", aliases: ["zane"] },
+  { key: "pyro", name: "Pyro", aliases: ["pyro"] }
+]);
+const partyMember = (name) => PARTY.find((member) => member.aliases.includes(normalized(name).replace(/\s+/g, " ")));
+const samePartyMember = (left, right) => Boolean(partyMember(left) && partyMember(left) === partyMember(right));
+const samePlayerName = (left, right) => normalized(left) === normalized(right) || samePartyMember(left, right);
 const actorId = (actor) => actor?.id ?? null;
 const sceneId = (combat) => combat?.scene?.id ?? combat?.sceneId ?? combat?.scene ?? null;
 const groupId = (combatant) => combatant?.group?.id ?? combatant?.group ?? null;
@@ -64,12 +75,18 @@ function playerRoster(scene, combat, game, saved) {
   const characters = values(game.actors).filter((actor) => actor.type === "character");
   const tokens = values(scene.tokens).filter((token) => token.actor?.type === "character");
   const assigned = new Set(values(game.users).filter((user) => !user.isGM).map((user) => user.character?.id).filter(Boolean));
-  const add = (row) => { rows.push(row); return row; };
+  const add = (row) => {
+    // Reuse party aliases across Foundry actors, saved custom rows and placeholders.
+    // Existing encounter documents are never removed or renamed by a preview.
+    const existing = rows.find((entry) => samePartyMember(entry.name, row.name));
+    if (existing) return existing;
+    rows.push(row); return row;
+  };
   for (const combatant of values(combat?.combatants)) {
     if (!["player", "placeholder"].includes(classifyCombatant(combatant))) continue;
     const own = flag(combatant, MODULE_ID, "playerPlaceholder");
     const character = combatant.actor?.type === "character" ? combatant.actor : characters.find((actor) =>
-      actor.id === own?.actorId || normalized(actor.name) === normalized(combatant.name));
+      actor.id === own?.actorId || samePlayerName(actor.name, combatant.name));
     add({ key: `combatant:${combatant.id}`, combatantId: combatant.id, actorId: actorId(character),
       tokenId: combatant.tokenId ?? null, name: combatant.name ?? character?.name ?? "Spieler",
       initiative: combatantInitiative(combatant), enabled: true });
@@ -86,20 +103,23 @@ function playerRoster(scene, combat, game, saved) {
       enabled: previous ? previous.enabled : assigned.has(actor.id) });
   }
   for (const previous of saved.filter((row) => !row.actorId && row.name)) {
-    if (rows.some((row) => normalized(row.name) === normalized(previous.name))) continue;
+    if (rows.some((row) => samePlayerName(row.name, previous.name))) continue;
     add({ key: `custom:${rows.length}`, name: previous.name, actorId: null, initiative: null, enabled: previous.enabled });
   }
   // Worlds without assigned users still get their characters as the initial party suggestion.
   if (!rows.some((row) => row.enabled) && !saved.length && !assigned.size) rows.forEach((row) => { row.enabled = true; });
-  // Pyro joins the established placeholder party without requiring a PC actor or map token.
-  // Preview remains read-only; the ordinary confirmation flow creates the combatant.
-  const pyro = rows.find((row) => normalized(row.name) === "pyro");
-  const previousPyro = saved.find((row) => normalized(row.name) === "pyro" ||
-    (pyro?.actorId && row.actorId === pyro.actorId));
-  if (pyro) pyro.enabled = previousPyro ? Boolean(previousPyro.enabled) : true;
-  else add({ key: "default:pyro", name: "Pyro", actorId: null, tokenId: null,
-    initiative: null, enabled: previousPyro ? Boolean(previousPyro.enabled) : true });
-  return rows.sort((left, right) => Number(right.enabled) - Number(left.enabled));
+  // The complete paper-character party is available without creating PC actors.
+  // Preview remains read-only; confirmation still requires manual initiative.
+  for (const member of PARTY) {
+    const row = rows.find((entry) => partyMember(entry.name) === member);
+    const previous = saved.find((entry) => partyMember(entry.name) === member ||
+      (row?.actorId && entry.actorId === row.actorId));
+    if (row) row.enabled = previous ? Boolean(previous.enabled) : true;
+    else add({ key: `default:${member.key}`, name: member.name, actorId: null, tokenId: null,
+      initiative: null, enabled: previous ? Boolean(previous.enabled) : true });
+  }
+  const order = (row) => { const index = PARTY.indexOf(partyMember(row.name)); return index < 0 ? PARTY.length : index; };
+  return rows.sort((left, right) => Number(right.enabled) - Number(left.enabled) || order(left) - order(right));
 }
 
 function lairActors(entries) {

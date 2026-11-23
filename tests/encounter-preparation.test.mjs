@@ -75,7 +75,7 @@ test("all map NPCs, including hidden and unselected, are rolled; other maps are 
   f.game.combat = foreign;
   const preview = f.service.preview();
   assert.equal(preview.npcCount, 3);
-  assert.deepEqual(preview.players.map((row) => row.name), ["zane", "Pyro"]);
+  assert.deepEqual(preview.players.map((row) => row.name), ["Orsik", "Nova Schaltkreis", "Ray", "Lichtwölkchen", "zane", "Pyro"]);
   assert.equal(preview.lairs.length, 1);
   assert.equal(f.rolls, 0, "preview and cancel are read-only");
   assert.equal(f.writes.length, 0);
@@ -84,7 +84,7 @@ test("all map NPCs, including hidden and unselected, are rolled; other maps are 
   assert.notEqual(combat.id, foreign.id);
   assert.equal(f.rolls, 3);
   assert.deepEqual([...combat.combatants.values()].filter((entry) => entry.tokenId).map((entry) => entry.tokenId).sort(), ["dragon", "goblin1", "goblin2", "zane"]);
-  assert.equal(combat.combatants.size, 5, "four map participants plus the actorless Pyro placeholder");
+  assert.equal(combat.combatants.size, 9, "three map NPCs, one native player and five actorless party placeholders");
   assert.equal([...combat.combatants.values()].find((entry) => entry.name === "Pyro").actor, null);
   assert.ok([...f.scene.tokens.values()].filter((token) => token.actor.type === "npc").every((token) => token.hidden));
   assert.equal(combat.round, 0);
@@ -204,7 +204,7 @@ test("mixed NPC/player groups and conflicting manual player groups fail before r
   preview = f.service.preview();
   f.writes.length = 0;
   await assert.rejects(f.service.prepare(preview.id, f.submit(preview, {
-    players: preview.players.map((row, index) => ({ ...row, initiative: index ? 9 : 10 }))
+    players: preview.players.map((row) => ({ ...row, initiative: row.combatantId === player.id ? 10 : 9 }))
   })), /denselben Initiativewert/);
   assert.equal(f.rolls, 0);
   assert.equal(f.writes.length, 0);
@@ -383,4 +383,111 @@ test("native Pyro character and token appear once and are selected by default", 
     assert.equal(entries.length, 1);
     assert.deepEqual(entries[0].getFlag(MODULE_ID, "playerPlaceholder"), { actorId: pyro.id });
   }
+});
+
+const partyNames = ["Orsik", "Nova Schaltkreis", "Ray", "Lichtwölkchen", "Zane", "Pyro"];
+
+test("an empty world offers the entire party without actors, guessed initiatives or preview writes", async () => {
+  const f = fixture({ existing: true });
+  f.scene.tokens.clear(); f.game.actors.clear(); f.game.users.clear();
+  const preview = f.service.preview();
+  assert.deepEqual(preview.players.map(({ name }) => name), partyNames);
+  assert.ok(preview.players.every((row) => row.enabled && row.actorId === null && row.tokenId === null && row.initiative === null));
+  assert.equal(f.game.combat.combatants.size, 0);
+  assert.equal(f.writes.length, 0);
+  await assert.rejects(f.service.prepare(preview.id, f.submit(preview, {
+    players: preview.players.map((row) => ({ ...row, initiative: row.name === "Ray" ? "" : 12 }))
+  })), /Initiative für Ray/);
+  assert.equal(f.writes.length, 0);
+  await f.service.prepare(preview.id, f.submit(preview));
+  const combat = f.game.combat;
+  const initialIds = [...combat.combatants.keys()];
+  assert.equal(initialIds.length, 6);
+  assert.ok([...combat.combatants.values()].every((entry) => entry.actor === null && entry.tokenId === null &&
+    entry.getFlag(MODULE_ID, "playerPlaceholder")?.actorId === null && entry.initiative === 12));
+  assert.deepEqual(conditionSourceChoices(combat).map(({ name }) => name), partyNames);
+  const again = f.service.preview();
+  assert.equal(again.players.length, 6);
+  assert.ok(again.players.every((row) => row.initiative === 12));
+  await f.service.prepare(again.id, f.submit(again));
+  assert.deepEqual([...combat.combatants.keys()], initialIds, "confirmation reuses all six placeholders");
+});
+
+test("a world with only native Orsik still prefills all six party members", () => {
+  const f = fixture();
+  f.scene.tokens.clear(); f.game.actors.clear(); f.game.users.clear();
+  const orsik = f.makeActor("Orsik", "character"); f.game.actors.set(orsik.id, orsik);
+  const preview = f.service.preview();
+  assert.deepEqual(preview.players.map(({ name }) => name), partyNames);
+  assert.equal(preview.players[0].actorId, orsik.id);
+  assert.ok(preview.players.every(({ enabled }) => enabled));
+  assert.ok(preview.players.slice(1).every(({ actorId }) => actorId === null));
+  assert.equal(f.writes.length, 0);
+});
+
+test("saved manual screenshot names and explicit party deselection are reused without alias defaults", async () => {
+  const f = fixture({ existing: true });
+  f.settings.set("encounterPlayers", [
+    { name: "Orsik", enabled: true }, { name: "Pyro", enabled: true }, { name: "Lichtwölkchen", enabled: true },
+    { name: "Nova", enabled: true }, { name: "Zane", enabled: true }, { name: "Ray", enabled: false },
+    { name: "Papierheld", enabled: true }
+  ]);
+  const preview = f.service.preview();
+  assert.equal(preview.players.length, 7);
+  assert.equal(preview.players.filter((row) => row.name === "Nova").length, 1);
+  assert.equal(preview.players.some((row) => row.name === "Nova Schaltkreis"), false);
+  assert.equal(preview.players.filter((row) => row.name.toLowerCase() === "zane").length, 1);
+  assert.equal(preview.players.find((row) => row.name === "Ray").enabled, false);
+  await f.service.prepare(preview.id, f.submit(preview));
+  assert.equal([...f.game.combat.combatants.values()].some((entry) => entry.name === "Ray"), false);
+  assert.equal(f.service.preview().players.find((row) => row.name === "Ray").enabled, false);
+});
+
+test("legacy party aliases reuse encounter IDs and initiatives without overbroad prefix matching", async () => {
+  const f = fixture({ existing: true });
+  f.scene.tokens.clear(); f.game.actors.clear(); f.game.users.clear();
+  const aliases = ["Flab", "Nova", "Ziggs", "Lichtwoelkchen", "Zane", "Pyro"];
+  const entries = aliases.map((name, index) => flags({ id: `party-${index}`, name, actor: null, initiative: 20 - index,
+    flags: { "monks-combat-details": { placeholder: true }, custom: { keep: index } } }));
+  for (const entry of entries) f.game.combat.combatants.set(entry.id, entry);
+  f.game.combat.setupTurns();
+  f.settings.set("encounterPlayers", [...partyNames.map((name) => ({ name, enabled: true })), { name: "Novak", enabled: true }]);
+  const preview = f.service.preview();
+  assert.deepEqual(preview.players.slice(0, 6).map(({ name }) => name), aliases);
+  assert.equal(preview.players.length, 7, "Novak remains an independent custom player");
+  for (const [index, row] of preview.players.slice(0, 6).entries()) {
+    assert.equal(row.combatantId, entries[index].id);
+    assert.equal(row.initiative, 20 - index);
+  }
+  await f.service.prepare(preview.id, f.submit(preview));
+  assert.equal(f.game.combat.combatants.size, 7);
+  for (const [index, entry] of entries.entries()) {
+    assert.deepEqual(entry.flags, { "monks-combat-details": { placeholder: true }, custom: { keep: index } });
+    assert.equal(entry.initiative, 20 - index);
+  }
+});
+
+test("native party actors and differently named legacy placeholders share one preparation row", async () => {
+  const f = fixture({ existing: true });
+  f.scene.tokens.clear(); f.game.actors.clear(); f.game.users.clear();
+  const pairs = [["Orsik", "Flab"], ["Nova Schaltkreis", "Nova"], ["Ray", "Ziggs"]];
+  for (const [index, [nativeName, legacyName]] of pairs.entries()) {
+    const actor = f.makeActor(nativeName, "character"); f.game.actors.set(actor.id, actor);
+    f.game.combat.combatants.set(`legacy-${index}`, flags({ id: `legacy-${index}`, name: legacyName, actor: null,
+      initiative: 19 - index, flags: { "monks-combat-details": { placeholder: true } } }));
+  }
+  f.settings.set("encounterPlayers", pairs.map(([name]) => ({ name, enabled: true })));
+  f.game.combat.setupTurns();
+  const preview = f.service.preview();
+  assert.equal(preview.players.length, 6);
+  for (const [index, [nativeName, legacyName]] of pairs.entries()) {
+    const row = preview.players[index];
+    assert.equal(row.name, legacyName);
+    assert.equal(row.actorId, nativeName);
+    assert.equal(row.combatantId, `legacy-${index}`);
+    assert.equal(row.initiative, 19 - index);
+  }
+  await f.service.prepare(preview.id, f.submit(preview));
+  assert.equal(f.game.combat.combatants.size, 6);
+  assert.equal(f.service.preview().players.length, 6);
 });
