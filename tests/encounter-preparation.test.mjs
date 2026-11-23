@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { MODULE_ID } from "../scripts/config.js";
 import { EncounterPreparation, parseInitiative, rollNpcInitiative, sceneEncounter } from "../scripts/services/encounter-preparation.js";
+import { conditionParticipants, conditionSourceChoices } from "../scripts/services/condition-operations.js";
 
 let nextId = 0;
 globalThis.foundry = { utils: { randomID: () => `random${++nextId}` } };
@@ -74,7 +75,7 @@ test("all map NPCs, including hidden and unselected, are rolled; other maps are 
   f.game.combat = foreign;
   const preview = f.service.preview();
   assert.equal(preview.npcCount, 3);
-  assert.equal(preview.players.length, 1);
+  assert.deepEqual(preview.players.map((row) => row.name), ["zane", "Pyro"]);
   assert.equal(preview.lairs.length, 1);
   assert.equal(f.rolls, 0, "preview and cancel are read-only");
   assert.equal(f.writes.length, 0);
@@ -82,7 +83,9 @@ test("all map NPCs, including hidden and unselected, are rolled; other maps are 
   const combat = f.game.combats.get(result.combatId);
   assert.notEqual(combat.id, foreign.id);
   assert.equal(f.rolls, 3);
-  assert.deepEqual([...combat.combatants.values()].map((entry) => entry.tokenId).sort(), ["dragon", "goblin1", "goblin2", "zane"]);
+  assert.deepEqual([...combat.combatants.values()].filter((entry) => entry.tokenId).map((entry) => entry.tokenId).sort(), ["dragon", "goblin1", "goblin2", "zane"]);
+  assert.equal(combat.combatants.size, 5, "four map participants plus the actorless Pyro placeholder");
+  assert.equal([...combat.combatants.values()].find((entry) => entry.name === "Pyro").actor, null);
   assert.ok([...f.scene.tokens.values()].filter((token) => token.actor.type === "npc").every((token) => token.hidden));
   assert.equal(combat.round, 0);
   assert.equal(combat.turn, null, "preparation does not start the encounter");
@@ -103,7 +106,7 @@ test("every repeat rerolls all NPCs, keeps player values, reuses participants, a
   await f.service.prepare(preview.id, f.submit(preview));
   assert.equal(f.rolls, 6);
   assert.deepEqual([...f.game.combat.combatants.keys()], ids);
-  assert.deepEqual([...f.game.combat.combatants.values()].filter((entry) => entry.actor.type === "npc").map((entry) => entry.initiative), [7, 8, 9]);
+  assert.deepEqual([...f.game.combat.combatants.values()].filter((entry) => entry.actor?.type === "npc").map((entry) => entry.initiative), [7, 8, 9]);
 });
 
 test("assigned world characters, scene players, Monk placeholders and saved custom players are not duplicated", async () => {
@@ -144,7 +147,7 @@ test("native groups and Combat Wall groups get one shared W12 result", async () 
     assert.equal(preview.rollCount, 2);
     await f.service.prepare(preview.id, f.submit(preview));
     assert.equal(f.rolls, 2);
-    const goblins = [...combat.combatants.values()].filter((entry) => entry.actor.id === "Goblin");
+    const goblins = [...combat.combatants.values()].filter((entry) => entry.actor?.id === "Goblin");
     assert.ok(goblins.every((entry) => entry.initiative === group.initiative));
   }
 });
@@ -294,4 +297,90 @@ test("manual initiative accepts zero, negatives and decimal commas; scene encoun
   assert.equal(parseInitiative(Infinity), null);
   const f = fixture({ existing: true });
   assert.equal(sceneEncounter(f.scene, f.game), f.game.combat);
+});
+
+test("Pyro is suggested without an actor or token, requires a manual initiative and becomes a reusable condition source", async () => {
+  const f = fixture({ existing: true });
+  let preview = f.service.preview();
+  const row = preview.players.find((row) => row.name === "Pyro");
+  assert.deepEqual(row, { key: "default:pyro", name: "Pyro", actorId: null, tokenId: null, initiative: null, enabled: true });
+  assert.equal(f.game.combat.combatants.size, 0, "opening preparation does not add participants");
+  assert.equal(f.writes.length, 0, "preview is read-only");
+  await assert.rejects(f.service.prepare(preview.id, f.submit(preview, {
+    players: preview.players.map((entry) => ({ ...entry, initiative: entry === row ? "" : 12 }))
+  })), /Initiative für Pyro/);
+  assert.equal(f.writes.length, 0);
+  await f.service.prepare(preview.id, f.submit(preview));
+  const pyro = [...f.game.combat.combatants.values()].find((entry) => entry.name === "Pyro");
+  assert.equal(pyro.actor, null);
+  assert.equal(pyro.actorId, null);
+  assert.equal(pyro.tokenId, null);
+  assert.equal(pyro.initiative, 12);
+  assert.deepEqual(pyro.getFlag(MODULE_ID, "playerPlaceholder"), { actorId: null });
+  assert.equal(conditionParticipants(f.game.combat).find((entry) => entry.key === pyro.id).placeholder, true);
+  assert.equal(conditionSourceChoices(f.game.combat).find((entry) => entry.combatantId === pyro.id).inCombat, true);
+  assert.ok(f.settings.get("encounterPlayers").some((entry) => entry.name === "Pyro" && entry.enabled));
+  preview = f.service.preview();
+  const repeated = preview.players.filter((entry) => entry.name.toLowerCase() === "pyro");
+  assert.equal(repeated.length, 1);
+  assert.equal(repeated[0].combatantId, pyro.id);
+  assert.equal(repeated[0].initiative, 12);
+  await f.service.prepare(preview.id, f.submit(preview));
+  assert.equal([...f.game.combat.combatants.values()].filter((entry) => entry.name.toLowerCase() === "pyro").length, 1);
+});
+
+test("existing Monk Pyro is reused case-insensitively with initiative and flags intact", async () => {
+  const f = fixture({ existing: true });
+  const monk = flags({ id: "pyro-monk", name: " pYrO ", initiative: 17, actor: null,
+    flags: { "monks-combat-details": { placeholder: true }, custom: { keep: true } } });
+  f.game.combat.combatants.set(monk.id, monk);
+  f.game.combat.setupTurns();
+  f.settings.set("encounterPlayers", [{ name: "PYRO", enabled: true }]);
+  const preview = f.service.preview();
+  const rows = preview.players.filter((row) => row.name.trim().toLowerCase() === "pyro");
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].combatantId, monk.id);
+  assert.equal(rows[0].initiative, 17);
+  await f.service.prepare(preview.id, f.submit(preview));
+  assert.equal([...f.game.combat.combatants.values()].filter((entry) => entry.name.trim().toLowerCase() === "pyro").length, 1);
+  assert.equal(monk.initiative, 17);
+  assert.deepEqual(monk.flags, { "monks-combat-details": { placeholder: true }, custom: { keep: true } });
+});
+
+test("saved Pyro membership including explicit deselection is preserved without duplicate defaults", async () => {
+  for (const enabled of [true, false]) {
+    const f = fixture({ existing: true });
+    f.settings.set("encounterPlayers", [{ name: "pyro", actorId: null, enabled }]);
+    let preview = f.service.preview();
+    const rows = preview.players.filter((row) => row.name.toLowerCase() === "pyro");
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0].enabled, enabled);
+    await f.service.prepare(preview.id, f.submit(preview));
+    assert.equal([...f.game.combat.combatants.values()].filter((entry) => entry.name.toLowerCase() === "pyro").length, Number(enabled));
+    preview = f.service.preview();
+    assert.equal(preview.players.find((row) => row.name.toLowerCase() === "pyro").enabled, enabled);
+  }
+  const f = fixture();
+  f.settings.set("encounterPlayers", [{ name: "Pyro", actorId: "deleted-actor", enabled: false }]);
+  const pyro = f.service.preview().players.find((row) => row.name === "Pyro");
+  assert.equal(pyro.actorId, null);
+  assert.equal(pyro.enabled, false, "a removed old actor does not discard the saved deselection");
+});
+
+test("native Pyro character and token appear once and are selected by default", async () => {
+  for (const onScene of [false, true]) {
+    const f = fixture({ existing: true });
+    const pyro = f.makeActor("PYRO", "character");
+    f.game.actors.set(pyro.id, pyro);
+    if (onScene) f.scene.tokens.set("pyro-token", { id: "pyro-token", actor: pyro, actorId: pyro.id, actorLink: true, name: "Pyro" });
+    const preview = f.service.preview();
+    const rows = preview.players.filter((row) => row.name.toLowerCase() === "pyro");
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0].actorId, pyro.id);
+    assert.equal(rows[0].enabled, true);
+    await f.service.prepare(preview.id, f.submit(preview));
+    const entries = [...f.game.combat.combatants.values()].filter((entry) => entry.name.toLowerCase() === "pyro");
+    assert.equal(entries.length, 1);
+    assert.deepEqual(entries[0].getFlag(MODULE_ID, "playerPlaceholder"), { actorId: pyro.id });
+  }
 });

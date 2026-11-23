@@ -91,6 +91,14 @@ function playerRoster(scene, combat, game, saved) {
   }
   // Worlds without assigned users still get their characters as the initial party suggestion.
   if (!rows.some((row) => row.enabled) && !saved.length && !assigned.size) rows.forEach((row) => { row.enabled = true; });
+  // Pyro joins the established placeholder party without requiring a PC actor or map token.
+  // Preview remains read-only; the ordinary confirmation flow creates the combatant.
+  const pyro = rows.find((row) => normalized(row.name) === "pyro");
+  const previousPyro = saved.find((row) => normalized(row.name) === "pyro" ||
+    (pyro?.actorId && row.actorId === pyro.actorId));
+  if (pyro) pyro.enabled = previousPyro ? Boolean(previousPyro.enabled) : true;
+  else add({ key: "default:pyro", name: "Pyro", actorId: null, tokenId: null,
+    initiative: null, enabled: previousPyro ? Boolean(previousPyro.enabled) : true });
   return rows.sort((left, right) => Number(right.enabled) - Number(left.enabled));
 }
 

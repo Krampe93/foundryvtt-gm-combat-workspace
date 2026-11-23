@@ -1,3 +1,10 @@
+## 0.16.3 – 2026-11-23
+
+- Pyro als voreingestellten Spieler-Placeholder in der Encounter-Vorbereitung ergänzt, auch ohne Actor oder Token. Die Initiative wird manuell eingegeben; erst beim Bestätigen wird der Kampfeintrag angelegt.
+- Bereits vorhandene Pyro-Einträge, Charaktere, Token und gespeicherte Spielerliste ohne Beachtung von Groß-/Kleinschreibung wiederverwendet. Gespeicherte Teilnahme und ausdrücklich abgewählte Teilnahme bleiben erhalten; keine automatische Änderung eines laufenden Encounters beim Laden.
+- Bestätigter actorloser Pyro wird mit dem bestehenden Placeholder-Flag gespeichert und erscheint danach als gültige Zustandsquelle und in Combat Walls Spielerübersicht. Erneute Vorbereitung verwendet denselben Eintrag und Initiativewert.
+- Vier neue Regressionstests für Standardvorschlag, manuelle Initiative, Persistenz/Quellen, vorhandenen Monk-Pyro, gespeicherte Teilnahme und native Charakter-/Token-Zuordnung. Gesamte Testsuite und Modulvalidierung erfolgreich.
+
 ## 0.16.2 – 2026-11-20
 
 - Spieler-Placeholder ohne regulären PC-Actor als Zustandsquellen aufgenommen; Encounter-Zugehörigkeit über die Combatant-ID statt allein über Actor-Typen ermittelt.

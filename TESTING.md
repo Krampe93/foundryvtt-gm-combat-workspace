@@ -1,3 +1,12 @@
+# Pyro-Placeholder – 0.16.3
+
+1. Encounter-Vorbereitung mit den bisherigen Spielern öffnen. Pyro muss zusätzlich vorgewählt erscheinen, auch wenn kein Pyro-Actor oder Token existiert. Initiative für Pyro eingeben; alternativ seine Teilnahme abwählen.
+2. Bestätigen: Pyro muss genau einmal als Placeholder im Encounter erscheinen und als Quelle für Zustände auswählbar sein. Die Combat Wall zeigt ihn erst nach dieser Bestätigung als Teilnehmer an.
+3. Vorbereitung erneut öffnen: Pyro bleibt einmal vorhanden, sein bisheriger Initiativewert ist vorbelegt. Eine ausdrücklich abgewählte Teilnahme bleibt gespeichert. Vorhandene Monk-/Actor-/Token-Einträge werden wiederverwendet.
+4. Das bloße Öffnen/Schließen des Dialogs oder Neuladen des Moduls darf keinen Teilnehmer anlegen und keinen Initiativewert erfinden. Ohne eingegebene Initiative muss die Bestätigung eine verständliche Fehlermeldung zeigen.
+
+Automatisch: `node --test tests/encounter-preparation.test.mjs` prüft die neuen Fälle einschließlich Zustandsquellen-Erkennung. Die gesamte Prüfung läuft mit `node --test` und `node tools/validate.mjs`.
+
 # Manual test checklist
 
 **Termin offen:** Tim führt die gemeinsame Abnahme bei Gelegenheit mit einem Gegenpart durch. Alle manuellen Gegenproben bleiben bis dahin offen; diese Liste dient der späteren gemeinsamen Prüfung, einschließlich mehrerer Runden, Reload und Update.
